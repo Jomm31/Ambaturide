@@ -1,19 +1,24 @@
+import manDrivingIMG from './assets/driving-homepage-img.jpg';
+import './Homepage.css';
 
+function Homepage() {
+  return (
+    <div className="app-container">
+      <div className="homepage-container">
+        <div className="homepage-left">
+          <h2>Login in to access your account</h2>
+          <div className="button-group">
+            <button className="btn rider">Rider</button>
+            <button className="btn driver">Driver</button>
+          </div>
+        </div>
 
-function Homepage(){
-
-    return(
-        <>
-        <h2>Login to access your account</h2>
-        <h1>Rider</h1>
-        <h1>Driver</h1>
-
-        </>
-        
-        
-    );
-
-    
+        <div className="homepage-right">
+          <img src={manDrivingIMG} alt="Person driving" />
+        </div>
+      </div>
+    </div>
+  );
 }
 
-export default Homepage
+export default Homepage;

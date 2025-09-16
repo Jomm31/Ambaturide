@@ -1,16 +1,29 @@
-import Logo from '../public/ambaturideLOGO.jpg'
-import './Header.css'
-
+import { useState } from 'react';
+import './Header.css';
+import darkLogo from '../public/ambaturide-darklogo.png';
 
 function Header() {
+  const [menuOpen, setMenuOpen] = useState(false);
+
   return (
     <header>
       <div className="logo-container">
-        <img src={Logo} alt="Ambaturide Logo" className="logo" />
+        <img src={darkLogo} alt="Ambaturide Logo" className="logo" />
         <h1 className="brand"><span>Ambatu</span>RIDE</h1>
       </div>
 
-      <nav>
+      {/* Burger Icon */}
+      <div 
+        className={`burger ${menuOpen ? 'open' : ''}`} 
+        onClick={() => setMenuOpen(!menuOpen)}
+      >
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+
+      {/* Navigation */}
+      <nav className={menuOpen ? 'menu-open' : ''}>
         <ul>
           <li><a href="">Book a Ride</a></li>
           <li><a href="">Solutions</a></li>
@@ -23,7 +36,7 @@ function Header() {
         </div>
       </nav>
     </header>
-  )
+  );
 }
 
-export default Header
+export default Header;
