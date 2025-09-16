@@ -1,4 +1,4 @@
-import manDrivingIMG from './assets/driving-homepage-img.jpg';
+import manDrivingIMG from '../assets/driving-homepage-img.jpg';
 import './Homepage.css';
 
 function Homepage() {
@@ -18,6 +18,7 @@ function Homepage() {
         </div>
       </div>
     </div>
+
   );
 }
 

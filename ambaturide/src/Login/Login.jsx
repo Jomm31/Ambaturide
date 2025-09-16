@@ -1,5 +1,5 @@
-import Header from './Header.jsx'
-import Footer from './Footer.jsx'
+import Header from '../Header.jsx'
+import Footer from '../Footer.jsx'
 import Homepage from './Homepage.jsx'
 
 function App() {
@@ -12,4 +12,5 @@ function App() {
   );
 }
 
-export default App
+
+export default App;
