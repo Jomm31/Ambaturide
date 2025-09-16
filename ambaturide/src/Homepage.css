@@ -3,18 +3,20 @@
   width: 100%;
   display: flex;
   justify-content: center;
-  padding: 0 5%;
+  padding: 0 20px;          /* adds space on small screens */
+  box-sizing: border-box;
 }
 
 .homepage-container {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  max-width: 1200px;
+  max-width: 1200px;        /* keeps content from stretching too wide */
   width: 100%;
   min-height: 70vh;
   font-family: 'Poppins', sans-serif;
   gap: 40px;
+  margin: 0 auto;           /* centers the block */
 }
 
 .homepage-left {
