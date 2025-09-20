@@ -25,10 +25,9 @@ function Header() {
       {/* Navigation */}
       <nav className={menuOpen ? 'menu-open' : ''}>
         <ul>
-          <li><a href="">Book a Ride</a></li>
-          <li><a href="">Solutions</a></li>
-          <li><a href="">Community</a></li>
-          <li><a href="">Resources</a></li>
+         <li><a href="">Book a Ride</a></li>
+          <li><a href="">About Us</a></li>
+          <li><a href="">Help</a></li>
         </ul>
         <div className="auth-buttons">
           <button className="login">LOG-IN</button>

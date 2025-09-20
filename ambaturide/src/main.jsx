@@ -1,10 +1,11 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
-import Login from './Login/Login.jsx'
+import HomePassenger from './Passenger-Interface/HomePassenger.jsx'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <Login/>
+    <HomePassenger />
   </StrictMode>,
+  
 )
