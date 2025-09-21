@@ -15,6 +15,10 @@ import cityIllustration from "../assets/Homepage pic(2).png";
 import ceoImg from "../assets/CEO.jpg";
 import historyBg from "../assets/Homepage(3).png";
 import phFlag from "../assets/Philippines.png";
+import Logo from "../assets/AmbatuRIDE Logo.png";
+import SocialMedia from "../assets/SocialMedia.png";
+import PhoneIcon from "../assets/Phone call.png";
+import QRCode from "../assets/QRCODE.png";
 
 function HomePassenger() {
   return (
@@ -137,7 +141,7 @@ function HomePassenger() {
       </div>
 
       {/* Contact Number Input with Flag */}
-      
+
  <div className="contact-container">
   <h1 className="contact-title">Help/Contact Us</h1>
   <form className="contact-form">
@@ -175,6 +179,39 @@ function HomePassenger() {
   </form>
 </div>
 
+
+    <footer className="footer">
+      {/* Left: Logo and Socials */}
+      <div className="footer-left">
+        <img src={Logo} alt="AmbatuRIDE Logo" className="footer-logo" />
+        <img src={SocialMedia} alt="Social Media" className="footer-socials" />
+      </div>
+
+      {/* Center: Nav + Auth + Phone */}
+      <div className="footer-center">
+  <div className="footer-links-auth">
+    <ul className="footer-links">
+      <li>Book a Ride</li>
+      <li>Login</li>
+      <li>Sign Up</li>
+      <li>Contact Us / Help</li>
+      <li>Profile</li>
+      <li>About Us</li>
+    </ul>
+  </div>
+  <div className="footer-contact">
+    <img src={PhoneIcon} alt="Phone" className="footer-phone-icon" />
+    <span className="footer-phone-number">63+ 920 401 4206</span>
+  </div>
+</div>
+
+      {/* Right: QR Code */}
+      <div className="footer-right">
+        <div className="footer-qr-bg">
+          <img src={QRCode} alt="QR Code" className="footer-qr" />
+        </div>
+      </div>
+    </footer>
 
     </>
   );

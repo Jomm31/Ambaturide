@@ -331,13 +331,15 @@ html, body, #root {
   border-radius: 8px;
 }
 
-
+/* -------------------- */
+/* Contact Section */
+/* -------------------- */
 .contact-container {
   display: flex;
   flex-direction: column;
-  align-items: center;      /* Center horizontally */
-  padding: 24px 0 0 0;     /* Less top padding, no bottom/side padding */
-  margin: 0 auto;          /* Center in parent */
+  align-items: center;
+  padding: 24px 0;
+  margin: 0 auto 120px auto;   /* ✅ pushes footer down */
   width: 100%;
   max-width: 1200px;
 }
@@ -354,6 +356,7 @@ html, body, #root {
   gap: 40px;
 }
 
+/* Left + Right layout */
 .form-left,
 .form-right {
   display: flex;
@@ -382,6 +385,7 @@ html, body, #root {
   background: #707070;
   padding: 8px 10px;
   width: 300px;
+  margin-bottom: 40px;   /* ✅ extra gap below */
 }
 
 .flag-icon {
@@ -444,20 +448,123 @@ html, body, #root {
   padding: 10px 20px;
   border: none;
   cursor: pointer;
+  align-self: flex-start;  /* ✅ keeps button aligned left */
 }
 
 .confirm-btn:hover {
   background: #45a049;
 }
 
+/* Ensure whole section never sticks to footer */
+.contact-section {
+  margin-bottom: 100px;  /* ✅ strong safety margin */
+}
 
-/* 🔥 Final scroll guarantee */
+.footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  background: #000;
+  color: #fff;
+  padding: 40px;
+  font-family: 'Inter', Arial, sans-serif;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Left */
+.footer-left {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 30px;
+}
+
+.footer-logo {
+  width: 80px;
+}
+
+.footer-socials {
+  width: 140px;
+}
+
+/* Center */
+.footer-center {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  margin: 0 80px;
+}
+
+.footer-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.footer-title {
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.footer-links ul {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0 0 0;
+}
+
+.footer-links li {
+  margin-bottom: 6px;
+  font-size: 15px;
+}
+
+.footer-auth {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-size: 15px;
+  margin-left: 60px;
+}
+
+.footer-contact {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 18px;
+  margin-top: 30px;
+}
+
+.footer-phone-icon {
+  width: 28px;
+  height: 28px;
+}
+
+/* Right */
+.footer-right {
+  display: flex;
+  align-items: flex-start;
+}
+
+.footer-qr-bg {
+  background: #18b8c9;
+  padding: 20px;
+}
+can 
+.footer-qr {
+  width: 120px;      /* reduced from 180px to 120px */
+  background: #fff;
+  padding: 8px;
+}
+
+
+/* Corrected selectors for scroll guarantee */
 .home-container,
 .how-it-works-section,
 .city-illustration,
 .about-section,
-.history-section 
-.contact-field{
+.history-section,
+.contact-field,
+.footer {
   height: auto !important;
   overflow: visible !important;
 }
