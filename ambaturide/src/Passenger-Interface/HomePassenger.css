@@ -1,21 +1,30 @@
+/* Reset & Scroll Fix */
+html, body, #root {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+  height: auto;          /* allow page to grow */
+  overflow-x: hidden;
+  overflow-y: auto;      /* always allow scrolling */
+  background: #fff;
+}
+
 /* Whole layout */
 .home-container {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;   /* don’t lock vertically */
   padding: 60px 80px;
   font-family: 'Inter', sans-serif;
   background: #fff;
+  flex-wrap: wrap;           /* wrap on small screens */
 }
 
-/* ...existing code... */
 .form-section {
   flex: 1;
   max-width: 450px;
-  /* margin-top: 32px; */ /* Remove or comment out this line if present */
-  align-self: flex-start; /* Add this line */
+  align-self: flex-start;
 }
-/* ...existing code... */
 
 .headline {
   font-size: 46px;
@@ -74,9 +83,9 @@
   gap: 6px;
   background: #eaeaea;
   border: none;
-  padding: 10px 12px;   /* smaller padding */
+  padding: 10px 12px;
   border-radius: 4px;
-  font-size: 14px;      /* smaller text */
+  font-size: 14px;
   cursor: pointer;
   color: #444;
   transition: background 0.3s ease;
@@ -88,16 +97,15 @@
 }
 
 .icon-img {
-  height: 14px;   /* smaller icons */
+  height: 14px;
   width: auto;
 }
-
 
 /* Button */
 .see-prices-btn {
   width: 150px;
   padding: 14px;
-  background: #4CAF50; /* Bright green */
+  background: #4CAF50;
   color: white;
   border: none;
   border-radius: 4px;
@@ -143,4 +151,67 @@
   .homepage-img {
     max-width: 90%;
   }
+}
+
+/* -------------------- */
+/* How it Works Section */
+/* -------------------- */
+.how-it-works-section {
+  background: #111;
+  color: #fff;
+  padding: 60px 80px;
+  font-family: 'Inter', sans-serif;
+}
+
+.how-headline {
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 40px;
+}
+
+.how-step {
+  display: flex;
+  align-items: center;
+  gap: 30px;
+  margin-bottom: 50px;
+}
+
+.how-img {
+  width: 250px;
+  border-radius: 6px;
+}
+
+.how-text h3 {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.how-text p {
+  font-size: 16px;
+  color: #ccc;
+  line-height: 1.4;
+}
+
+/* City Illustration */
+.city-illustration {
+  background: #fff;
+  text-align: center;
+}
+
+.city-illustration img {
+  width: 100%;
+  max-width: 100%;
+  display: block;
+}
+
+.home-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;   /* ❌ was center — locks height */
+  padding: 60px 80px;
+  font-family: 'Inter', sans-serif;
+  background: #fff;
+  flex-wrap: wrap;
+  height: auto;              /* ✅ don’t force full viewport */
 }
