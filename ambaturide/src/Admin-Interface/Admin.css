@@ -1,0 +1,23 @@
+html, body {
+    width: 100%;
+    height: 100%;
+}
+
+.main-container {
+    width: 100%;
+    height: 100%;
+    background-image: url('../assets/homepage-driver.jpg');
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+.card {
+    width: 200px;
+    background-color: #fff;
+    transition: all ease 500ms;
+}
+
+.card:hover {
+    transform: translate(0, 100px);
+}
