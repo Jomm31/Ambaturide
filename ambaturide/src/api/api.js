@@ -1,3 +1,8 @@
+// DATABASE
+function getDB() {
+    const db = 'ambaturide_db';
+}
+
 // LOGIN
 function getLoginData(email, password) {
     return email, password;
@@ -8,7 +13,6 @@ function bookRide() {
 
 }
 
-// DATABASE
-function getDB() {
-    const db = 'ambaturide_db';
+function report() {
+    
 }
