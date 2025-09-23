@@ -1,8 +1,11 @@
 import { useState } from 'react';
 import './Header.css';
 import darkLogo from '../public/ambaturide-darklogo.png';
+import { Link} from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 function Header() {
+  const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
@@ -25,12 +28,13 @@ function Header() {
       {/* Navigation */}
       <nav className={menuOpen ? 'menu-open' : ''}>
         <ul>
-         <li><a href="">Book a Ride</a></li>
+          <li><Link to={"/admin"}>Admin Page</Link></li>
+          <li><a href="">Book a Ride</a></li>
           <li><a href="">About Us</a></li>
           <li><a href="">Help</a></li>
         </ul>
         <div className="auth-buttons">
-          <button className="login">LOG-IN</button>
+          <button className="login" onClick={() => navigate("/login")}>LOG IN</button>
           <button className="register">REGISTER</button>
         </div>
       </nav>
