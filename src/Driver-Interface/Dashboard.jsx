@@ -10,7 +10,7 @@ export default function Dashboard() {
   return (
     <div className="Outer_Div">
 
-      {/* Header at the top */}
+      
       <DashboardHeader />
 
       {/* Inner layout (Sidebar + Main content) */}
