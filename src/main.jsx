@@ -12,6 +12,7 @@ import PassengerSignUp from "./Login/PassengerLogin/PassengerSignUp.jsx";
 import DriverLogin from "./Login/DriverLogin/DriverLogin.jsx"
 import Dashboard from "./Driver-Interface/Dashboard.jsx"; 
 import PassengerProfile from "./Passenger-Interface/PassengerProfile.jsx"
+import Passenger_Booking from "./Passenger-Interface/Passenger_Booking.jsx";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
@@ -23,6 +24,7 @@ createRoot(document.getElementById("root")).render(
         <Route path="/PassengerHomepage" element={<PassengerHomepage />} />
         <Route path="/PassengerLogin" element={<PassengerLogin/>}/>
         <Route path="/PassengerSignUp" element={<PassengerSignUp/>}/>
+        <Route path="/Passenger_Booking" element={<Passenger_Booking/>}/>
 
         <Route path="/PassengerProfile" element={<PassengerProfile/>}/>
         
