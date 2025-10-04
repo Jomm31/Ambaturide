@@ -1,13 +1,13 @@
 import manDrivingIMG from '../assets/driving-homepage.jpg';
 import './LoginHomepage.css';
-import HeaderPassenger from '../Passenger-Interface/Header/PassengerHeader'
+import Header from '../Header'
 
 
 
 function LoginHomepage() {
   return (
     <>
-    <HeaderPassenger/>
+  <Header />
     <div className="app-container">
       <div className="homepage-container">
         <div className="homepage-left">

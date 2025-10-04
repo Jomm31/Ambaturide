@@ -1,11 +1,11 @@
 import React from "react";
 import "./Css/PassengerProfile.css";
-import PassengerHeader from "./Header/PassengerHeader";
+import Header from "../Header";
 
 function PassengerProfile() {
   return (
     <>
-      <PassengerHeader />
+  <Header />
       <h1>Profile</h1>
       <h1>Passenger</h1>
 

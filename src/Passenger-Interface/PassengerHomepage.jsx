@@ -5,7 +5,7 @@ import homepageImg from "../assets/homepage-pic.png";
 import ambatuLogo from "../assets/ambaturide-logo.png";
 import dateIcon from "../assets/date.png";
 import timeIcon from "../assets/time.png";
-import PassengerHeader from "./Header/PassengerHeader";
+import Header from "../Header";
 import Footer from '../Footer'
 // New images
 import how1 from "../assets/how-it-works.png";
@@ -28,7 +28,7 @@ function PassengerHomepage() {
 
   return (
     <>
-      <PassengerHeader />
+  <Header />
 
       {/* Hero Section */}
       <section className="hero-section">

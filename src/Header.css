@@ -1,65 +1,53 @@
-header {
+/* Base header */
+.header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 40px;
-  background-color: rgb(18, 18, 18);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+  background: black;
+  color: white;
+  padding: 12px 30px;
+  font-family: "Inter", sans-serif;
   position: sticky;
   top: 0;
   z-index: 1000;
-  font-family: 'Inter', sans-serif;
 }
 
-/* Logo + brand */
-.logo-container {
+/* Logo section */
+.header-left {
   display: flex;
   align-items: center;
-  gap: 10px;
 }
-
 .logo {
-  height: 40px;
-  width: auto;
+  width: 40px;
+  margin-right: 10px;
 }
-
 .brand {
   font-size: 20px;
   font-weight: 700;
   color: #fff;
-  margin: 0;
 }
-
 .brand span {
-  font-weight: 600;
-  color: #00C853;
+  color: #00C853; /* green accent */
 }
 
-/* Navigation */
-nav {
+/* Nav links */
+.header-right {
   display: flex;
   align-items: center;
-  gap: 30px;
-}
-
-nav ul {
-  list-style: none;
-  display: flex;
   gap: 25px;
-  margin: 0;
-  padding: 0;
 }
-
-nav ul li a {
+.header-right a {
+  color: white;
   text-decoration: none;
-  color: #ccc;
-  font-weight: 500;
   font-size: 15px;
-  transition: color 0.3s ease;
+  padding: 6px 12px;
+  border-radius: 4px;
+  background: transparent;   /* ✅ remove white background */
+  display: inline-block;     /* ✅ makes them inline not block */
 }
-
-nav ul li a:hover {
-  color: #00C853;
+.header-right a:hover {
+  background: #00C853;
+  color: #121212;
 }
 
 /* Auth buttons */
@@ -67,97 +55,81 @@ nav ul li a:hover {
   display: flex;
   gap: 10px;
 }
-
-.auth-buttons button {
-  padding: 6px 14px;
-  border-radius: 6px;
-  font-weight: 600;
-  font-size: 13px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
 .auth-buttons .login {
   background: transparent;
-  border: 1px solid #ccc;
-  color: #ccc;
+  border: 1px solid #fff;
+  color: #fff;
+  padding: 6px 14px;
+  border-radius: 6px;
 }
-
 .auth-buttons .login:hover {
   border-color: #00C853;
   color: #00C853;
 }
-
 .auth-buttons .register {
   background: #00C853;
   border: 1px solid #00C853;
   color: #121212;
+  padding: 6px 14px;
+  border-radius: 6px;
 }
-
 .auth-buttons .register:hover {
   background: #00E676;
   border-color: #00E676;
 }
 
-/* Burger menu (hidden by default) */
+/* Burger menu */
 .burger {
   display: none;
   flex-direction: column;
   cursor: pointer;
   gap: 5px;
 }
-
 .burger span {
   width: 25px;
   height: 3px;
   background: #fff;
-  border-radius: 3px;
-  transition: all 0.3s ease;
+  border-radius: 2px;
+  transition: 0.3s;
 }
-
-/* Animate burger into X */
 .burger.open span:nth-child(1) {
-  transform: rotate(45deg) translateY(8px);
+  transform: translateY(8px) rotate(45deg);
 }
 .burger.open span:nth-child(2) {
   opacity: 0;
 }
 .burger.open span:nth-child(3) {
-  transform: rotate(-45deg) translateY(-8px);
+  transform: translateY(-8px) rotate(-45deg);
 }
 
+/* Mobile styles */
 @media (max-width: 900px) {
-  nav {
-    position: fixed;       /* instead of absolute */
-    top: 0;
-    right: -100%;
-    background: #121212;
+  .header-right {
+    display: none;
     flex-direction: column;
     align-items: flex-start;
-    padding: 20px;
-    gap: 20px;
-    width: 250px;
-    height: 100vh;         /* full height */
-    transition: right 0.3s ease;
-    z-index: 2000;         /* make sure it overlays */
-  }
-
-  nav.menu-open {
+    position: absolute;
+    top: 60px;
     right: 0;
-  }
-
-  nav ul {
-    flex-direction: column;
+    width: 100vw;
+    background: #111;
+    padding: 20px;
     gap: 15px;
+    z-index: 999;
   }
-
-  .auth-buttons {
-    flex-direction: column;
-    width: 70%;
+  .header-right.open {
+    display: flex;
   }
-
   .burger {
     display: flex;
-    z-index: 2100; /* stays above menu */
+  }
+  .header-right a {
+    width: 100%;
+    padding: 12px 20px;
+    border-bottom: 1px solid #222;
+  }
+  .auth-buttons {
+    flex-direction: column;
+    width: 100%;
   }
 }

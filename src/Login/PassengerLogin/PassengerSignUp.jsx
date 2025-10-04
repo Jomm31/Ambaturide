@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import manDrivingIMG from '../../assets/driving-homepage.jpg';
 import './PassengerSignUp.css';
-import HeaderPassenger from '../../Passenger-Interface/Header/PassengerHeader'
+import Header from '../../Header'
 
 function PassengerSignUp() {
   const [email, setEmail] = useState('');
@@ -17,7 +17,7 @@ function PassengerSignUp() {
 
   return (
     <>
-    <HeaderPassenger/>
+  <Header />
     <div className="app-container">
       <div className="homepage-container">
         <div className="homepage-left">
