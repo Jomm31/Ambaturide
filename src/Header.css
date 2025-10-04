@@ -27,7 +27,7 @@
   color: #fff;
 }
 .brand span {
-  color: #00C853; /* green accent */
+  color: #00C853;
 }
 
 /* Nav links */
@@ -35,6 +35,7 @@
   display: flex;
   align-items: center;
   gap: 25px;
+  transition: transform 0.3s ease-in-out;
 }
 .header-right a {
   color: white;
@@ -42,8 +43,6 @@
   font-size: 15px;
   padding: 6px 12px;
   border-radius: 4px;
-  background: transparent;   /* ✅ remove white background */
-  display: inline-block;     /* ✅ makes them inline not block */
 }
 .header-right a:hover {
   background: #00C853;
@@ -84,6 +83,7 @@
   flex-direction: column;
   cursor: pointer;
   gap: 5px;
+  z-index: 1100;
 }
 .burger span {
   width: 25px;
@@ -105,20 +105,20 @@
 /* Mobile styles */
 @media (max-width: 900px) {
   .header-right {
-    display: none;
     flex-direction: column;
     align-items: flex-start;
-    position: absolute;
-    top: 60px;
+    position: fixed;
+    top: 0;
     right: 0;
-    width: 100vw;
+    height: 100vh;
+    width: 250px;
     background: #111;
-    padding: 20px;
-    gap: 15px;
-    z-index: 999;
+    padding: 60px 20px;
+    gap: 20px;
+    transform: translateX(100%); /* hidden by default */
   }
   .header-right.open {
-    display: flex;
+    transform: translateX(0); /* slide in */
   }
   .burger {
     display: flex;
