@@ -5,7 +5,7 @@ import darkLogo from '../public/ambaturide-darklogo.png';
 function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
 
-  // close menu when a nav link is clicked (mobile)
+  // close menu when nav link is clicked
   const handleNavClick = () => setMenuOpen(false);
 
   return (
@@ -16,7 +16,7 @@ function Header() {
         <h1 className="brand"><span>Ambatu</span>RIDE</h1>
       </div>
 
-      {/* Burger Icon */}
+      {/* Burger / X button */}
       <div
         className={`burger ${menuOpen ? 'open' : ''}`}
         onClick={() => setMenuOpen(!menuOpen)}
@@ -27,14 +27,14 @@ function Header() {
         <span></span>
       </div>
 
-      {/* Navigation */}
+      {/* Slide-in Navigation */}
       <nav className={`header-right ${menuOpen ? 'open' : ''}`}>
         <a href="#" onClick={handleNavClick}>Book a Ride</a>
         <a href="#" onClick={handleNavClick}>About Us</a>
         <a href="#" onClick={handleNavClick}>Help</a>
         <div className="auth-buttons">
-          <button className="login">LOG-IN</button>
-          <button className="register">REGISTER</button>
+          <button className="login" onClick={handleNavClick}>LOG-IN</button>
+          <button className="register" onClick={handleNavClick}>REGISTER</button>
         </div>
       </nav>
     </header>
