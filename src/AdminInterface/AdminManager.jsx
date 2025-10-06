@@ -17,10 +17,10 @@ function AdminManager() {
         <>
             <div className='card'>
                 <ul>
-                    <li onClick={() => navigate('/')}>Transactions List</li>
-                    <li onClick={() => navigate('/')}>Drivers List</li>
-                    <li onClick={() => navigate('/')}>Riders List</li>
-                    <li onClick={() => navigate('/')}>Reports List</li>
+                    <li onClick={() => navigate('/Admin')}>Transactions List</li>
+                    <li onClick={() => navigate('/Admin')}>Drivers List</li>
+                    <li onClick={() => navigate('/Admin')}>Riders List</li>
+                    <li onClick={() => navigate('/Admin')}>Reports List</li>
                     <li onClick={() => navigate('/')}>Exit</li>
                     </ul>
             </div>
