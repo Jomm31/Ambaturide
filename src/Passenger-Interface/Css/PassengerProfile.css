@@ -69,10 +69,72 @@
   margin-right: 20px;
 }
 
+.info-value-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
 .info-value {
   font-weight: 500;
   color: #1f2937;
   font-size: 1rem;
+  flex: 1;
+}
+
+/* Edit Mode Styles */
+.edit-mode {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+}
+
+.edit-input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 1rem;
+  background: white;
+}
+
+.edit-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+}
+
+.edit-actions {
+  display: flex;
+  gap: 5px;
+}
+
+.save-btn, .cancel-btn {
+  padding: 6px 10px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.save-btn {
+  background: #10b981;
+  color: white;
+}
+
+.cancel-btn {
+  background: #ef4444;
+  color: white;
+}
+
+.save-btn:hover {
+  background: #059669;
+}
+
+.cancel-btn:hover {
+  background: #dc2626;
 }
 
 .gender-badge {
@@ -105,15 +167,23 @@
   margin-left: 40px;
 }
 
+.profile-picture-container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
 .profile-picture {
-  width: 120px;
-  height: 120px;
+  width: 200px;
+  height: 200px;
   border-radius: 50%;
   background: #3b82f6;
   display: flex;
   align-items: center;
   justify-content: center;
   border: 3px solid #e5e7eb;
+  position: relative;
 }
 
 .profile-number {
@@ -122,10 +192,47 @@
   font-weight: 700;
 }
 
+.profile-edit-label {
+  position: absolute;
+  bottom: -10px;
+  right: -10px;
+  background: white;
+  border-radius: 50%;
+  padding: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+  border: 2px solid #e5e7eb;
+}
+
+.profile-edit-icon {
+  font-size: 1rem;
+  display: block;
+}
+
+.profile-file-input {
+  display: none;
+}
+
 .profile-label {
   font-weight: 600;
   color: #374151;
   font-size: 1rem;
+  margin-top: 10px;
+}
+
+/* Edit Icons */
+.edit-icon {
+  color: #6b7280;
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.edit-icon:hover {
+  background: #f3f4f6;
+  color: #374151;
 }
 
 /* Main Content - Two Columns */
@@ -245,13 +352,6 @@
 .email-input:focus {
   border-color: #3b82f6;
   background: white;
-}
-
-.edit-icon {
-  padding: 0 12px;
-  color: #6b7280;
-  cursor: pointer;
-  font-size: 1rem;
 }
 
 /* Yellow Buttons */
@@ -388,6 +488,10 @@
     margin-right: 0;
   }
 
+  .info-value-container {
+    width: 100%;
+  }
+
   .profile-title {
     font-size: 2rem;
   }
@@ -424,5 +528,14 @@
 
   .success-title {
     font-size: 1.5rem;
+  }
+
+  .edit-mode {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .edit-actions {
+    align-self: flex-end;
   }
 }

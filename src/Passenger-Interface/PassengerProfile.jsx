@@ -4,11 +4,12 @@ import Header from "../Header";
 
 function PassengerProfile() {
   const [activeSection, setActiveSection] = useState("profile");
+  const [editingField, setEditingField] = useState(null);
   const [formData, setFormData] = useState({
     lastName: "Tingson",
     firstName: "Carlos John",
     gender: "Male",
-    birthdate: "Dec. 25, 2004",
+    birthdate: "2004-12-25",
     contactNo: "",
     email: "",
     currentPassword: "",
@@ -16,11 +17,35 @@ function PassengerProfile() {
     confirmPassword: ""
   });
 
+  const [tempData, setTempData] = useState({ ...formData });
+
   const handleInputChange = (e) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value
     });
+  };
+
+  const handleTempChange = (e) => {
+    setTempData({
+      ...tempData,
+      [e.target.name]: e.target.value
+    });
+  };
+
+  const startEditing = (fieldName) => {
+    setEditingField(fieldName);
+    setTempData({ ...formData });
+  };
+
+  const saveEdit = (fieldName) => {
+    setFormData({ ...tempData });
+    setEditingField(null);
+  };
+
+  const cancelEdit = () => {
+    setEditingField(null);
+    setTempData({ ...formData });
   };
 
   const handleSaveChanges = (e) => {
@@ -31,6 +56,11 @@ function PassengerProfile() {
   const handlePasswordChange = (e) => {
     e.preventDefault();
     setActiveSection("passwordSuccess");
+  };
+
+  const handleProfilePictureChange = (e) => {
+    // Handle profile picture upload logic here
+    console.log("Profile picture changed");
   };
 
   return (
@@ -50,30 +80,139 @@ function PassengerProfile() {
             {/* Personal Info Section */}
             <div className="personal-info-section">
               <div className="info-left">
+                {/* Last Name */}
                 <div className="info-row">
                   <span className="info-label">Last Name</span>
-                  <span className="info-value">{formData.lastName}</span>
+                  <div className="info-value-container">
+                    {editingField === 'lastName' ? (
+                      <div className="edit-mode">
+                        <input
+                          type="text"
+                          className="edit-input"
+                          value={tempData.lastName}
+                          onChange={handleTempChange}
+                          name="lastName"
+                        />
+                        <div className="edit-actions">
+                          <button className="save-btn" onClick={() => saveEdit('lastName')}>✓</button>
+                          <button className="cancel-btn" onClick={cancelEdit}>✕</button>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <span className="info-value">{formData.lastName}</span>
+                        <span className="edit-icon" onClick={() => startEditing('lastName')}>✏️</span>
+                      </>
+                    )}
+                  </div>
                 </div>
+
+                {/* First Name */}
                 <div className="info-row">
                   <span className="info-label">First Name</span>
-                  <span className="info-value">{formData.firstName}</span>
+                  <div className="info-value-container">
+                    {editingField === 'firstName' ? (
+                      <div className="edit-mode">
+                        <input
+                          type="text"
+                          className="edit-input"
+                          value={tempData.firstName}
+                          onChange={handleTempChange}
+                          name="firstName"
+                        />
+                        <div className="edit-actions">
+                          <button className="save-btn" onClick={() => saveEdit('firstName')}>✓</button>
+                          <button className="cancel-btn" onClick={cancelEdit}>✕</button>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <span className="info-value">{formData.firstName}</span>
+                        <span className="edit-icon" onClick={() => startEditing('firstName')}>✏️</span>
+                      </>
+                    )}
+                  </div>
                 </div>
+
+                {/* Gender */}
                 <div className="info-row">
                   <span className="info-label">Gender</span>
-                  <span className="gender-badge">{formData.gender}</span>
+                  <div className="info-value-container">
+                    {editingField === 'gender' ? (
+                      <div className="edit-mode">
+                        <select
+                          className="edit-input"
+                          value={tempData.gender}
+                          onChange={handleTempChange}
+                          name="gender"
+                        >
+                          <option value="Male">Male</option>
+                          <option value="Female">Female</option>
+                          <option value="Other">Other</option>
+                        </select>
+                        <div className="edit-actions">
+                          <button className="save-btn" onClick={() => saveEdit('gender')}>✓</button>
+                          <button className="cancel-btn" onClick={cancelEdit}>✕</button>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <span className="gender-badge">{formData.gender}</span>
+                        <span className="edit-icon" onClick={() => startEditing('gender')}>✏️</span>
+                      </>
+                    )}
+                  </div>
                 </div>
+
+                {/* Birthdate */}
                 <div className="info-row">
                   <span className="info-label">Birthdate</span>
-                  <span className="birthdate-value">
-                    <span className="calendar-icon">📅</span>
-                    {formData.birthdate}
-                  </span>
+                  <div className="info-value-container">
+                    {editingField === 'birthdate' ? (
+                      <div className="edit-mode">
+                        <input
+                          type="date"
+                          className="edit-input"
+                          value={tempData.birthdate}
+                          onChange={handleTempChange}
+                          name="birthdate"
+                        />
+                        <div className="edit-actions">
+                          <button className="save-btn" onClick={() => saveEdit('birthdate')}>✓</button>
+                          <button className="cancel-btn" onClick={cancelEdit}>✕</button>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <span className="birthdate-value">
+                          <span className="calendar-icon">📅</span>
+                          {new Date(formData.birthdate).toLocaleDateString('en-US', {
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric'
+                          })}
+                        </span>
+                        <span className="edit-icon" onClick={() => startEditing('birthdate')}>✏️</span>
+                      </>
+                    )}
+                  </div>
                 </div>
               </div>
               
               <div className="profile-picture-section">
-                <div className="profile-picture">
-                  <span className="profile-number">8</span>
+                <div className="profile-picture-container">
+                  <div className="profile-picture">
+                    <span className="profile-number">8</span>
+                  </div>
+                  <label className="profile-edit-label">
+                    <span className="edit-icon profile-edit-icon">✏️</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleProfilePictureChange}
+                      className="profile-file-input"
+                    />
+                  </label>
                 </div>
                 <span className="profile-label">Profile</span>
               </div>
