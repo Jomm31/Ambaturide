@@ -3,8 +3,8 @@ import "./Css/PassengerHomepage.css";
 
 import homepageImg from "../assets/homepage-pic.png";
 import ambatuLogo from "../assets/ambaturide-logo.png";
-import dateIcon from "../assets/date.png";
-import timeIcon from "../assets/time.png";
+import dateIcon from "../assets/Date.png";
+import timeIcon from "../assets/Time.png";
 import Header from "../Header";
 import Footer from '../Footer'
 // New images
