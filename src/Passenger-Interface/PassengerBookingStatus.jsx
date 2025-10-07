@@ -9,7 +9,25 @@ function PassengerBookingStatus() {
   return (
     <div className="booking-status-page">
       <Header_Login />
-      
+
+      {/* Dev Toggle - Remove in production */}
+      <div style={{ textAlign: 'center', padding: '20px' }}>
+        <button
+          onClick={() => setHasDriver(!hasDriver)}
+          style={{
+            background: '#FCD223',
+            border: 'none',
+            padding: '10px 20px',
+            fontSize: '16px',
+            fontWeight: 'bold',
+            cursor: 'pointer',
+            borderRadius: '4px'
+          }}
+        >
+          Toggle State: {hasDriver ? 'Driver Assigned' : 'Pending'}
+        </button>
+      </div>
+
       <div className="booking-status-container">
         {/* Left Panel */}
         <div className={`left-panel ${hasDriver ? 'has-driver' : 'pending'}`}>
