@@ -1,6 +1,7 @@
 import { useState } from 'react';
+import { useState } from 'react';
 import './Header.css';
-import darkLogo from '../public/ambaturide-darklogo.png';
+import darkLogo from './assets/ambaturide-dark-logo.png';
 
 function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
