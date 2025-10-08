@@ -40,7 +40,7 @@ createRoot(document.getElementById("root")).render(
         <Route path="/PassengerBookingStatus" element={<PassengerBookingStatus/>}/>
         
         {/*Driver Login, Signup*/}
-        <Route path="/DriverSignUp " element={<DriverSignUp />} />
+        <Route path="/DriverSignUp" element={<DriverSignUp />} />
         <Route path="/DriverLogin" element={<DriverLogin />} />
         <Route path="/DriverBooking" element={<DriverBooking />} />
         {/*Driver Dashboard, Sidebar with nested routes*/}

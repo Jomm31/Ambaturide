@@ -1,18 +1,32 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import manDrivingIMG from '../../assets/driving-homepage.jpg';
 import './DriverLogin.css';
 import DriverHeader from '../../Driver-Interface/Header/DriverHeader'
 
 function DriverLogin() {
+  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  const [error, setError] = useState('');
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Handle login logic here
-    console.log('Login attempt:', { email, password, rememberMe });
+    setError('');
+    
+    // Basic validation
+    if (!email || !password) {
+      setError('Please fill in all fields');
+      return;
+    }
+    
+    // TODO: Backend authentication will go here
+    console.log('Driver login attempt:', { email, password, rememberMe });
+    
+    // Temporary: Navigate to dashboard (will be replaced with real auth)
+    navigate('/Dashboard');
   };
 
   return (
@@ -22,9 +36,11 @@ function DriverLogin() {
       <div className="homepage-container">
         <div className="homepage-left">
           <div className="login-header">
-            <h2>Driver Sign in</h2>
-            <p>Sign up to access your account</p>
+            <h2>Driver Sign In</h2>
+            <p>Access your driver dashboard</p>
           </div>
+          
+          {error && <div className="error-message">{error}</div>}
           
           <form className="login-form" onSubmit={handleSubmit}>
             <div className="form-group">
@@ -59,26 +75,6 @@ function DriverLogin() {
                 </button>
               </div>
             </div>
-            <div className="form-group">
-              <label htmlFor="password">Confirm Password</label>
-              <div className="password-input-container">
-                <input 
-                  type={showPassword ? "text" : "password"} 
-                  id="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter your password"
-                  required
-                />
-                <button 
-                  type="button" 
-                  className="password-toggle"
-                  onClick={() => setShowPassword(!showPassword)}
-                >
-                  {showPassword ? "Hide" : "Show"}
-                </button>
-              </div>
-            </div>
             
             <div className="form-options">
               <div className="remember-me">
@@ -93,14 +89,18 @@ function DriverLogin() {
               <a href="#" className="forgot-password">Forgot password?</a>
             </div>
             
-            <button type="submit" className="login-btn">Sign in</button>
+            <button type="submit" className="login-btn">Sign In</button>
             
             <div className="divider">
               <span>or</span>
             </div>
             
-            <button type="button" className="create-account-btn">
-              Login
+            <button 
+              type="button" 
+              className="create-account-btn"
+              onClick={() => navigate('/DriverSignUp')}
+            >
+              Create Driver Account
             </button>
           </form>
         </div>
