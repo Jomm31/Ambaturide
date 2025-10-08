@@ -1,4 +1,4 @@
-/* PassengerLogin.css */
+/* DriverSignUp.css */
 .app-container {
   width: 100%;
   min-height: 100vh;
@@ -23,8 +23,8 @@
 .homepage-container {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  max-width: 1200px;
+  justify-content: center;
+  max-width: 900px;
   width: 100%;
   background: white;
   border-radius: 20px;
@@ -33,23 +33,24 @@
   min-height: 600px;
 }
 
-.homepage-left {
+.form-content {
   flex: 1;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   text-align: left;
   padding: 50px;
-  max-width: 500px;
-}
-
-.login-header {
-  margin-bottom: 40px;
   width: 100%;
 }
 
+.login-header {
+  margin-bottom: 30px;
+  width: 100%;
+  text-align: center;
+}
+
 .login-header h2 {
-  font-size: 2.5rem;
+  font-size: 2.2rem;
   font-weight: 700;
   margin-bottom: 10px;
   color: #000000;
@@ -70,6 +71,19 @@
   gap: 20px;
 }
 
+.form-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+  width: 100%;
+}
+
+.form-column {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
 .form-group {
   display: flex;
   flex-direction: column;
@@ -80,25 +94,55 @@
 .form-group label {
   font-weight: 500;
   color: #000000;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
 }
 
-.form-group input {
-  padding: 14px 16px;
+.form-group input,
+.select-input {
+  padding: 12px 14px;
   border: 1px solid #d1d5db;
   border-radius: 8px;
-  font-size: 1rem;
+  font-size: 0.95rem;
   transition: all 0.3s ease;
   width: 100%;
   box-sizing: border-box;
   background: #ffffff;
   color: #000000;
+  font-family: inherit;
 }
 
-.form-group input:focus {
+.form-group input:focus,
+.select-input:focus {
   outline: none;
   border-color: #000000;
   box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
+}
+
+.select-input {
+  cursor: pointer;
+}
+
+.file-input {
+  padding: 10px 14px;
+  border: 2px dashed #d1d5db;
+  background: #f8f9fa;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0.9rem;
+}
+
+.file-input:hover {
+  border-color: #000000;
+  background: #f1f5f9;
+}
+
+.file-preview {
+  padding: 6px 10px;
+  background: #f1f5f9;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  color: #374151;
+  border-left: 3px solid #000000;
 }
 
 .password-input-container {
@@ -114,47 +158,13 @@
   background: none;
   border: none;
   color: #666;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   cursor: pointer;
-  padding: 5px;
+  padding: 4px;
 }
 
 .password-toggle:hover {
   color: #000000;
-}
-
-.form-options {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin: 10px 0;
-}
-
-.remember-me {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.remember-me input {
-  margin: 0;
-}
-
-.remember-me label {
-  font-size: 0.9rem;
-  color: #000000;
-}
-
-.forgot-password {
-  font-size: 0.9rem;
-  color: #000000;
-  text-decoration: none;
-  font-weight: 500;
-}
-
-.forgot-password:hover {
-  text-decoration: underline;
-  color: #333333;
 }
 
 .login-btn {
@@ -162,12 +172,13 @@
   color: white;
   border: none;
   border-radius: 8px;
-  padding: 16px;
-  font-size: 1.1rem;
+  padding: 14px;
+  font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
   margin-top: 10px;
+  width: 100%;
 }
 
 .login-btn:hover {
@@ -201,11 +212,12 @@
   color: #000000;
   border: 1px solid #000000;
   border-radius: 8px;
-  padding: 16px;
-  font-size: 1.1rem;
+  padding: 14px;
+  font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
+  width: 100%;
 }
 
 .create-account-btn:hover {
@@ -215,85 +227,23 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-.homepage-right {
-  flex: 1;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  padding: 30px;
-  background: #f8f9fa;
-}
-
-.image-container {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
-}
-
-.login-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  margin: 0 10px 0 10px;
-}
-
-.image-overlay {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: linear-gradient(transparent, rgba(0, 0, 0, 0.8));
-  color: white;
-  padding: 40px 30px 30px;
-}
-
-.image-overlay h3 {
-  font-size: 1.8rem;
-  margin: 0 0 10px;
-  font-weight: 600;
-}
-
-.image-overlay p {
-  font-size: 1rem;
-  margin: 0;
-  opacity: 0.9;
-}
-
 /* Responsive Design */
 @media (max-width: 900px) {
   .homepage-container {
-    flex-direction: column;
-    max-width: 500px;
+    max-width: 700px;
   }
   
-  .homepage-left {
+  .form-content {
     padding: 40px 30px;
-    max-width: 100%;
-  }
-  
-  .homepage-right {
-    width: 100%;
-    height: 300px;
-    padding: 20px;
-    background: #f8f9fa;
   }
   
   .login-header h2 {
     font-size: 2rem;
   }
   
-  .login-image {
-    margin: 0 10px 0 10px;
+  .form-columns {
+    grid-template-columns: 1fr;
+    gap: 20px;
   }
 }
 
@@ -302,7 +252,7 @@
     padding: 10px;
   }
   
-  .homepage-left {
+  .form-content {
     padding: 30px 20px;
   }
   
@@ -310,27 +260,13 @@
     font-size: 1.8rem;
   }
   
-  .form-options {
-    flex-direction: column;
-    align-items: flex-start;
+  .form-group input,
+  .select-input {
+    padding: 10px 12px;
+    font-size: 0.9rem;
+  }
+  
+  .form-columns {
     gap: 15px;
-  }
-  
-  .homepage-right {
-    height: 250px;
-    padding: 15px;
-    background: #f8f9fa;
-  }
-  
-  .image-overlay {
-    padding: 30px 20px 20px;
-  }
-  
-  .image-overlay h3 {
-    font-size: 1.5rem;
-  }
-  
-  .login-image {
-    margin: 0 10px 0 10px;
   }
 }
