@@ -11,6 +11,7 @@ import PassengerLogin from "./Login/PassengerLogin/PassengerLogin.jsx"
 import PassengerSignUp from "./Login/PassengerLogin/PassengerSignUp.jsx";
 import DriverLogin from "./Login/DriverLogin/DriverLogin.jsx"
 import Dashboard from "./Driver-Interface/Dashboard.jsx"; 
+import DriverBooking from "./Driver-Interface/DriverBooking.jsx"
 import PassengerProfile from "./Passenger-Interface/PassengerProfile.jsx"
 
 import Passenger_Booking from "./Passenger-Interface/Passenger_Booking.jsx";
@@ -42,7 +43,7 @@ createRoot(document.getElementById("root")).render(
         {/*Driver Login, Signup*/}
         <Route path="/DriverSignUp " element={<DriverSignUp />} />
         <Route path="/DriverLogin" element={<DriverLogin />} />
-
+        <Route path="/DriverBooking" element={<DriverBooking />} />
         {/*Driver Dashboard, Sidebar with nested routes*/}
         <Route path="/Dashboard/*" element={<Dashboard />}>
           <Route index element={<Bookings />} />
