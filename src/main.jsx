@@ -30,8 +30,8 @@ createRoot(document.getElementById("root")).render(
       <Routes>
 
         {/*Passenger Homepage, Login, Signup*/}
-        <Route path="/" element={<LoginHomepage />} />
-        <Route path="/PassengerHomepage" element={<PassengerHomepage />} />
+        <Route path="/" element={<PassengerHomepage />} />
+        <Route path="/LoginHomepage" element={<LoginHomepage />} />
         <Route path="/PassengerLogin" element={<PassengerLogin/>}/>
         <Route path="/PassengerSignUp" element={<PassengerSignUp/>}/>
         <Route path="/Passenger_Booking" element={<Passenger_Booking/>}/>
@@ -50,7 +50,9 @@ createRoot(document.getElementById("root")).render(
           <Route path="earnings" element={<Earnings />} />
           <Route path="reviews" element={<Reviews />} />
         </Route>
-        
+
+
+        {/*Admin*/}
         <Route path="/Admin" element={<Admin />} />
       </Routes>
     </BrowserRouter>

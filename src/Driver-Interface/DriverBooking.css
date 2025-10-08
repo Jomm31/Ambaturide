@@ -126,7 +126,7 @@
 .bookings-list {
   display: flex;
   flex-direction: column;
-  gap: 1px;
+  gap: 10px;
 }
 
 .booking-card {
@@ -219,6 +219,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  margin-right: 10px;
 }
 
 .booking-badge.pending {

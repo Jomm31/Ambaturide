@@ -1,746 +1,464 @@
 /* Css/PassengerBookingStatus.css */
-.booking-status-page {
-  min-height: 100vh;
-  background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)),
-    url('../../assets/Homepage(3).png') center/cover no-repeat fixed;
-
-}
-
 .booking-status-container {
-  display: flex;
-  gap: 0;
-  max-width: 1400px;
-  margin: 1px auto;
-  min-height: calc(100vh - 200px);
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
-  border-radius: 20px;
-  overflow: hidden;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 40px 20px;
+    background: linear-gradient(135deg, #00BCD4 0%, #00838F 100%);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-/* Left Panel */
-.left-panel {
-  flex: 1;
-  max-width: 550px;
-  padding: 10px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  position: relative;
+.page-title {
+    text-align: center;
+    margin-bottom: 30px;
+    color: white;
+    font-size: 2.5rem;
+    font-weight: 700;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
-.left-panel.pending {
-  background: linear-gradient(135deg, #D9D9D9 0%, #C4C4C4 100%);
+.booking-card {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+    max-width: 1200px;
+    width: 100%;
+    min-height: 650px;
 }
 
-.left-panel.has-driver {
-  background: linear-gradient(135deg, #64BC46 0%, #4FA835 100%);
+.left-section {
+    padding: 40px;
+    background: #f5f5f5;
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
 }
 
+/* Pending State */
 .pending-state {
-  text-align: center;
-  width: 100%;
-  animation: fadeInUp 0.6s ease-out;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    gap: 30px;
 }
 
-.status-title {
-  font-family: 'Inter', -apple-system, Roboto, Helvetica, sans-serif;
-  font-size: 36px;
-  font-weight: 700;
-  color: #1E1E1E;
-  margin-bottom: 30px;
-  letter-spacing: -0.5px;
-  line-height: 1.3;
+.wait-title {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #2c3e50;
+    text-align: center;
 }
 
-.status-badge {
-  background: #1E1E1E;
-  color: #FFF;
-  padding: 16px 60px;
-  border-radius: 8px;
-  font-family: 'Inter', -apple-system, Roboto, Helvetica, sans-serif;
-  font-size: 32px;
-  font-weight: 700;
-  letter-spacing: -0.5px;
-  display: inline-block;
-  margin-bottom: 50px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+.status-badge-pending {
+    background: #2c3e50;
+    color: white;
+    padding: 12px 40px;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 1.1rem;
 }
 
-.logo-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  margin-top: 20px;
+.pending-logo {
+    width: 200px;
+    height: auto;
+    object-fit: contain;
 }
 
-.logo-text-ambatu {
-  font-family: 'Inter', -apple-system, Roboto, Helvetica, sans-serif;
-  font-size: 42px;
-  font-weight: 800;
-  color: #1E1E1E;
-  letter-spacing: -1px;
+/* Driver Assigned State */
+.driver-assigned-header {
+    background: linear-gradient(135deg, #00BCD4, #00838F);
+    padding: 15px 25px;
+    margin: -40px -40px 0 -40px;
 }
 
-.logo-text-ride {
-  font-family: 'Inter', -apple-system, Roboto, Helvetica, sans-serif;
-  font-size: 28px;
-  font-weight: 500;
-  color: #1E1E1E;
-  opacity: 0.9;
+.driver-assigned-header .section-title {
+    color: white;
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 700;
 }
 
-/* Driver State */
-.driver-state {
-  width: 100%;
-  animation: slideInLeft 0.6s ease-out;
+.right-section {
+    padding: 40px;
+    background: white;
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
 }
 
-.driver-panel-title {
-  background: linear-gradient(135deg, #1DB6C7 0%, #1AA5B4 100%);
-  padding: 20px;
-  text-align: center;
-  font-family: 'Inter', -apple-system, Roboto, Helvetica, sans-serif;
-  font-size: 32px;
-  font-weight: 700;
-  color: #FFF;
-  margin: -40px -40px 30px -40px;
-  letter-spacing: -0.5px;
-  box-shadow: 0 4px 12px rgba(29, 182, 199, 0.3);
+.section-title {
+    font-size: 1.8rem;
+    margin-bottom: 30px;
+    color: #2c3e50;
+    font-weight: 700;
+    border-bottom: 3px solid #3498db;
+    padding-bottom: 10px;
 }
 
-.driver-card {
-  background: #FFF;
-  padding: 30px;
-  border: 3px solid #1DB6C7;
-  border-radius: 12px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+/* Driver Profile Styles */
+.driver-profile {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 20px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-.driver-photo {
-  width: 140px;
-  height: 140px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #E0E0E0 0%, #C4C4C4 100%);
-  margin: 0 auto 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  border: 4px solid #1DB6C7;
-  box-shadow: 0 6px 20px rgba(29, 182, 199, 0.3);
+.profile-picture {
+    margin-right: 20px;
 }
 
-.driver-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+.driver-img-placeholder {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: #e0e0e0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    flex-shrink: 0;
 }
 
-.driver-name {
-  font-family: 'Inter', -apple-system, Roboto, Helvetica, sans-serif;
-  font-size: 28px;
-  font-weight: 700;
-  color: #1E1E1E;
-  text-align: center;
-  margin-bottom: 15px;
-  letter-spacing: -0.5px;
+.driver-details h3 {
+    margin: 0 0 8px 0;
+    color: #2c3e50;
+    font-size: 1.2rem;
+    font-weight: 700;
 }
 
-.driver-contact {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  margin-bottom: 25px;
-  padding: 12px;
-  background: #F8F9FA;
-  border-radius: 8px;
-  border: 1px solid #E9ECEF;
+.driver-details p {
+    margin: 0;
+    color: #666;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 5px;
 }
 
-.driver-contact svg {
-  width: 24px;
-  height: 30px;
-  flex-shrink: 0;
+/* Vehicle Info Styles */
+.vehicle-info {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-.phone-number {
-  font-family: 'Inter', -apple-system, Roboto, Helvetica, sans-serif;
-  font-size: 20px;
-  font-weight: 600;
-  color: #1E1E1E;
-}
-
-.car-details {
-  display: flex;
-  gap: 25px;
-  margin-bottom: 25px;
-  padding-bottom: 25px;
-  border-bottom: 2px solid #E9ECEF;
-}
-
-.car-section {
-  flex: 1;
-  text-align: center;
-  padding: 15px;
-  background: #F8F9FA;
-  border-radius: 8px;
-  border: 1px solid #E9ECEF;
-}
-
-.car-label {
-  display: block;
-  font-family: 'Inter', -apple-system, Roboto, Helvetica, sans-serif;
-  font-size: 20px;
-  font-weight: 600;
-  color: #1E1E1E;
-  margin-bottom: 12px;
+.vehicle-header h4 {
+    margin: 0 0 20px 0;
+    color: #2c3e50;
+    font-size: 1.3rem;
 }
 
 .car-image {
-  width: 100%;
-  max-width: 200px;
-  height: auto;
-  margin: 10px 0;
-  border-radius: 6px;
+    margin-bottom: 20px;
 }
 
-.car-zoom-icon {
-  margin: 10px 0;
-  opacity: 0.7;
-  transition: opacity 0.3s ease;
+.car-img-placeholder {
+    width: 100%;
+    height: 100px;
+    background: #f5f5f5;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3rem;
+    margin-bottom: 15px;
 }
 
-.car-zoom-icon:hover {
-  opacity: 1;
+.car-details {
+    margin-bottom: 15px;
 }
 
-.car-name {
-  font-family: 'Inter', -apple-system, Roboto, Helvetica, sans-serif;
-  font-size: 20px;
-  font-weight: 700;
-  color: #1E1E1E;
-  margin-top: 10px;
+.detail-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid #ecf0f1;
 }
 
-.plate-section {
-  flex: 1;
-  text-align: center;
-  padding: 15px;
-  background: #F8F9FA;
-  border-radius: 8px;
-  border: 1px solid #E9ECEF;
+.detail-row:last-child {
+    border-bottom: none;
 }
 
-.plate-label {
-  display: block;
-  font-family: 'Inter', -apple-system, Roboto, Helvetica, sans-serif;
-  font-size: 20px;
-  font-weight: 600;
-  color: #1E1E1E;
-  margin-bottom: 12px;
+.label {
+    font-weight: 600;
+    color: #7f8c8d;
 }
 
-.plate-number {
-  background: #FFF;
-  border: 2px solid #1E1E1E;
-  padding: 12px 16px;
-  font-family: 'Inter', -apple-system, Roboto, Helvetica, sans-serif;
-  font-size: 20px;
-  font-weight: 700;
-  color: #1E1E1E;
-  margin-top: 20px;
-  border-radius: 6px;
-  letter-spacing: 1.5px;
+.value {
+    font-weight: 600;
+    color: #2c3e50;
 }
 
-.report-driver-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  background: linear-gradient(135deg, #8F1F1F 0%, #7A1A1A 100%);
-  color: #FFF;
-  border: none;
-  padding: 14px 28px;
-  font-family: 'Inter', -apple-system, Roboto, Helvetica, sans-serif;
-  font-size: 20px;
-  font-weight: 600;
-  cursor: pointer;
-  margin: 0 auto 25px;
-  width: fit-content;
-  border-radius: 8px;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(143, 31, 31, 0.3);
+.status-indicator {
+    text-align: center;
+    margin-top: 15px;
 }
 
-.report-driver-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(143, 31, 31, 0.4);
+.status-badge {
+    padding: 8px 20px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    text-transform: uppercase;
 }
 
-.report-driver-btn svg {
-  width: 32px;
-  height: 32px;
-  flex-shrink: 0;
+.status-badge-active {
+    background: #ff5252;
+    color: white;
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
 }
 
+/* Rating Section */
 .rating-section {
-  margin-top: 20px;
-  padding-top: 20px;
-  border-top: 2px solid #E9ECEF;
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-.rating-title {
-  font-family: 'Inter', -apple-system, Roboto, Helvetica, sans-serif;
-  font-size: 22px;
-  font-weight: 700;
-  color: #1E1E1E;
-  text-align: center;
-  margin-bottom: 15px;
+.rating-section h4 {
+    margin: 0 0 15px 0;
+    color: #2c3e50;
+    font-size: 1.3rem;
 }
 
-.stars {
-  display: flex;
-  justify-content: center;
-  gap: 8px;
-  margin-bottom: 20px;
-  padding-bottom: 20px;
-  border-bottom: 2px solid #E9ECEF;
+.stars-container {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    justify-content: center;
 }
 
-.stars svg {
-  width: 40px;
-  height: 40px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  fill: none;
-  stroke: #FFD700;
+.star-btn {
+    background: none;
+    border: none;
+    font-size: 2rem;
+    color: #ddd;
+    cursor: pointer;
+    transition: all 0.2s;
 }
 
-.stars svg:hover {
-  transform: scale(1.1);
-  fill: #FFD700;
+.star-btn.filled {
+    color: #ffd700;
+}
+
+.star-btn:hover {
+    transform: scale(1.2);
 }
 
 .comments-section {
-  margin-top: 20px;
+    margin-bottom: 20px;
 }
 
-.comments-label {
-  display: block;
-  font-family: 'Inter', -apple-system, Roboto, Helvetica, sans-serif;
-  font-size: 20px;
-  font-weight: 600;
-  color: #1E1E1E;
-  margin-bottom: 12px;
+.comments-section label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #2c3e50;
 }
 
-.comments-textarea {
-  width: 100%;
-  min-height: 100px;
-  padding: 16px;
-  background: #F8F9FA;
-  border: 2px solid #E9ECEF;
-  color: #1E1E1E;
-  font-family: 'Inter', -apple-system, Roboto, Helvetica, sans-serif;
-  font-size: 16px;
-  resize: vertical;
-  border-radius: 8px;
-  transition: all 0.3s ease;
+.comments-input {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    resize: vertical;
+    font-family: inherit;
+    transition: border-color 0.3s;
 }
 
-.comments-textarea:focus {
-  outline: none;
-  border-color: #1DB6C7;
-  background: #FFF;
-  box-shadow: 0 0 0 3px rgba(29, 182, 199, 0.1);
+.comments-input:focus {
+    outline: none;
+    border-color: #3498db;
 }
 
-.comments-textarea::placeholder {
-  color: #6C757D;
-}
 
-/* Right Panel */
-.right-panel {
-  flex: 1;
-  max-width: 850px;
-  background: #FFF;
-  padding: 10px;
-  animation: slideInRight 0.6s ease-out;
-}
-
-.booking-details {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-}
-
+/* Right Section Styles */
 .address-section {
-  margin-bottom: 10px;
-  padding: 20px;
-  background: #F8F9FA;
-  border-radius: 8px;
-  border: 1px solid #E9ECEF;
+    margin-bottom: 30px;
 }
 
-.address-title {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-family: 'Inter', -apple-system, Roboto, Helvetica, sans-serif;
-  font-size: 22px;
-  font-weight: 700;
-  color: #1E1E1E;
-  margin-bottom: 12px;
+.address-group {
+    margin-bottom: 25px;
 }
 
-.location-dot {
-  width: 12px;
-  height: 12px;
-  background: #1DB6C7;
-  border-radius: 50%;
-  display: inline-block;
-  box-shadow: 0 2px 4px rgba(29, 182, 199, 0.3);
+.address-label {
+    font-weight: 600;
+    color: #7f8c8d;
+    margin-bottom: 8px;
+    font-size: 1rem;
 }
 
-.location-square {
-  width: 12px;
-  height: 12px;
-  background: #1DB6C7;
-  display: inline-block;
-  transform: rotate(45deg);
-  box-shadow: 0 2px 4px rgba(29, 182, 199, 0.3);
+.address-value {
+    background: #f8f9fa;
+    padding: 12px 15px;
+    border-radius: 8px;
+    border-left: 3px solid #00BCD4;
+    font-size: 1rem;
+    color: #2c3e50;
 }
 
-.address-text {
-  font-family: 'Inter', -apple-system, Roboto, Helvetica, sans-serif;
-  font-size: 18px;
-  font-weight: 500;
-  color: #495057;
-  margin-left: 24px;
-  line-height: 1.5;
+.trip-details {
+    margin-bottom: 30px;
 }
 
-.address-divider {
-  width: 100%;
-  height: 1px;
-  background: linear-gradient(90deg, transparent 0%, #E9ECEF 50%, transparent 100%);
-  margin: 1px 0;
+.detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
 }
 
-.datetime-vehicle-section {
-  display: flex;
-  gap: 30px;
-    margin: 0;
-  padding: 10px 10px 0 10px;
-  background: #F8F9FA;
-  border-radius: 8px;
-  border: 1px solid #E9ECEF;
-
+.detail-item {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    border-left: 3px solid #00BCD4;
 }
 
-.datetime-group {
-  display: flex;
-  gap: 25px;
-  flex: 2;
+.detail-item.full-width {
+    grid-column: 1 / -1;
 }
 
-.datetime-item {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  flex: 1;
+.detail-label {
+    font-weight: 600;
+    color: #7f8c8d;
+    margin-bottom: 5px;
+    font-size: 0.9rem;
 }
 
-.datetime-label {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-family: 'Inter', -apple-system, Roboto, Helvetica, sans-serif;
-  font-size: 18px;
-  font-weight: 600;
-  color: #1E1E1E;
+.detail-value {
+    font-size: 1.1rem;
+    color: #2c3e50;
+    font-weight: 600;
 }
 
-.datetime-label svg {
-  width: 32px;
-  height: 32px;
-  flex-shrink: 0;
+.payment-section {
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 25px;
 }
 
-.datetime-value {
-  background: #1E1E1E;
-  color: #FFF;
-  padding: 14px 16px;
-  text-align: center;
-  font-family: 'Inter', -apple-system, Roboto, Helvetica, sans-serif;
-  font-size: 18px;
-  font-weight: 600;
-  border-radius: 6px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+.payment-section h3 {
+    margin: 0 0 20px 0;
+    color: #2c3e50;
+    font-size: 1.4rem;
+    font-weight: 700;
 }
 
-.vehicle-section {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  flex: 1;
-  padding: 15px;
-  background: #FFF;
-  border-radius: 8px;
-  margin: 10px;
-  border: 1px solid #E9ECEF;
-}
-
-.vehicle-label {
-  font-family: 'Inter', -apple-system, Roboto, Helvetica, sans-serif;
-  font-size: 18px;
-  font-weight: 600;
-  color: #1E1E1E;
-}
-
-.vehicle-icon {
-  width: 120px;
-  height: 120px;
-  object-fit: contain;
-}
-
-.vehicle-type {
-  font-family: 'Inter', -apple-system, Roboto, Helvetica, sans-serif;
-  font-size: 18px;
-  font-weight: 600;
-  color: #1E1E1E;
-  text-align: center;
-}
-
-.total-amount-section {
-  background: linear-gradient(135deg, #FFF 0%, #F8F9FA 100%);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
-  padding: 10px;
-  margin: 5px 0;
-  border-radius: 12px;
-  border: 1px solid #E9ECEF;
-}
-
-.total-title {
-  font-family: 'Inter', -apple-system, Roboto, Helvetica, sans-serif;
-  font-size: 32px;
-  font-weight: 700;
-  color: #1E1E1E;
-  text-align: center;
-  margin-bottom: 5px;
-  letter-spacing: -0.5px;
+.payment-header h4 {
+    margin: 0 0 20px 0;
+    color: #2c3e50;
+    font-size: 1.3rem;
 }
 
 .amount-breakdown {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+    background: white;
+    border-radius: 10px;
+    padding: 20px;
 }
 
 .breakdown-row {
-  font-family: 'Inter', -apple-system, Roboto, Helvetica, sans-serif;
-  font-size: 18px;
-  font-weight: 500;
-  color: #495057;
-  text-align: center;
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid #ecf0f1;
 }
 
-.breakdown-divider {
-  height: 2px;
-  background: linear-gradient(90deg, transparent 0%, #E9ECEF 20%, #E9ECEF 80%, transparent 100%);
-  margin: 15px 0;
+.breakdown-row:last-child {
+    border-bottom: none;
 }
 
-.total-row {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 20px;
-  margin-top: 5px;
-  padding-top: 5px;
-  border-top: 2px solid #E9ECEF;
+.breakdown-row.total {
+    font-weight: 700;
+    font-size: 1.2rem;
 }
 
-.total-price {
-  font-family: 'Inter', -apple-system, Roboto, Helvetica, sans-serif;
-  font-size: 32px;
-  font-weight: 800;
-  color: #1E1E1E;
-  letter-spacing: -0.5px;
+.total-amount {
+    color: #e74c3c;
 }
 
 .action-buttons {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  margin-top: auto;
+    display: flex;
+    gap: 15px;
+    margin-top: auto;
 }
 
-.cancel-btn,
-.home-btn {
-  padding: 18px 32px;
-  border: none;
-  font-family: 'Inter', -apple-system, Roboto, Helvetica, sans-serif;
-  font-size: 20px;
-  font-weight: 700;
-  cursor: pointer;
-  letter-spacing: -0.5px;
-  transition: all 0.3s ease;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+.btn {
+    padding: 15px;
+    border: none;
+    border-radius: 10px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-align: center;
 }
 
-.cancel-btn {
-  background: linear-gradient(135deg, #FCD223 0%, #F2C60F 100%);
-  color: #1E1E1E;
+.confirm-btn {
+    background: #FFD700;
+    color: #2c3e50;
+    flex: 1;
 }
 
-.cancel-btn:hover {
-  background: linear-gradient(135deg, #F2C60F 0%, #E5BD1F 100%);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(252, 210, 35, 0.4);
+.confirm-btn:hover {
+    background: #FFC700;
+    transform: translateY(-2px);
 }
 
 .home-btn {
-  background: linear-gradient(135deg, #1DB6C7 0%, #1AA5B4 100%);
-  color: #FFF;
+    background: #FFD700;
+    color: #2c3e50;
+    flex: 1;
 }
 
 .home-btn:hover {
-  background: linear-gradient(135deg, #1AA5B4 0%, #1894A1 100%);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(29, 182, 199, 0.4);
+    background: #FFC700;
+    transform: translateY(-2px);
 }
 
-/* Animations */
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+/* Responsive Design */
+@media (max-width: 968px) {
+    .booking-card {
+        grid-template-columns: 1fr;
+    }
+    
+    .detail-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .action-buttons {
+        flex-direction: column;
+    }
 }
 
-@keyframes slideInLeft {
-  from {
-    opacity: 0;
-    transform: translateX(-30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-@keyframes slideInRight {
-  from {
-    opacity: 0;
-    transform: translateX(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-/* Responsive */
-@media (max-width: 1200px) {
-  .booking-status-container {
-    margin: 20px;
-    border-radius: 16px;
-  }
-}
-
-@media (max-width: 1024px) {
-  .booking-status-container {
-    flex-direction: column;
-  }
-
-  .left-panel,
-  .right-panel {
-    max-width: 100%;
-  }
-
-  .datetime-vehicle-section {
-    flex-direction: column;
-  }
-
-  .datetime-group {
-    flex-direction: column;
-  }
-}
-
-@media (max-width: 768px) {
-  .booking-status-container {
-    margin: 15px;
-  }
-
-  .left-panel,
-  .right-panel {
-    padding: 25px;
-  }
-
-  .status-title,
-  .status-badge {
-    font-size: 28px;
-  }
-
-  .driver-name {
-    font-size: 24px;
-  }
-
-  .car-details {
-    flex-direction: column;
-    gap: 20px;
-  }
-
-  .total-title {
-    font-size: 28px;
-  }
-
-  .total-price {
-    font-size: 28px;
-  }
-
-  .cancel-btn,
-  .home-btn {
-    font-size: 18px;
-    padding: 16px 24px;
-  }
-}
-
-@media (max-width: 480px) {
-  .left-panel,
-  .right-panel {
-    padding: 20px;
-  }
-
-  .driver-panel-title {
-    font-size: 24px;
-    margin: -20px -20px 20px -20px;
-  }
-
-  .status-title {
-    font-size: 24px;
-  }
-
-  .status-badge {
-    font-size: 20px;
-    padding: 12px 40px;
-  }
-
-  .logo-text-ambatu {
-    font-size: 32px;
-  }
-
-  .logo-text-ride {
-    font-size: 20px;
-  }
+@media (max-width: 640px) {
+    .booking-status-container {
+        padding: 20px 10px;
+    }
+    
+    .left-section,
+    .right-section {
+        padding: 25px 20px;
+    }
+    
+    .driver-assigned-header {
+        margin: -25px -20px 0 -20px;
+    }
 }
