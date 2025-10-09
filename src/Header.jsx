@@ -1,41 +1,60 @@
-import { useState } from 'react';
-import './Header.css';
-import darkLogo from '../public/ambaturide-darklogo.png';
+import { useEffect, useState } from "react";
+import "./Header.css";
+import darkLogo from "../public/ambaturide-darklogo.png";
+import defaultProfile from "../public/profile-pictures/default.jpg";
 
 function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [user, setUser] = useState(null);
 
-  // close menu when nav link is clicked
-  const handleNavClick = () => setMenuOpen(false);
+  useEffect(() => {
+    const savedUser = localStorage.getItem("user");
+    if (savedUser) {
+      setUser(JSON.parse(savedUser));
+    }
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    setUser(null);
+    window.location.href = "/";
+  };
 
   return (
     <header className="header">
-      {/* Logo + Brand */}
       <div className="header-left">
         <img src={darkLogo} alt="Ambaturide Logo" className="logo" />
         <h1 className="brand"><span>Ambatu</span>RIDE</h1>
       </div>
 
-      {/* Burger / X button */}
       <div
-        className={`burger ${menuOpen ? 'open' : ''}`}
+        className={`burger ${menuOpen ? "open" : ""}`}
         onClick={() => setMenuOpen(!menuOpen)}
-        aria-label="Toggle navigation menu"
       >
-        <span></span>
-        <span></span>
-        <span></span>
+        <span></span><span></span><span></span>
       </div>
 
-      {/* Slide-in Navigation */}
-      <nav className={`header-right ${menuOpen ? 'open' : ''}`}>
-        <a href="#" onClick={handleNavClick}>Book a Ride</a>
-        <a href="#" onClick={handleNavClick}>About Us</a>
-        <a href="#" onClick={handleNavClick}>Help</a>
-        <div className="auth-buttons">
-          <button className="login" onClick={handleNavClick}>LOG-IN</button>
-          <button className="register" onClick={handleNavClick}>REGISTER</button>
-        </div>
+      <nav className={`header-right ${menuOpen ? "open" : ""}`}>
+        <a href="/">Book a Ride</a>
+        <a href="/">About Us</a>
+        <a href="#">Help</a>
+
+        {user ? (
+          <div className="auth-buttons">
+            <img
+              src={user.profilePicture ? `http://localhost:5000${user.profilePicture}` : defaultProfile}
+              alt="Profile"
+              className="profile-pic"
+              onClick={() => window.location.href = "/PassengerProfile"}
+            />
+            <button className="logout" onClick={handleLogout}>Logout</button>
+          </div>
+        ) : (
+          <div className="auth-buttons">
+            <button className="login" onClick={() => window.location.href = "/LoginHomepage"}>LOG-IN</button>
+            <button className="register" onClick={() => window.location.href = "/LoginHomepage"}>REGISTER</button>
+          </div>
+        )}
       </nav>
     </header>
   );

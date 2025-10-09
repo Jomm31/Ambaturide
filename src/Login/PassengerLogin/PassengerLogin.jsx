@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+
+
 import manDrivingIMG from '../../assets/driving-homepage.jpg';
 import './PassengerLogin.css';
 import Header from '../../Header'
@@ -12,22 +14,49 @@ function PassengerLogin() {
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState('');
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    setError('');
+  const handleSubmit = async (e) => {
+  e.preventDefault();
+  setError('');
+
+  if (!email || !password) {
+    setError('Please fill in all fields');
+    return;
+  }
+
+  try {
+    const response = await fetch('http://localhost:5000/api/passenger/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+      credentials: 'include'
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      localStorage.setItem('user', JSON.stringify(data.passenger));
+      navigate('/');
+    }
+
+
     
-    // Basic validation
-    if (!email || !password) {
-      setError('Please fill in all fields');
+    const data = await response.json();
+
+    if (!response.ok) {
+      setError(data.message || 'Login failed');
       return;
     }
-    
-    // TODO: Backend authentication will go here
-    console.log('Login attempt:', { email, password, rememberMe });
-    
-    // Temporary: Navigate to homepage (will be replaced with real auth)
-    navigate('/PassengerHomepage');
-  };
+
+    // Save to local storage (optional)
+    localStorage.setItem('passenger', JSON.stringify(data.passenger));
+
+    console.log('✅ Login success:', data);
+    navigate('/');
+  } catch (err) {
+    console.error('❌ Error:', err);
+    setError('Server error. Please try again later.');
+  }
+};
+
 
   return (
     <>

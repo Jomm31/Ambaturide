@@ -13,32 +13,55 @@ function PassengerSignUp() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    setError('');
-    
-    // Validation
-    if (!email || !password || !confirmPassword) {
-      setError('Please fill in all fields');
-      return;
+  const handleSubmit = async (e) => {
+  e.preventDefault();
+  setError('');
+
+  if (!email || !password || !confirmPassword) {
+    setError('Please fill in all fields');
+    return;
+  }
+
+  if (password !== confirmPassword) {
+    setError('Passwords do not match');
+    return;
+  }
+
+  if (password.length < 6) {
+    setError('Password must be at least 6 characters');
+    return;
+  }
+
+  try {
+    const response = await fetch("http://localhost:5000/api/passenger/signup", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        firstName: "Passenger",
+        lastName: "User",
+        email,
+        password,
+        phoneNumber: "0000000000",
+        address: "Unknown",
+        birthDate: "2000-01-01"
+      }),
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      alert("✅ Sign up successful!");
+      navigate('/PassengerLogin');
+    } else {
+      setError(data.message || "Sign up failed");
     }
-    
-    if (password !== confirmPassword) {
-      setError('Passwords do not match');
-      return;
-    }
-    
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters');
-      return;
-    }
-    
-    // TODO: Backend registration will go here
-    console.log('Sign up attempt:', { email, password });
-    
-    // Temporary: Navigate to login (will be replaced with real auth)
-    navigate('/PassengerLogin');
-  };
+
+  } catch (error) {
+    console.error("Error:", error);
+    setError("Something went wrong. Please try again.");
+  }
+};
+
 
   return (
     <>
