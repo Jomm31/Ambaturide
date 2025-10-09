@@ -8,9 +8,19 @@ import bcrypt from 'bcryptjs';
 import multer from "multer";
 import path from "path";
 import { fileURLToPath } from "url";
+import fs from "fs";
+
+const ensureDir = (dir) => {
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+};
+
+ensureDir(path.join(__dirname, "uploads/driver-license"));
+ensureDir(path.join(__dirname, "uploads/vehicle-images"));
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+const app = express();
 
 const storage = multer.diskStorage({
   destination: path.join(__dirname, "uploads/profile-pictures"),
@@ -33,7 +43,7 @@ app.post("/api/passenger/upload-profile", upload.single("profile"), (req, res) =
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 
-const app = express();
+
 
  
 
@@ -203,6 +213,104 @@ app.get("/", (req, res) => {
 app.use((req, res) => {
   res.status(404).send("❌ Route not found");
 });
+
+
+
+// ✅ Driver Signup Route
+const driverStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    let folder = "uploads/driver-license";
+    if (file.fieldname === "vehicleImage") {
+      folder = "uploads/vehicle-images";
+    }
+    cb(null, path.join(__dirname, folder));
+  },
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + path.extname(file.originalname));
+  }
+});
+
+const driverUpload = multer({ storage: driverStorage });
+
+app.post("/api/driver/signup", driverUpload.fields([
+  { name: "licenseImage", maxCount: 1 },
+  { name: "vehicleImage", maxCount: 1 }
+]), async (req, res) => {
+  try {
+    const {
+      firstName,
+      lastName,
+      email,
+      password,
+      phoneNumber,
+      address,
+      licenseNumber,
+      vehicleType,
+      plateNumber,
+      vehicleBrand
+    } = req.body;
+
+    // Required validation
+    if (!email || !password || !licenseNumber || !vehicleType || !plateNumber) {
+      return res.status(400).json({ message: "Please fill in all required fields." });
+    }
+
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const licenseImagePath = req.files?.licenseImage
+      ? `/uploads/driver-license/${req.files.licenseImage[0].filename}`
+      : null;
+
+    const vehicleImagePath = req.files?.vehicleImage
+      ? `/uploads/vehicle-images/${req.files.vehicleImage[0].filename}`
+      : null;
+
+    const sql = `
+      INSERT INTO drivers 
+      (FirstName, LastName, Email, Password, PhoneNumber, Address, 
+      LicenseNumber, LicenseImage, VehicleType, PlateNumber, VehicleBrand, VehiclePicture, Status)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')
+    `;
+
+    db.query(
+      sql,
+      [
+        firstName || "Driver",
+        lastName || "User",
+        email,
+        hashedPassword,
+        phoneNumber || "",
+        address || "",
+        licenseNumber,
+        licenseImagePath,
+        vehicleType,
+        plateNumber,
+        vehicleBrand || "",
+        vehicleImagePath
+      ],
+      (err, result) => {
+        if (err) {
+          console.error("❌ DB Error:", err);
+          if (err.code === "ER_DUP_ENTRY") {
+            return res.status(409).json({ message: "Email already registered" });
+          }
+          return res.status(500).json({ message: "Database error" });
+        }
+
+        res.status(201).json({
+          success: true,
+          message: "Driver registered successfully!",
+          driverID: result.insertId
+        });
+      }
+    );
+  } catch (error) {
+    console.error("❌ Error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 
 
 // Start server

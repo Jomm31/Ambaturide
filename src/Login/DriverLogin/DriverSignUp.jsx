@@ -41,48 +41,60 @@ function DriverSignUp() {
     }
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    setError('');
-    
-    // Validation
-    const { email, password, confirmPassword, licenseNumber, vehicleType, vehiclePlate } = formData;
-    
-    if (!email || !password || !confirmPassword || !licenseNumber || !vehicleType || !vehiclePlate) {
-      setError('Please fill in all fields');
-      return;
-    }
-    
-    if (!licenseImage) {
-      setError('Please upload your driver\'s license image');
+  const handleSubmit = async (e) => {
+  e.preventDefault();
+  setError('');
+
+  const { email, password, confirmPassword, licenseNumber, vehicleType, vehiclePlate } = formData;
+
+  if (!email || !password || !confirmPassword || !licenseNumber || !vehicleType || !vehiclePlate) {
+    setError('Please fill in all fields');
+    return;
+  }
+
+  if (password !== confirmPassword) {
+    setError('Passwords do not match');
+    return;
+  }
+
+  if (!licenseImage || !vehicleImage) {
+    setError('Please upload both images');
+    return;
+  }
+
+  try {
+    const data = new FormData();
+    data.append("firstName", "Driver");
+    data.append("lastName", "User");
+    data.append("email", formData.email);
+    data.append("password", formData.password);
+    data.append("licenseNumber", formData.licenseNumber);
+    data.append("vehicleType", formData.vehicleType);
+    data.append("plateNumber", formData.vehiclePlate);
+    data.append("licenseImage", licenseImage);
+    data.append("vehicleImage", vehicleImage);
+
+    const res = await fetch("http://localhost:5000/api/driver/signup", {
+      method: "POST",
+      body: data
+    });
+
+    const result = await res.json();
+
+    if (!res.ok) {
+      setError(result.message || "Failed to register driver");
       return;
     }
 
-    if (!vehicleImage) {
-      setError('Please upload your vehicle image');
-      return;
-    }
-    
-    if (password !== confirmPassword) {
-      setError('Passwords do not match');
-      return;
-    }
-    
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters');
-      return;
-    }
-    
-    // TODO: Backend registration will go here
-    console.log('Driver sign up attempt:', { 
-      ...formData, 
-      licenseImage, 
-      vehicleImage 
-    });
-    
-    // Temporary: Navigate to login (will be replaced with real auth)
-    navigate('/DriverLogin');
-  };
+    alert("✅ Driver registered successfully!");
+    navigate("/DriverLogin");
+
+  } catch (err) {
+    console.error(err);
+    setError("Server error occurred");
+  }
+};
+
 
   return (
     <>
