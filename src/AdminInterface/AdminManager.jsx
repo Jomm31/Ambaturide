@@ -1,7 +1,5 @@
 import { useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { checkDB, describeTable, getDB, selectAllUsers } from './database.js';
-import { UsersPanel, TransactionsPanel } from './AdminPanel.jsx';
 
 function AdminManager() {
     useEffect(() => {
@@ -18,13 +16,12 @@ function AdminManager() {
         <>
             <div className='card'>
                 <ul>
-                    <li onClick={() => selectAllUsers('ambaturide')}>Select All</li>
-                    <li onClick={() => checkDB('ambaturide_db')}>Test Database</li>
-                    <li onClick={() => TransactionsPanel()}>Transactions Table</li>
-                    <li onClick={() => navigate('/Admin')}>Transactions List</li>
+                    <li onClick={() => navigate('/Admin')}>Users List</li>
                     <li onClick={() => navigate('/Admin')}>Drivers List</li>
                     <li onClick={() => navigate('/Admin')}>Riders List</li>
+                    <li onClick={() => navigate('/Admin')}>Transactions List</li>
                     <li onClick={() => navigate('/Admin')}>Reports List</li>
+                    <li onClick={() => navigate('/Admin')}>Bookings List</li>
                     <li onClick={() => navigate('/')}>Exit</li>
                     </ul>
             </div>
