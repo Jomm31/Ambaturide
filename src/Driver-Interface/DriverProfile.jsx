@@ -1,27 +1,84 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "./DriverProfile.css";
-import DriverHeader from '../../src/DriverHeader.jsx'
+import DriverHeader from '../../src/DriverHeader.jsx';
+import axios from "axios";
 
 function DriverProfile() {
   const [activeSection, setActiveSection] = useState("profile");
   const [editingField, setEditingField] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState({
-    lastName: "Tingson",
-    firstName: "Carlos John",
-    gender: "Male",
-    birthdate: "2004-12-25",
+    lastName: "",
+    firstName: "",
+    gender: "",
+    birthdate: "",
     contactNo: "",
     email: "",
     currentPassword: "",
     newPassword: "",
     confirmPassword: "",
-    carBrand: "Toyota",
-    carModel: "Vios",
-    carColor: "White",
-    plateNumber: "ABC123"
+    carBrand: "",
+    carModel: "",
+    carColor: "",
+    plateNumber: "",
+    profilePicture: ""
   });
 
   const [tempData, setTempData] = useState({ ...formData });
+
+  // Load driver data on component mount
+  useEffect(() => {
+    const loadDriverData = async () => {
+      try {
+        const savedDriver = localStorage.getItem("driver");
+        if (savedDriver) {
+          const driverData = JSON.parse(savedDriver);
+          const driverId = driverData.DriverID;
+          
+          // Fetch full driver profile from backend
+          const response = await axios.get(`http://localhost:5000/api/driver/profile/${driverId}`, {
+            withCredentials: true
+          });
+          
+          const fullData = response.data;
+          setFormData({
+            firstName: fullData.FirstName || "",
+            lastName: fullData.LastName || "",
+            gender: fullData.Gender || "",
+            birthdate: fullData.BirthDate || "",
+            contactNo: fullData.PhoneNumber || "",
+            email: fullData.Email || "",
+            carBrand: fullData.VehicleBrand || "",
+            carModel: fullData.VehicleType || "",
+            carColor: "", // You might need to add this field to your database
+            plateNumber: fullData.PlateNumber || "",
+            profilePicture: fullData.ProfilePicture || "",
+            currentPassword: "",
+            newPassword: "",
+            confirmPassword: ""
+          });
+        }
+      } catch (error) {
+        console.error("Error loading driver data:", error);
+        // Fallback to localStorage data
+        const savedDriver = localStorage.getItem("driver");
+        if (savedDriver) {
+          const driverData = JSON.parse(savedDriver);
+          setFormData(prev => ({
+            ...prev,
+            firstName: driverData.FirstName || "",
+            lastName: driverData.LastName || "",
+            email: driverData.Email || "",
+            profilePicture: driverData.ProfilePicture || ""
+          }));
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadDriverData();
+  }, []);
 
   const handleInputChange = (e) => {
     setFormData({
@@ -42,9 +99,53 @@ function DriverProfile() {
     setTempData({ ...formData });
   };
 
-  const saveEdit = (fieldName) => {
-    setFormData({ ...tempData });
-    setEditingField(null);
+  const saveEdit = async (fieldName) => {
+    try {
+      const savedDriver = JSON.parse(localStorage.getItem("driver"));
+      const driverId = savedDriver?.DriverID;
+
+      if (!driverId) {
+        alert("No Driver ID found. Please log in again.");
+        return;
+      }
+
+      // Update local UI first
+      setFormData({ ...tempData });
+      setEditingField(null);
+
+      // Send update request to backend
+      const response = await axios.put(
+        `http://localhost:5000/api/driver/update/${driverId}`,
+        {
+          firstName: tempData.firstName,
+          lastName: tempData.lastName,
+          gender: tempData.gender,
+          birthdate: tempData.birthdate,
+        },
+        { withCredentials: true }
+      );
+
+      if (response.data.success) {
+        alert("✅ Profile updated successfully!");
+        // Update both localStorage items
+        const updatedDriver = {
+          ...savedDriver,
+          FirstName: tempData.firstName,
+          LastName: tempData.lastName,
+          Gender: tempData.gender,
+          BirthDate: tempData.birthdate,
+        };
+        
+        localStorage.setItem("driver", JSON.stringify(updatedDriver));
+        localStorage.setItem("user", JSON.stringify(updatedDriver));
+        window.dispatchEvent(new Event('userUpdated'));
+      } else {
+        alert("⚠️ Failed to update profile.");
+      }
+    } catch (error) {
+      console.error("❌ Error updating profile:", error);
+      alert("An error occurred while saving changes.");
+    }
   };
 
   const cancelEdit = () => {
@@ -52,25 +153,212 @@ function DriverProfile() {
     setTempData({ ...formData });
   };
 
-  const handleSaveChanges = (e) => {
+  const handleSaveChanges = async (e) => {
     e.preventDefault();
-    setActiveSection("success");
+    try {
+      const savedDriver = JSON.parse(localStorage.getItem("driver"));
+      const driverId = savedDriver?.DriverID;
+
+      if (!driverId) {
+        alert("No Driver ID found. Please log in again.");
+        return;
+      }
+
+      const response = await axios.put(
+        `http://localhost:5000/api/driver/update-contact/${driverId}`,
+        {
+          contactNo: formData.contactNo,
+          email: formData.email,
+        },
+        { withCredentials: true }
+      );
+
+      if (response.data.success) {
+        alert("✅ Contact info updated!");
+        // Update both localStorage items
+        const updatedDriver = {
+          ...savedDriver,
+          Email: formData.email,
+          PhoneNumber: formData.contactNo,
+        };
+        
+        localStorage.setItem("driver", JSON.stringify(updatedDriver));
+        localStorage.setItem("user", JSON.stringify(updatedDriver));
+        window.dispatchEvent(new Event('userUpdated'));
+        
+        setActiveSection("success");
+      } else {
+        alert("⚠️ Failed to update info");
+      }
+    } catch (error) {
+      console.error("❌ Error updating contact info:", error);
+      alert("Server error while saving contact info");
+    }
   };
 
-  const handlePasswordChange = (e) => {
+  const handlePasswordChange = async (e) => {
     e.preventDefault();
-    setActiveSection("passwordSuccess");
+
+    if (formData.newPassword !== formData.confirmPassword) {
+      alert("❌ New password and confirm password do not match");
+      return;
+    }
+
+    try {
+      const savedDriver = JSON.parse(localStorage.getItem("driver"));
+      const driverId = savedDriver?.DriverID;
+
+      if (!driverId) {
+        alert("No Driver ID found. Please log in again.");
+        return;
+      }
+
+      const response = await axios.put(
+        `http://localhost:5000/api/driver/change-password/${driverId}`,
+        {
+          oldPassword: formData.currentPassword,
+          newPassword: formData.newPassword,
+        },
+        { withCredentials: true }
+      );
+
+      if (response.data.success) {
+        alert("✅ Password changed successfully!");
+        setFormData((prev) => ({
+          ...prev,
+          currentPassword: "",
+          newPassword: "",
+          confirmPassword: "",
+        }));
+        setActiveSection("passwordSuccess");
+      } else {
+        alert(`⚠️ ${response.data.message}`);
+      }
+    } catch (error) {
+      console.error("❌ Error changing password:", error);
+      alert("Server error while changing password");
+    }
   };
 
-  const handleCarInfoChange = (e) => {
+  const handleCarInfoChange = async (e) => {
     e.preventDefault();
-    setActiveSection("carSuccess");
+    try {
+      const savedDriver = JSON.parse(localStorage.getItem("driver"));
+      const driverId = savedDriver?.DriverID;
+
+      if (!driverId) {
+        alert("No Driver ID found. Please log in again.");
+        return;
+      }
+
+      const response = await axios.put(
+        `http://localhost:5000/api/driver/update-vehicle/${driverId}`,
+        {
+          vehicleBrand: formData.carBrand,
+          vehicleType: formData.carModel,
+          plateNumber: formData.plateNumber,
+          // Add carColor if you have it in your database
+        },
+        { withCredentials: true }
+      );
+
+      if (response.data.success) {
+        alert("✅ Car information updated!");
+        // Update localStorage
+        const updatedDriver = {
+          ...savedDriver,
+          VehicleBrand: formData.carBrand,
+          VehicleType: formData.carModel,
+          PlateNumber: formData.plateNumber,
+        };
+        
+        localStorage.setItem("driver", JSON.stringify(updatedDriver));
+        localStorage.setItem("user", JSON.stringify(updatedDriver));
+        window.dispatchEvent(new Event('userUpdated'));
+        
+        setActiveSection("carSuccess");
+      } else {
+        alert("⚠️ Failed to update car info");
+      }
+    } catch (error) {
+      console.error("❌ Error updating car info:", error);
+      alert("Server error while updating car information");
+    }
   };
 
-  const handleProfilePictureChange = (e) => {
-    // Handle profile picture upload logic here
-    console.log("Profile picture changed");
+  const handleProfilePictureChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Validate file type and size
+    if (!file.type.startsWith('image/')) {
+      alert('Please select an image file');
+      return;
+    }
+    
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Image size should be less than 5MB');
+      return;
+    }
+
+    try {
+      const savedDriver = JSON.parse(localStorage.getItem("driver"));
+      const driverId = savedDriver?.DriverID;
+      
+      if (!driverId) {
+        alert("No Driver ID found. Please log in again.");
+        return;
+      }
+
+      const uploadFormData = new FormData();
+      uploadFormData.append("profile", file);
+
+      const response = await axios.post(
+        `http://localhost:5000/api/driver/profile-picture/${driverId}`,
+        uploadFormData,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+          withCredentials: true,
+        }
+      );
+
+      if (response.data.success) {
+        alert("✅ Profile picture updated!");
+        const newImagePath = response.data.imagePath;
+        
+        // Update UI state
+        setFormData((prev) => ({
+          ...prev,
+          profilePicture: newImagePath
+        }));
+
+        // Update both localStorage items
+        const updatedDriver = {
+          ...savedDriver,
+          ProfilePicture: newImagePath,
+        };
+        
+        localStorage.setItem("driver", JSON.stringify(updatedDriver));
+        localStorage.setItem("user", JSON.stringify(updatedDriver));
+        window.dispatchEvent(new Event('userUpdated'));
+        
+        // Force refresh the image
+        setTimeout(() => {
+          setFormData((prev) => ({
+            ...prev,
+            profilePicture: `${newImagePath}?t=${Date.now()}`
+          }));
+        }, 100);
+      }
+    } catch (error) {
+      console.error("❌ Error uploading profile picture:", error);
+      alert("Failed to upload profile picture. Please try again.");
+    }
   };
+
+  if (loading) {
+    return <div className="profile-container">Loading profile...</div>;
+  }
 
   return (
     <>
@@ -109,7 +397,7 @@ function DriverProfile() {
                       </div>
                     ) : (
                       <>
-                        <span className="info-value">{formData.lastName}</span>
+                        <span className="info-value">{formData.lastName || "N/A"}</span>
                         <span className="edit-icon" onClick={() => startEditing('lastName')}>✏️</span>
                       </>
                     )}
@@ -136,7 +424,7 @@ function DriverProfile() {
                       </div>
                     ) : (
                       <>
-                        <span className="info-value">{formData.firstName}</span>
+                        <span className="info-value">{formData.firstName || "N/A"}</span>
                         <span className="edit-icon" onClick={() => startEditing('firstName')}>✏️</span>
                       </>
                     )}
@@ -155,6 +443,7 @@ function DriverProfile() {
                           onChange={handleTempChange}
                           name="gender"
                         >
+                          <option value="">Select Gender</option>
                           <option value="Male">Male</option>
                           <option value="Female">Female</option>
                           <option value="Other">Other</option>
@@ -166,7 +455,7 @@ function DriverProfile() {
                       </div>
                     ) : (
                       <>
-                        <span className="gender-badge">{formData.gender}</span>
+                        <span className="gender-badge">{formData.gender || "N/A"}</span>
                         <span className="edit-icon" onClick={() => startEditing('gender')}>✏️</span>
                       </>
                     )}
@@ -195,11 +484,11 @@ function DriverProfile() {
                       <>
                         <span className="birthdate-value">
                           <span className="calendar-icon">📅</span>
-                          {new Date(formData.birthdate).toLocaleDateString('en-US', {
+                          {formData.birthdate ? new Date(formData.birthdate).toLocaleDateString('en-US', {
                             month: 'short',
                             day: 'numeric',
                             year: 'numeric'
-                          })}
+                          }) : "N/A"}
                         </span>
                         <span className="edit-icon" onClick={() => startEditing('birthdate')}>✏️</span>
                       </>
@@ -211,7 +500,23 @@ function DriverProfile() {
               <div className="profile-picture-section">
                 <div className="profile-picture-container">
                   <div className="profile-picture">
-                    <span className="profile-number">8</span>
+                    {formData.profilePicture ? (
+                      <img
+                        src={`http://localhost:5000${formData.profilePicture}?t=${Date.now()}`}
+                        alt="Profile"
+                        className="profile-img"
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                          e.target.nextSibling.style.display = 'block';
+                        }}
+                      />
+                    ) : null}
+                    <span 
+                      className="profile-number"
+                      style={{ display: formData.profilePicture ? 'none' : 'block' }}
+                    >
+                      {formData.firstName ? formData.firstName.charAt(0) : 'D'}
+                    </span>
                   </div>
                   <label className="profile-edit-label">
                     <span className="edit-icon profile-edit-icon">✏️</span>
@@ -227,6 +532,7 @@ function DriverProfile() {
               </div>
             </div>
 
+            {/* Rest of your JSX remains the same, just update the car info section to use the new functions */}
             {/* Main Content - Three Columns */}
             <div className="main-content">
               {/* Privacy Panel - Left */}
@@ -295,7 +601,7 @@ function DriverProfile() {
                       </div>
                     ) : (
                       <>
-                        <span className="info-value">{formData.carBrand}</span>
+                        <span className="info-value">{formData.carBrand || "N/A"}</span>
                         <span className="edit-icon" onClick={() => startEditing('carBrand')}>✏️</span>
                       </>
                     )}
@@ -321,7 +627,7 @@ function DriverProfile() {
                       </div>
                     ) : (
                       <>
-                        <span className="info-value">{formData.carModel}</span>
+                        <span className="info-value">{formData.carModel || "N/A"}</span>
                         <span className="edit-icon" onClick={() => startEditing('carModel')}>✏️</span>
                       </>
                     )}
@@ -347,7 +653,7 @@ function DriverProfile() {
                       </div>
                     ) : (
                       <>
-                        <span className="info-value">{formData.carColor}</span>
+                        <span className="info-value">{formData.carColor || "N/A"}</span>
                         <span className="edit-icon" onClick={() => startEditing('carColor')}>✏️</span>
                       </>
                     )}
@@ -373,7 +679,7 @@ function DriverProfile() {
                       </div>
                     ) : (
                       <>
-                        <span className="info-value">{formData.plateNumber}</span>
+                        <span className="info-value">{formData.plateNumber || "N/A"}</span>
                         <span className="edit-icon" onClick={() => startEditing('plateNumber')}>✏️</span>
                       </>
                     )}
@@ -433,7 +739,7 @@ function DriverProfile() {
           </div>
         )}
 
-        {/* Success Modals */}
+        {/* Success Modals (same as before) */}
         {activeSection === "success" && (
           <div className="modal-overlay">
             <div className="success-modal">

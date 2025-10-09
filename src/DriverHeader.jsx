@@ -8,16 +8,64 @@ function DriverHeader() {
   const [user, setUser] = useState(null);
 
   useEffect(() => {
-    const savedUser = localStorage.getItem("user");
-    if (savedUser) {
-      setUser(JSON.parse(savedUser));
-    }
+    const updateUserFromStorage = () => {
+      // Try to get user from 'user' localStorage first, then fallback to 'driver'
+      const savedUser = localStorage.getItem("user");
+      const savedDriver = localStorage.getItem("driver");
+      
+      if (savedUser) {
+        setUser(JSON.parse(savedUser));
+      } else if (savedDriver) {
+        // If driver exists but user doesn't, sync them
+        const driverData = JSON.parse(savedDriver);
+        setUser(driverData);
+        localStorage.setItem("user", JSON.stringify(driverData));
+      }
+    };
+
+    // Initial load
+    updateUserFromStorage();
+
+    // Listen for storage changes (when profile picture is updated in another tab/component)
+    const handleStorageChange = (e) => {
+      if (e.key === "user" || e.key === "driver") {
+        updateUserFromStorage();
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Custom event listener for same-tab updates
+    const handleUserUpdate = () => {
+      updateUserFromStorage();
+    };
+    
+    window.addEventListener('userUpdated', handleUserUpdate);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('userUpdated', handleUserUpdate);
+    };
   }, []);
 
   const handleLogout = () => {
     localStorage.removeItem("user");
+    localStorage.removeItem("driver");
     setUser(null);
     window.location.href = "/LoginHomepage";
+  };
+
+  // Function to get profile picture URL with cache busting
+  const getProfilePictureUrl = (profilePicture) => {
+    if (!profilePicture) return defaultProfile;
+    
+    // If it's already a full URL or data URL, return as is
+    if (profilePicture.startsWith('http') || profilePicture.startsWith('data:')) {
+      return profilePicture;
+    }
+    
+    // If it's a path, construct the full URL with cache busting
+    return `http://localhost:5000${profilePicture}?t=${Date.now()}`;
   };
 
   return (
@@ -47,14 +95,13 @@ function DriverHeader() {
         {user ? (
           <div className="auth-buttons">
             <img
-              src={
-                user.profilePicture
-                  ? `http://localhost:5000${user.profilePicture}`
-                  : defaultProfile
-              }
+              src={getProfilePictureUrl(user.ProfilePicture)}
               alt="Profile"
               className="profile-pic"
               onClick={() => window.location.href = "/DriverProfile"}
+              onError={(e) => {
+                e.target.src = defaultProfile;
+              }}
             />
             <button className="logout" onClick={handleLogout}>
               Logout

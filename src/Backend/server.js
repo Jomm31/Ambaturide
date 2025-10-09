@@ -335,7 +335,22 @@ app.post("/api/driver/login", async (req, res) => {
     if (!isMatch)
       return res.status(401).json({ message: "Invalid credentials" });
 
-    res.json({ message: "Login successful", driver });
+    // Return driver data in consistent format
+    res.json({ 
+      message: "Login successful", 
+      driver: {
+        DriverID: driver.DriverID,
+        FirstName: driver.FirstName,
+        LastName: driver.LastName,
+        Email: driver.Email,
+        PhoneNumber: driver.PhoneNumber,
+        ProfilePicture: driver.ProfilePicture,
+        VehicleBrand: driver.VehicleBrand,
+        VehicleType: driver.VehicleType,
+        PlateNumber: driver.PlateNumber,
+        Status: driver.Status
+      }
+    });
   });
 });
 app.get("/api/driver/login", (req, res) => {
@@ -487,6 +502,161 @@ app.put("/api/passenger/change-password/:id", async (req, res) => {
 });
 
 
+// ✅ Get full driver profile by ID
+app.get("/api/driver/profile/:id", (req, res) => {
+  const driverId = req.params.id;
+
+  const sql = `
+    SELECT DriverID, FirstName, LastName, Email, PhoneNumber, Address, BirthDate, Gender, ProfilePicture, 
+           VehicleBrand, VehicleType, PlateNumber, Status
+    FROM drivers
+    WHERE DriverID = ?
+  `;
+
+  db.query(sql, [driverId], (err, results) => {
+    if (err) {
+      console.error("❌ Database error:", err);
+      return res.status(500).json({ message: "Database error" });
+    }
+
+    if (results.length === 0) {
+      return res.status(404).json({ message: "Driver not found" });
+    }
+
+    res.json(results[0]);
+  });
+});
+
+// ✅ Driver Profile Picture Upload & Update
+app.post("/api/driver/profile-picture/:id", profileUpload.single("profile"), (req, res) => {
+  const driverId = req.params.id;
+
+  if (!req.file) {
+    return res.status(400).json({ message: "No file uploaded" });
+  }
+
+  const imagePath = `/uploads/profile-pictures/${req.file.filename}`;
+
+  const sql = "UPDATE drivers SET ProfilePicture = ? WHERE DriverID = ?";
+  db.query(sql, [imagePath, driverId], (err, result) => {
+    if (err) {
+      console.error("❌ Database error:", err);
+      return res.status(500).json({ message: "Database error" });
+    }
+
+    res.json({ success: true, imagePath, message: "Profile picture updated successfully" });
+  });
+});
+
+// ✅ Update Driver Info (Name, Gender, Birthdate, etc.)
+app.put("/api/driver/update/:id", (req, res) => {
+  const driverId = req.params.id;
+  const { firstName, lastName, gender, birthdate } = req.body;
+
+  const sql = `
+    UPDATE drivers 
+    SET FirstName = ?, LastName = ?, Gender = ?, BirthDate = ?
+    WHERE DriverID = ?
+  `;
+
+  db.query(sql, [firstName, lastName, gender, birthdate, driverId], (err, result) => {
+    if (err) {
+      console.error("❌ Database error:", err);
+      return res.status(500).json({ message: "Database error" });
+    }
+
+    res.json({ success: true, message: "Profile updated successfully!" });
+  });
+});
+
+// ✅ Update Driver Contact and Email
+app.put("/api/driver/update-contact/:id", (req, res) => {
+  const driverId = req.params.id;
+  const { contactNo, email } = req.body;
+
+  if (!contactNo || !email) {
+    return res.status(400).json({ success: false, message: "Contact number and email are required" });
+  }
+
+  const sql = `
+    UPDATE drivers 
+    SET PhoneNumber = ?, Email = ?
+    WHERE DriverID = ?
+  `;
+
+  db.query(sql, [contactNo, email, driverId], (err, result) => {
+    if (err) {
+      console.error("❌ Database error:", err);
+      return res.status(500).json({ success: false, message: "Database error" });
+    }
+
+    res.json({ success: true, message: "Contact info updated successfully!" });
+  });
+});
+
+// ✅ Update Driver Vehicle Information
+app.put("/api/driver/update-vehicle/:id", (req, res) => {
+  const driverId = req.params.id;
+  const { vehicleBrand, vehicleType, plateNumber } = req.body;
+
+  const sql = `
+    UPDATE drivers 
+    SET VehicleBrand = ?, VehicleType = ?, PlateNumber = ?
+    WHERE DriverID = ?
+  `;
+
+  db.query(sql, [vehicleBrand, vehicleType, plateNumber, driverId], (err, result) => {
+    if (err) {
+      console.error("❌ Database error:", err);
+      return res.status(500).json({ success: false, message: "Database error" });
+    }
+
+    res.json({ success: true, message: "Vehicle information updated successfully!" });
+  });
+});
+
+// ✅ Change Driver Password
+app.put("/api/driver/change-password/:id", async (req, res) => {
+  const driverId = req.params.id;
+  const { oldPassword, newPassword } = req.body;
+
+  if (!oldPassword || !newPassword) {
+    return res.status(400).json({ success: false, message: "Both old and new passwords are required" });
+  }
+
+  // Get the current password hash from the DB
+  const getSql = `SELECT Password FROM drivers WHERE DriverID = ?`;
+  db.query(getSql, [driverId], async (err, results) => {
+    if (err) {
+      console.error("❌ Database error:", err);
+      return res.status(500).json({ success: false, message: "Database error" });
+    }
+
+    if (results.length === 0) {
+      return res.status(404).json({ success: false, message: "Driver not found" });
+    }
+
+    const storedHash = results[0].Password;
+    const isMatch = await bcrypt.compare(oldPassword, storedHash);
+
+    if (!isMatch) {
+      return res.status(401).json({ success: false, message: "Old password is incorrect" });
+    }
+
+    // Hash the new password
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    const updateSql = `UPDATE drivers SET Password = ? WHERE DriverID = ?`;
+
+    db.query(updateSql, [hashedPassword, driverId], (err) => {
+      if (err) {
+        console.error("❌ Database error:", err);
+        return res.status(500).json({ success: false, message: "Failed to update password" });
+      }
+
+      res.json({ success: true, message: "Password changed successfully!" });
+    });
+  });
+});
 
 // Handle all other undefined routes safely
 app.use((req, res) => {

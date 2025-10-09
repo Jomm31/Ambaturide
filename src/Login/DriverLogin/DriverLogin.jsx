@@ -37,7 +37,11 @@ function DriverLogin() {
       }
 
       // ✅ Save logged-in driver to localStorage
-      localStorage.setItem('user', JSON.stringify(data.driver));
+      // Use data.driver instead of undefined driverData variable
+      const driverData = data.driver || data; // Handle both response formats
+      
+      localStorage.setItem('user', JSON.stringify(driverData));
+      localStorage.setItem('driver', JSON.stringify(driverData));
 
       console.log('✅ Driver login success:', data);
 

@@ -42,59 +42,64 @@ function DriverSignUp() {
   };
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
-  setError('');
+    e.preventDefault();
+    setError('');
 
-  const { email, password, confirmPassword, licenseNumber, vehicleType, vehiclePlate } = formData;
+    const { email, password, confirmPassword, licenseNumber, vehicleType, vehiclePlate } = formData;
 
-  if (!email || !password || !confirmPassword || !licenseNumber || !vehicleType || !vehiclePlate) {
-    setError('Please fill in all fields');
-    return;
-  }
-
-  if (password !== confirmPassword) {
-    setError('Passwords do not match');
-    return;
-  }
-
-  if (!licenseImage || !vehicleImage) {
-    setError('Please upload both images');
-    return;
-  }
-
-  try {
-    const data = new FormData();
-    data.append("firstName", "Driver");
-    data.append("lastName", "User");
-    data.append("email", formData.email);
-    data.append("password", formData.password);
-    data.append("licenseNumber", formData.licenseNumber);
-    data.append("vehicleType", formData.vehicleType);
-    data.append("plateNumber", formData.vehiclePlate);
-    data.append("licenseImage", licenseImage);
-    data.append("vehicleImage", vehicleImage);
-
-    const res = await fetch("http://localhost:5000/api/driver/signup", {
-      method: "POST",
-      body: data
-    });
-
-    const result = await res.json();
-
-    if (!res.ok) {
-      setError(result.message || "Failed to register driver");
+    if (!email || !password || !confirmPassword || !licenseNumber || !vehicleType || !vehiclePlate) {
+      setError('Please fill in all fields');
       return;
     }
 
-    alert("✅ Driver registered successfully!");
-    navigate("/DriverLogin");
+    if (password !== confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
 
-  } catch (err) {
-    console.error(err);
-    setError("Server error occurred");
-  }
-};
+    if (!licenseImage || !vehicleImage) {
+      setError('Please upload both images');
+      return;
+    }
 
+    try {
+      const data = new FormData();
+      data.append("firstName", "Driver");
+      data.append("lastName", "User");
+      data.append("email", formData.email);
+      data.append("password", formData.password);
+      data.append("licenseNumber", formData.licenseNumber);
+      data.append("vehicleType", formData.vehicleType); // Now sending the actual value directly
+      data.append("plateNumber", formData.vehiclePlate);
+      data.append("licenseImage", licenseImage);
+      data.append("vehicleImage", vehicleImage);
+
+      console.log("📤 Sending data:", {
+        email: formData.email,
+        vehicleType: formData.vehicleType,
+        plateNumber: formData.vehiclePlate
+      });
+
+      const res = await fetch("http://localhost:5000/api/driver/signup", {
+        method: "POST",
+        body: data
+      });
+
+      const result = await res.json();
+
+      if (!res.ok) {
+        setError(result.message || "Failed to register driver");
+        return;
+      }
+
+      alert("✅ Driver registered successfully!");
+      navigate("/DriverLogin");
+
+    } catch (err) {
+      console.error(err);
+      setError("Server error occurred");
+    }
+  };
 
   return (
     <>
@@ -197,11 +202,11 @@ function DriverSignUp() {
                       className="select-input"
                     >
                       <option value="">Select vehicle type</option>
-                      <option value="sedan">Sedan</option>
-                      <option value="suv">SUV</option>
-                      <option value="hatchback">Hatchback</option>
-                      <option value="van">Van</option>
-                      <option value="motorcycle">Motorcycle</option>
+                      <option value="Sedan">Sedan</option>
+                      <option value="SUV">SUV</option>
+                      <option value="Hatchback">Hatchback</option>
+                      <option value="Van">Van</option>
+                      <option value="Motorcycle">Motorcycle</option>
                     </select>
                   </div>
 
