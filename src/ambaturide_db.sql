@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Oct 09, 2025 at 03:00 PM
+-- Generation Time: Oct 09, 2025 at 05:28 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.0.30
 
@@ -24,16 +24,68 @@ SET time_zone = "+00:00";
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `bookings`
+--
+
+CREATE TABLE `bookings` (
+  `BookingID` int(11) NOT NULL,
+  `PassengerID` int(11) DEFAULT NULL,
+  `PickupArea` enum('Toril','Mintal','Catalunan','Bago Gallera','Ulas','Bankal','Matina Crossing','Maa','Ecoland','Roxas','Magsaysay','Agdao','Buhangin','Lanang','Sasa') NOT NULL,
+  `DropoffArea` enum('Toril','Mintal','Catalunan','Bago Gallera','Ulas','Bankal','Matina Crossing','Maa','Ecoland','Roxas','Magsaysay','Agdao','Buhangin','Lanang','Sasa') NOT NULL,
+  `PickupFullAddress` varchar(255) DEFAULT NULL,
+  `DropoffFullAddress` varchar(255) DEFAULT NULL,
+  `RideDate` date NOT NULL,
+  `RideTime` time NOT NULL,
+  `VehicleType` enum('4 Seaters','6 Seaters') NOT NULL,
+  `Fare` decimal(10,2) NOT NULL,
+  `Status` enum('pending','accepted','completed','cancelled') DEFAULT 'pending',
+  `CreatedAt` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `drivers`
 --
 
 CREATE TABLE `drivers` (
   `DriverID` int(11) NOT NULL,
   `TransactionID` int(11) DEFAULT NULL,
-  `PlateNumber` varchar(20) DEFAULT NULL,
+  `FirstName` varchar(100) NOT NULL,
+  `LastName` varchar(100) NOT NULL,
+  `Email` varchar(100) NOT NULL,
+  `Password` varchar(255) NOT NULL,
+  `PhoneNumber` varchar(15) DEFAULT NULL,
+  `Address` varchar(255) DEFAULT NULL,
+  `LicenseNumber` varchar(100) DEFAULT NULL,
+  `LicenseImage` varchar(255) DEFAULT NULL,
   `VehicleType` enum('2 Wheeler','4 Wheeler','6 Wheeler') DEFAULT NULL,
+  `PlateNumber` varchar(20) DEFAULT NULL,
   `VehicleBrand` varchar(50) DEFAULT NULL,
-  `VehiclePicture` varchar(255) DEFAULT NULL
+  `VehiclePicture` varchar(255) DEFAULT NULL,
+  `Status` enum('pending','active','inactive','banned') DEFAULT 'active',
+  `CreatedAt` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `passengers`
+--
+
+CREATE TABLE `passengers` (
+  `PassengerID` int(11) NOT NULL,
+  `TransactionID` int(11) DEFAULT NULL,
+  `FirstName` varchar(100) NOT NULL,
+  `LastName` varchar(100) NOT NULL,
+  `Email` varchar(100) NOT NULL,
+  `Password` varchar(255) NOT NULL,
+  `PhoneNumber` varchar(15) DEFAULT NULL,
+  `Address` varchar(255) DEFAULT NULL,
+  `BirthDate` date DEFAULT NULL,
+  `ProfilePicture` varchar(255) DEFAULT NULL,
+  `Status` enum('active','inactive','banned') DEFAULT 'active',
+  `CreatedAt` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -48,17 +100,6 @@ CREATE TABLE `reports` (
   `Reason` varchar(255) DEFAULT NULL,
   `NoteFromRider` text DEFAULT NULL,
   `NoteFromDriver` text DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `riders`
---
-
-CREATE TABLE `riders` (
-  `RiderID` int(11) NOT NULL,
-  `TransactionID` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -111,24 +152,31 @@ INSERT INTO `users` (`UserID`, `Email`, `Password`, `Name`, `Age`, `Gender`, `Ty
 --
 
 --
+-- Indexes for table `bookings`
+--
+ALTER TABLE `bookings`
+  ADD PRIMARY KEY (`BookingID`),
+  ADD KEY `PassengerID` (`PassengerID`);
+
+--
 -- Indexes for table `drivers`
 --
 ALTER TABLE `drivers`
   ADD PRIMARY KEY (`DriverID`),
-  ADD KEY `TransactionID` (`TransactionID`);
+  ADD UNIQUE KEY `Email` (`Email`);
+
+--
+-- Indexes for table `passengers`
+--
+ALTER TABLE `passengers`
+  ADD PRIMARY KEY (`PassengerID`),
+  ADD UNIQUE KEY `Email` (`Email`);
 
 --
 -- Indexes for table `reports`
 --
 ALTER TABLE `reports`
   ADD PRIMARY KEY (`ReportID`),
-  ADD KEY `TransactionID` (`TransactionID`);
-
---
--- Indexes for table `riders`
---
-ALTER TABLE `riders`
-  ADD PRIMARY KEY (`RiderID`),
   ADD KEY `TransactionID` (`TransactionID`);
 
 --
@@ -149,6 +197,24 @@ ALTER TABLE `users`
 --
 -- AUTO_INCREMENT for dumped tables
 --
+
+--
+-- AUTO_INCREMENT for table `bookings`
+--
+ALTER TABLE `bookings`
+  MODIFY `BookingID` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `drivers`
+--
+ALTER TABLE `drivers`
+  MODIFY `DriverID` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `passengers`
+--
+ALTER TABLE `passengers`
+  MODIFY `PassengerID` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `reports`
@@ -173,24 +239,16 @@ ALTER TABLE `users`
 --
 
 --
--- Constraints for table `drivers`
+-- Constraints for table `bookings`
 --
-ALTER TABLE `drivers`
-  ADD CONSTRAINT `drivers_ibfk_1` FOREIGN KEY (`DriverID`) REFERENCES `users` (`UserID`),
-  ADD CONSTRAINT `drivers_ibfk_2` FOREIGN KEY (`TransactionID`) REFERENCES `transactions` (`TransactionID`);
+ALTER TABLE `bookings`
+  ADD CONSTRAINT `bookings_ibfk_1` FOREIGN KEY (`PassengerID`) REFERENCES `passengers` (`PassengerID`);
 
 --
 -- Constraints for table `reports`
 --
 ALTER TABLE `reports`
   ADD CONSTRAINT `reports_ibfk_1` FOREIGN KEY (`TransactionID`) REFERENCES `transactions` (`TransactionID`);
-
---
--- Constraints for table `riders`
---
-ALTER TABLE `riders`
-  ADD CONSTRAINT `riders_ibfk_1` FOREIGN KEY (`RiderID`) REFERENCES `users` (`UserID`),
-  ADD CONSTRAINT `riders_ibfk_2` FOREIGN KEY (`TransactionID`) REFERENCES `transactions` (`TransactionID`);
 
 --
 -- Constraints for table `transactions`
