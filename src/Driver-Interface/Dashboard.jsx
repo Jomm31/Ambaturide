@@ -9,18 +9,17 @@ export default function Dashboard() {
 
       <DashboardHeader />
 
-      
-      <div className="Inner_Div">
 
+      <div className="Inner_Div">
+       
         <div className="Sidebar_Container">
           <div className="Sidebar_Btn">
-            <Link to="account" className="menu-item">Account</Link>
-            <Link to="bookings" className="menu-item">Bookings</Link>
-            <Link to="earnings" className="menu-item">Earnings</Link>
-            <Link to="reviews" className="menu-item">Reviews</Link>
+            <Link to="/Dashboard/DriverBooking" className="menu-item">DriverBooking</Link>
+            <Link to="/Dashboard/DriverProfile" className="menu-item">DriverProfile</Link>
+            <Link to="/Dashboard/Reviews" className="menu-item">Reviews</Link>
           </div>
-        </div>
-
+       
+       </div>
 
         <div className="main">
           <Outlet />
