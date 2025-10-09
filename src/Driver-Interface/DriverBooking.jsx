@@ -30,6 +30,12 @@ function DriverBooking() {
     fetchBookings();
   }, []);
 
+  // Helper: remove "+" and "-" (and spaces/parentheses) from phone for display
+  const sanitizePhone = (phone) => {
+    if (!phone) return "";
+    return phone.toString().replace(/[+\-\s()]/g, "");
+  };
+
   // ✅ Filter pending bookings by location or name
   const filteredBookings = useMemo(() => {
     const q = (searchLocation || "").toLowerCase().trim();
@@ -41,30 +47,44 @@ function DriverBooking() {
         const pickup = (booking.PickupFullAddress || booking.Origin || "").toString().toLowerCase();
         const dropoff = (booking.DropoffFullAddress || booking.Destination || "").toString().toLowerCase();
         const passenger = (booking.PassengerName || "").toString().toLowerCase();
+        const pickupArea = (booking.PickupArea || "").toString().toLowerCase();
+        const dropoffArea = (booking.DropoffArea || "").toString().toLowerCase();
 
         if (!q) return true;
         return (
           pickup.includes(q) ||
           dropoff.includes(q) ||
-          passenger.includes(q)
+          passenger.includes(q) ||
+          pickupArea.includes(q) ||
+          dropoffArea.includes(q)
         );
       });
   }, [bookings, searchLocation]);
 
-  // ✅ Accept ride
   const handleAccept = async (id) => {
     setLoadingId(id);
     try {
+      const driverData = JSON.parse(localStorage.getItem("driver")); // 👈 make sure you save this at login
+      const driverId = driverData?.DriverID;
+
+      if (!driverId) {
+        alert("Driver ID not found. Please log in again.");
+        return;
+      }
+
       const response = await fetch(`http://localhost:5000/api/driver/bookings/${id}/status`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: "accepted" }),
+        body: JSON.stringify({ status: "accepted", driverId }), // ✅ include driverId
       });
+
       const data = await response.json();
       if (data.success) {
         setBookings((prev) =>
           prev.map((b) => (b.BookingID === id ? { ...b, Status: "accepted" } : b))
         );
+      } else {
+        console.error("Failed to accept:", data.message);
       }
     } catch (err) {
       console.error("Accept error:", err);
@@ -97,13 +117,13 @@ function DriverBooking() {
 
   const getInitials = (name) =>
     name
-      ?.split(", ")
+      ?.split(/\s+/) // split on spaces (works with "First Last")
       .map((part) => part.charAt(0))
       .join("")
       .toUpperCase();
-
+  
   if (loading) return <p>Loading bookings...</p>;
-
+  
   return (
     <>
       <DriverHeader />
@@ -154,55 +174,69 @@ function DriverBooking() {
 
           <div className="bookings-list">
             {filteredBookings.map((booking) => {
-              const pickup = booking.PickupFullAddress || booking.Origin || "Unknown pickup";
-              const dropoff = booking.DropoffFullAddress || booking.Destination || "Unknown dropoff";
-              const passengerImage = booking.PassengerImage || booking.ProfilePicture || "/default-avatar.jpg";
+              const pickup = booking.PickupFullAddress || booking.Origin || "";
+              const dropoff = booking.DropoffFullAddress || booking.Destination || "";
+              const pickupArea = booking.PickupArea || "Unknown area";
+              const dropoffArea = booking.DropoffArea || "Unknown area";
 
-              return (
-                <div key={booking.BookingID} className="booking-card">
-                  <div className="booking-header">
-                    <div className="passenger-info">
-                      <div className="avatar-container">
-                        <img
+              // booking.PassengerImage comes from server as "/uploads/..." — prefix backend URL so images load
+              const passengerImage = booking.PassengerImage
+                ? `http://localhost:5000${booking.PassengerImage}`
+                : booking.ProfilePicture
+                ? `http://localhost:5000${booking.ProfilePicture}`
+                : "/profile-pictures/default.jpg";
+
+               return (
+                 <div key={booking.BookingID} className="booking-card">
+                   <div className="booking-header">
+                     <div className="passenger-info">
+                       <div className="avatar-container">
+                         <img
                           src={passengerImage}
-                          alt={booking.PassengerName}
-                          className="passenger-image"
-                          onError={(e) => {
-                            e.target.style.display = "none";
-                            e.target.nextSibling.style.display = "flex";
-                          }}
-                        />
-                        <div className="avatar-fallback">
-                          {getInitials(booking.PassengerName)}
-                        </div>
-                      </div>
-                      <div className="passenger-details">
-                        <span className="label">Passenger</span>
-                        <h3 className="passenger-name">{booking.PassengerName}</h3>
-                      </div>
-                    </div>
-                    <div className="booking-badge pending">Pending</div>
-                  </div>
+                           alt={booking.PassengerName || "Passenger"}
+                           className="passenger-image"
+                           onError={(e) => {
+                            // fallback to default avatar if backend image fails
+                            e.target.src = "/profile-pictures/default.jpg";
+                            e.target.style.objectFit = "cover";
+                           }}
+                         />
+                         <div className="avatar-fallback" aria-hidden>
+                           {getInitials(booking.PassengerName)}
+                         </div>
+                       </div>
+                       <div className="passenger-details">
+                         <span className="label">Passenger</span>
+                         <h3 className="passenger-name">{booking.PassengerName || "Unknown"}</h3>
+                         {booking.PhoneNumber && (
+                           <div className="passenger-phone">{sanitizePhone(booking.PhoneNumber)}</div>
+                         )}
+                       </div>
+                     </div>
+                     <div className="booking-badge pending">Pending</div>
+                   </div>
 
-                  <div className="trip-details">
-                    <div className="route-info">
-                      <div className="route-item">
-                        <span className="route-label">From</span>
-                        <p className="route-text">{booking.PickupFullAddress}</p>
-                      </div>
-                      <div className="route-item">
-                        <span className="route-label">To</span>
-                        <p className="route-text">{booking.DropoffFullAddress}</p>
-                      </div>
-                    </div>
-
-                    <div className="datetime-info">
-                      <span>{booking.RideDate}</span> | <span>{booking.RideTime}</span>
-                    </div>
-                  </div>
-
-                  <div className="action-buttons">
-                    <button
+                   <div className="trip-details">
+                     <div className="route-info">
+                       <div className="route-item">
+                         <span className="route-label">From</span>
+-                        <p className="route-text">{pickup}</p>
++                        <p className="route-text">{pickupArea}{pickup ? ` — ${pickup}` : ""}</p>
+                       </div>
+                       <div className="route-item">
+                         <span className="route-label">To</span>
+-                        <p className="route-text">{dropoff}</p>
++                        <p className="route-text">{dropoffArea}{dropoff ? ` — ${dropoff}` : ""}</p>
+                       </div>
+                     </div>
+ 
+                     <div className="datetime-info">
+                       <span>{booking.RideDate}</span> | <span>{booking.RideTime}</span>
+                     </div>
+                   </div>
+ 
+                   <div className="action-buttons">
+                     <button
                       className="btn-reject"
                       onClick={() => handleReject(booking.BookingID)}
                       disabled={loadingId !== null}
@@ -218,9 +252,9 @@ function DriverBooking() {
                     </button>
                   </div>
                 </div>
-              );
-            })}
-          </div>
+               );
+             })}
+           </div>
 
           {filteredBookings.length === 0 && (
             <div className="no-bookings">

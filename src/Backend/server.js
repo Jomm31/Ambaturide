@@ -702,50 +702,97 @@ app.post("/api/passenger/book", (req, res) => {
   });
 });
 
+// ✅ Get all bookings (joined with driver details)
+// ✅ Get bookings + passenger info
 app.get("/api/driver/bookings", (req, res) => {
   const sql = `
-  SELECT 
-    b.BookingID,
-    CONCAT(u.LastName, ', ', u.FirstName) AS PassengerName,
-    u.ProfilePicture,
-    b.PickupFullAddress AS Origin,
-    b.DropoffFullAddress AS Destination,
-    DATE_FORMAT(b.RideDate, '%b. %d, %Y') AS RideDate,
-    DATE_FORMAT(b.RideTime, '%h:%i %p') AS RideTime,
-    b.Status
-  FROM bookings b
-  JOIN passengers u ON b.PassengerID = u.PassengerID
-  WHERE b.Status = 'pending'
-  ORDER BY b.CreatedAt DESC
-`;
-
+    SELECT 
+      b.BookingID,
+      b.PassengerID,
+      b.DriverID,
+      b.PickupFullAddress,
+      b.DropoffFullAddress,
+      b.PickupArea,
+      b.DropoffArea,
+      b.RideDate,
+      b.RideTime,
+      b.Status,
+      b.VehicleType,
+      b.Fare,
+      CONCAT(p.FirstName, ' ', p.LastName) AS PassengerName,
+      p.ProfilePicture AS PassengerImage,
+      p.PhoneNumber,
+      p.Gender
+    FROM bookings AS b
+    LEFT JOIN passengers AS p ON b.PassengerID = p.PassengerID
+    ORDER BY b.BookingID DESC
+  `;
 
   db.query(sql, (err, results) => {
     if (err) {
-      console.error("Error fetching bookings:", err);
+      console.error("❌ Error fetching bookings:", err);
       return res.status(500).json({ success: false, message: "Database error" });
     }
+
+    // Send results to frontend
     res.json({ success: true, bookings: results });
   });
 });
 
-app.put("/api/driver/bookings/:id/status", (req, res) => {
-  const { id } = req.params;
-  const { status } = req.body; // "accepted" or "cancelled"
 
-  if (!["accepted", "cancelled"].includes(status)) {
-    return res.status(400).json({ success: false, message: "Invalid status" });
+
+
+
+
+
+// ✅ Update booking status (accept / cancel / complete)
+// ✅ Update booking status and assign driver
+app.put("/api/driver/bookings/:id/status", (req, res) => {
+  const bookingId = req.params.id;
+  const { status, driverId } = req.body;
+
+  if (!status || !driverId) {
+    return res.status(400).json({ 
+      success: false, 
+      message: "Missing status or driverId" 
+    });
   }
 
-  const sql = `UPDATE bookings SET Status = ? WHERE BookingID = ?`;
-  db.query(sql, [status, id], (err, result) => {
+  // ✅ Update both Status and DriverID
+  const sql = `
+    UPDATE bookings 
+    SET Status = ?, DriverID = ? 
+    WHERE BookingID = ?
+  `;
+
+  db.query(sql, [status, driverId, bookingId], (err, result) => {
     if (err) {
-      console.error("Error updating status:", err);
+      console.error("❌ Error updating booking status:", err);
       return res.status(500).json({ success: false, message: "Database error" });
     }
-    res.json({ success: true, message: `Booking ${status}` });
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ success: false, message: "Booking not found" });
+    }
+
+    // ✅ Optional: Fetch the updated booking to confirm
+    db.query(`SELECT * FROM bookings WHERE BookingID = ?`, [bookingId], (err, rows) => {
+      if (err) {
+        console.error("❌ Error fetching updated booking:", err);
+        return res.status(500).json({ success: false, message: "Database error" });
+      }
+
+      res.json({ 
+        success: true, 
+        message: "Booking accepted successfully!", 
+        updatedBooking: rows[0] 
+      });
+    });
   });
 });
+
+
+
 
 
 // Handle all other undefined routes safely
