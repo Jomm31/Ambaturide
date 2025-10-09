@@ -1,0 +1,185 @@
+/* Page Container Styles */
+.pageContainer {
+  background-color: #ffffff;
+  width: 100%;
+  height: 100vh;
+  font-family: Inter, -apple-system, Roboto, Helvetica, sans-serif;
+  overflow: hidden;
+}
+
+.contentWrapper {
+  gap: 20px;
+  height: calc(100vh - 160px);
+  margin-top: 30px;
+  padding: 0 38px;
+  display: flex;
+}
+
+@media (width <= 991px) {
+  .contentWrapper {
+    flex-direction: column;
+    height: auto;
+    padding: 0 20px;
+  }
+}
+
+.mainContent {
+  background-color: #fff;
+  border-radius: 30px;
+  flex: 1;
+  padding: 40px;
+ 
+}
+
+@media (width <= 991px) {
+  .mainContent {
+    border-radius: 20px;
+    padding: 20px;
+  }
+}
+
+.reviewsContainer {
+  flex-direction: column;
+  gap: 30px;
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+}
+
+@media (width <= 991px) {
+  .brandName {
+    font-size: 48px;
+  }
+}
+
+@media (width <= 640px) {
+  .brandName {
+    font-size: 36px;
+  }
+}
+
+.brandSuffix {
+  color: #fff;
+  margin-left: 8px;
+  font-size: 64px;
+  font-weight: 400;
+  line-height: 120%;
+}
+
+@media (width <= 991px) {
+  .brandSuffix {
+    font-size: 44px;
+  }
+}
+
+@media (width <= 640px) {
+  .brandSuffix {
+    font-size: 32px;
+  }
+}
+
+/* Review Card Styles */
+.reviewCard {
+  background-color: #1db6c7;
+  border-radius: 13px;
+  flex-direction: column;
+  gap: 27px;
+  padding: 27px;
+  display: flex;
+}
+
+.reviewHeader {
+  justify-content: space-between;
+  align-items: center;
+  display: flex;
+}
+
+@media (width <= 640px) {
+  .reviewHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+}
+
+.userInfo {
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+  display: flex;
+}
+
+.userAvatar {
+  border-radius: 50%;
+  flex-shrink: 0;
+  width: 54px;
+  height: 54px;
+}
+
+.userDetails {
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+  display: flex;
+}
+
+.userName {
+  color: #323232;
+  font-size: 24px;
+  font-weight: 400;
+}
+
+@media (width <= 640px) {
+  .userName {
+    font-size: 20px;
+  }
+}
+
+.userMeta {
+  gap: 7px;
+  display: flex;
+  align-items: center;
+}
+
+.metaDot {
+  background-color: #323232;
+  border-radius: 50%;
+  width: 4px;
+  height: 4px;
+}
+
+.reviewDate {
+  color: #323232;
+  font: 14px Heebo, -apple-system, Roboto, Helvetica, sans-serif;
+}
+
+.verifiedBadge {
+  color: #323232;
+  background-color: #dddaed;
+  border-radius: 7px;
+  padding: 3px 14px;
+  font: 14px Heebo, -apple-system, Roboto, Helvetica, sans-serif;
+}
+
+.reviewText {
+  color: #000;
+  margin: 0;
+  font-size: 24px;
+  line-height: 150%;
+}
+
+@media (width <= 640px) {
+  .reviewText {
+    font-size: 18px;
+  }
+}
+
+/* Star Rating Styles */
+.starRating {
+  gap: 7px;
+  display: flex;
+}
+
+.star {
+  flex-shrink: 0;
+}
