@@ -1,4 +1,6 @@
-import React, { useState } from "react";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
 import "./Css/PassengerHomepage.css";
 
 import homepageImg from "../assets/homepage-pic.png";
@@ -25,7 +27,20 @@ function PassengerHomepage() {
   const [dropoff, setDropoff] = useState("");
   const [date, setDate] = useState("Today");
   const [time, setTime] = useState("Now");
-
+  const navigate = useNavigate();
+  const handleBookClick = async () => {
+    try {
+      const res = await axios.get("http://localhost:5000/api/check-auth", { withCredentials: true });
+      if (res.data.loggedIn) {
+        navigate("/Passenger_Booking");
+      } else {
+        navigate("/LoginHomepage");
+      }
+    } catch (err) {
+      console.error("Auth check failed", err);
+      navigate("/LoginHomepage");
+    }
+  };
   return (
     <>
   <Header />
@@ -46,23 +61,16 @@ function PassengerHomepage() {
               
               <div className="booking-form">
                 <div className="input-group">
-                  <input 
-                    type="text" 
-                    placeholder="Pickup Location" 
-                    className="input-box"
-                    value={pickup}
-                    onChange={(e) => setPickup(e.target.value)}
-                  />
+                  <input type="text" placeholder="Pickup Location" 
+                  className="input-box"
+                  value={pickup} onChange={(e) => setPickup(e.target.value)} />
                 </div>
                 
                 <div className="input-group">
-                  <input 
-                    type="text" 
-                    placeholder="Dropoff Location" 
-                    className="input-box"
-                    value={dropoff}
-                    onChange={(e) => setDropoff(e.target.value)}
-                  />
+                  <input type="text" 
+                  placeholder="Dropoff Location" 
+                  className="input-box"
+                  value={dropoff} onChange={(e) => setDropoff(e.target.value)} />
                 </div>
 
                 <div className="datetime-row">
@@ -76,7 +84,7 @@ function PassengerHomepage() {
                   </button>
                 </div>
 
-                <button className="cta-button primary">
+                <button className="cta-button primary" onClick={handleBookClick}>
                   See Prices & Book Ride
                 </button>
               </div>
