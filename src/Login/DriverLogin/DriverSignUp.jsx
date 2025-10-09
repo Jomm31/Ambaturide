@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './DriverSignUp.css';
-import DriverHeader from '../../Driver-Interface/Header/DriverHeader'
+import DriverHeader from '../../../src/DriverHeader.jsx'
 
 function DriverSignUp() {
   const navigate = useNavigate();

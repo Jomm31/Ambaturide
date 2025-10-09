@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import "./DriverProfile.css";
-// ...existing code...
-// removed: import Header from "../Header";
+import DriverHeader from '../../src/DriverHeader.jsx'
 
 function DriverProfile() {
   const [activeSection, setActiveSection] = useState("profile");
@@ -75,7 +74,7 @@ function DriverProfile() {
 
   return (
     <>
-      {/* Header removed */}
+      <DriverHeader/>
 
       <div className="profile-container">
         {/* Header Section */}

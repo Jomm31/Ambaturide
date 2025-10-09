@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import './DriverBooking.css';
+import DriverHeader from '../../src/DriverHeader.jsx'
 
 function DriverBooking() {
   const [bookings, setBookings] = useState([
@@ -71,7 +72,10 @@ function DriverBooking() {
   };
 
   return (
-    <div className="driver-booking-container">
+    <>
+
+    <DriverHeader/>
+      <div className="driver-booking-container">
       
       <div className="booking-content">
         <div className="search-header">
@@ -232,6 +236,8 @@ function DriverBooking() {
         )}
       </div>
     </div>
+    </>
+    
   );
 }
 
