@@ -10,15 +10,20 @@ import path from "path";
 import { fileURLToPath } from "url";
 import fs from "fs";
 
+
+
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 const ensureDir = (dir) => {
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
 };
 
+
 ensureDir(path.join(__dirname, "uploads/driver-license"));
 ensureDir(path.join(__dirname, "uploads/vehicle-images"));
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 const app = express();
 
@@ -209,10 +214,7 @@ app.get("/", (req, res) => {
   res.send("✅ Backend API is running!");
 });
 
-// Handle all other undefined routes safely
-app.use((req, res) => {
-  res.status(404).send("❌ Route not found");
-});
+
 
 
 
@@ -310,8 +312,49 @@ app.post("/api/driver/signup", driverUpload.fields([
     res.status(500).json({ message: "Server error" });
   }
 });
+app.get("/api/driver/signup", (req, res) => {
+  res.send("✅ You reached the Driver SignUp route! Use POST to submit data.");
+});
 
 
+
+app.post("/api/driver/login", async (req, res) => {
+  const { email, password } = req.body;
+
+  if (!email || !password)
+    return res.status(400).json({ message: "Missing email or password" });
+
+  const query = "SELECT * FROM drivers WHERE Email = ?";
+  db.query(query, [email], async (err, results) => {
+    if (err) {
+      console.error("Database error:", err);
+      return res.status(500).json({ message: "Database error" });
+    }
+
+    if (results.length === 0)
+      return res.status(401).json({ message: "Driver not found" });
+
+    const driver = results[0];
+    const isMatch = await bcrypt.compare(password, driver.Password);
+
+    if (!isMatch)
+      return res.status(401).json({ message: "Invalid credentials" });
+
+    res.json({ message: "Login successful", driver });
+  });
+});
+app.get("/api/driver/login", (req, res) => {
+  res.send("✅ You reached the Driver SignUp route! Use POST to submit data.");
+});
+
+
+
+
+
+// Handle all other undefined routes safely
+app.use((req, res) => {
+  res.status(404).send("❌ Route not found");
+});
 
 // Start server
 app.listen(5000, () => console.log("🚀 Server running on http://localhost:5000"));

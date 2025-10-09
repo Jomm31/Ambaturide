@@ -17,42 +17,63 @@ function DriverHeader() {
   const handleLogout = () => {
     localStorage.removeItem("user");
     setUser(null);
-    window.location.href = "/";
+    window.location.href = "/LoginHomepage";
   };
 
   return (
     <header className="header">
       <div className="header-left">
         <img src={darkLogo} alt="Ambaturide Logo" className="logo" />
-        <h1 className="brand"><span>Ambatu</span>RIDE</h1>
+        <h1 className="brand">
+          <span>Ambatu</span>RIDE
+        </h1>
       </div>
 
       <div
         className={`burger ${menuOpen ? "open" : ""}`}
         onClick={() => setMenuOpen(!menuOpen)}
       >
-        <span></span><span></span><span></span>
+        <span></span>
+        <span></span>
+        <span></span>
       </div>
 
       <nav className={`header-right ${menuOpen ? "open" : ""}`}>
-        <a href="/DriverBooking">PassengersBookings</a>
-        <a href="/">Transactions</a>
-        <a href="/Reviews">Reviews</a>
+        {/* ✅ Driver-specific navigation */}
+        <a href="/DriverBooking">Passenger Bookings</a>
+        <a href="/DriverTransactions">Transactions</a>
+        <a href="/DriverReviews">Reviews</a>
 
         {user ? (
           <div className="auth-buttons">
             <img
-              src={user.profilePicture ? `http://localhost:5000${user.profilePicture}` : defaultProfile}
+              src={
+                user.profilePicture
+                  ? `http://localhost:5000${user.profilePicture}`
+                  : defaultProfile
+              }
               alt="Profile"
               className="profile-pic"
-              onClick={() => window.location.href = "/PassengerProfile"}
+              onClick={() => window.location.href = "/DriverProfile"}
             />
-            <button className="logout" onClick={handleLogout}>Logout</button>
+            <button className="logout" onClick={handleLogout}>
+              Logout
+            </button>
           </div>
         ) : (
           <div className="auth-buttons">
-            <button className="login" onClick={() => window.location.href = "/LoginHomepage"}>LOG-IN</button>
-            <button className="register" onClick={() => window.location.href = "/LoginHomepage"}>REGISTER</button>
+            <button
+              className="login"
+              onClick={() => (window.location.href = "/LoginHomepage")}
+            >
+              LOG-IN
+            </button>
+            <button
+              className="register"
+              onClick={() => (window.location.href = "/LoginHomepage")}
+            >
+              REGISTER
+            </button>
           </div>
         )}
       </nav>
