@@ -21,71 +21,91 @@ function PassengerProfile() {
   const [loading, setLoading] = useState(true); // Added loading state
   const [error, setError] = useState(""); // Added error state
 
-  // Function to load data from localStorage (fallback)
-// Function to load data from localStorage (fallback)
-const loadFromLocalStorage = () => {
-  try {
-    const savedPassenger = localStorage.getItem("passenger");
-    if (savedPassenger) {
-      const passengerData = JSON.parse(savedPassenger);
-      setFormData(prev => ({
-        ...prev,
-        firstName: passengerData.FirstName || "",
-        lastName: passengerData.LastName || "",
-        email: passengerData.Email || "",
-        profilePicture: passengerData.ProfilePicture || "" // Add this line
-      }));
-      return true;
+  // Helper: read passenger data from localStorage with fallbacks and normalize id
+  const getSavedPassenger = () => {
+    try {
+      const raw =
+        localStorage.getItem("passenger") ||
+        localStorage.getItem("user") ||
+        localStorage.getItem("driver");
+      if (!raw) return null;
+      return JSON.parse(raw);
+    } catch (err) {
+      console.error("Error parsing saved passenger from localStorage:", err);
+      return null;
     }
-    return false;
-  } catch (err) {
-    console.error("Error loading from localStorage:", err);
-    return false;
-  }
-};
+  };
+
+  const getPassengerId = (obj) => {
+    if (!obj) return null;
+    return obj.PassengerID || obj.id || obj.passengerId || obj.PassengerId || null;
+  };
+
+  // Function to load data from localStorage (fallback)
+  const loadFromLocalStorage = () => {
+    try {
+      const savedPassenger = localStorage.getItem("passenger");
+      if (savedPassenger) {
+        const passengerData = JSON.parse(savedPassenger);
+        setFormData(prev => ({
+          ...prev,
+          firstName: passengerData.FirstName || "",
+          lastName: passengerData.LastName || "",
+          email: passengerData.Email || "",
+          profilePicture: passengerData.ProfilePicture || "" // Add this line
+        }));
+        return true;
+      }
+      return false;
+    } catch (err) {
+      console.error("Error loading from localStorage:", err);
+      return false;
+    }
+  };
 
   // Function to fetch full profile from backend (optional, for complete data)
-// Function to fetch full profile from backend (optional, for complete data)
-const fetchProfileFromDB = async (passengerId) => {
-  try {
-    const response = await axios.get(`http://localhost:5000/api/passenger/profile/${passengerId}`, {
-      withCredentials: true // For session-based auth
-    });
-    const fullData = response.data;
-    setFormData({
-      firstName: fullData.FirstName || "",
-      lastName: fullData.LastName || "",
-      gender: fullData.Gender || "",
-      birthdate: fullData.BirthDate || "",
-      contactNo: fullData.PhoneNumber || "",
-      email: fullData.Email || "",
-      profilePicture: fullData.ProfilePicture || "", // Add this line
-      currentPassword: "",
-      newPassword: "",
-      confirmPassword: ""
-    });
-  } catch (err) {
-    console.error("Error fetching profile from DB:", err);
-    setError("Failed to load full profile. Using cached data.");
-    loadFromLocalStorage(); // Fallback to localStorage
-  }
-};
+  const fetchProfileFromDB = async (passengerId) => {
+    try {
+      const response = await axios.get(`http://localhost:5000/api/passenger/profile/${passengerId}`, {
+        withCredentials: true // For session-based auth
+      });
+      const fullData = response.data;
+      setFormData({
+        firstName: fullData.FirstName || "",
+        lastName: fullData.LastName || "",
+        gender: fullData.Gender || "",
+        birthdate: fullData.BirthDate || "",
+        contactNo: fullData.PhoneNumber || "",
+        email: fullData.Email || "",
+        profilePicture: fullData.ProfilePicture || "", // Add this line
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: ""
+      });
+    } catch (err) {
+      console.error("Error fetching profile from DB:", err);
+      setError("Failed to load full profile. Using cached data.");
+      loadFromLocalStorage(); // Fallback to localStorage
+    }
+  };
   useEffect(() => {
     setLoading(true);
-    const savedPassenger = localStorage.getItem("passenger");
+    const savedPassenger = getSavedPassenger();
     if (savedPassenger) {
-      const passengerData = JSON.parse(savedPassenger);
-      // First, try to fetch full data from DB using PassengerID
-      if (passengerData.PassengerID) {
-        fetchProfileFromDB(passengerData.PassengerID);
+      console.log("🔍 DEBUG - Passenger data:", savedPassenger);
+      
+      const passengerId = getPassengerId(savedPassenger);
+      
+      if (passengerId) {
+        console.log("🔄 Fetching profile for ID:", passengerId);
+        fetchProfileFromDB(passengerId);
       } else {
-        // Fallback to localStorage only
+        console.log("❌ No passenger ID found, using localStorage only");
         loadFromLocalStorage();
       }
     } else {
-      // No saved data – redirect to login or show error
       setError("No profile data found. Please log in.");
-      loadFromLocalStorage(); // Try anyway
+      loadFromLocalStorage();
     }
     setLoading(false);
   }, []);
@@ -109,53 +129,54 @@ const fetchProfileFromDB = async (passengerId) => {
     setTempData({ ...formData });
   };
 
-const saveEdit = async (fieldName) => {
-  try {
-    const savedPassenger = JSON.parse(localStorage.getItem("passenger"));
-    const passengerId = savedPassenger?.PassengerID;
+  const saveEdit = async (fieldName) => {
+    try {
+      const savedPassenger = getSavedPassenger();
+      const passengerId = getPassengerId(savedPassenger);
 
-    if (!passengerId) {
-      alert("No Passenger ID found. Please log in again.");
-      return;
-    }
+      if (!passengerId) {
+        alert("No Passenger ID found. Please log in again.");
+        console.log("❌ No PassengerID found in:", savedPassenger);
+        return;
+      }
 
-    // Update local UI first
-    setFormData({ ...tempData });
-    setEditingField(null);
+      // Update local UI first
+      setFormData({ ...tempData });
+      setEditingField(null);
 
-    // Send update request to backend
-    const response = await axios.put(
-      `http://localhost:5000/api/passenger/update/${passengerId}`,
-      {
-        firstName: tempData.firstName,
-        lastName: tempData.lastName,
-        gender: tempData.gender,
-        birthdate: tempData.birthdate,
-      },
-      { withCredentials: true }
-    );
-
-    if (response.data.success) {
-      alert("✅ Profile updated successfully!");
-      // Optionally update localStorage
-      localStorage.setItem(
-        "passenger",
-        JSON.stringify({
-          ...savedPassenger,
-          FirstName: tempData.firstName,
-          LastName: tempData.lastName,
-          Gender: tempData.gender,
-          BirthDate: tempData.birthdate,
-        })
+      // Send update request to backend
+      const response = await axios.put(
+        `http://localhost:5000/api/passenger/update/${passengerId}`,
+        {
+          firstName: tempData.firstName,
+          lastName: tempData.lastName,
+          gender: tempData.gender,
+          birthdate: tempData.birthdate,
+        },
+        { withCredentials: true }
       );
-    } else {
-      alert("⚠️ Failed to update profile.");
+
+      if (response.data.success) {
+        alert("✅ Profile updated successfully!");
+        // Optionally update localStorage
+        localStorage.setItem(
+          "passenger",
+          JSON.stringify({
+            ...savedPassenger,
+            FirstName: tempData.firstName,
+            LastName: tempData.lastName,
+            Gender: tempData.gender,
+            BirthDate: tempData.birthdate,
+          })
+        );
+      } else {
+        alert("⚠️ Failed to update profile.");
+      }
+    } catch (error) {
+      console.error("❌ Error updating profile:", error);
+      alert("An error occurred while saving changes.");
     }
-  } catch (error) {
-    console.error("❌ Error updating profile:", error);
-    alert("An error occurred while saving changes.");
-  }
-};
+  };
 
 
   const cancelEdit = () => {
@@ -163,169 +184,171 @@ const saveEdit = async (fieldName) => {
     setTempData({ ...formData });
   };
 
-const handleSaveChanges = async (e) => {
-  e.preventDefault();
-  try {
-    const savedPassenger = JSON.parse(localStorage.getItem("passenger"));
-    const passengerId = savedPassenger?.PassengerID;
+  const handleSaveChanges = async (e) => {
+    e.preventDefault();
+    try {
+      const savedPassenger = getSavedPassenger();
+      const passengerId = getPassengerId(savedPassenger);
 
-    if (!passengerId) {
-      alert("No Passenger ID found. Please log in again.");
-      return;
-    }
-
-    const response = await axios.put(
-      `http://localhost:5000/api/passenger/update-contact/${passengerId}`,
-      {
-        contactNo: formData.contactNo,
-        email: formData.email,
-      },
-      { withCredentials: true }
-    );
-
-    if (response.data.success) {
-      alert("✅ Contact info updated!");
-      localStorage.setItem(
-        "passenger",
-        JSON.stringify({
-          ...savedPassenger,
-          Email: formData.email,
-          PhoneNumber: formData.contactNo,
-        })
-      );
-      setActiveSection("success");
-    } else {
-      alert("⚠️ Failed to update info");
-    }
-  } catch (error) {
-    console.error("❌ Error updating contact info:", error);
-    alert("Server error while saving contact info");
-  }
-};
-
-
-const handlePasswordChange = async (e) => {
-  e.preventDefault();
-
-  if (formData.newPassword !== formData.confirmPassword) {
-    alert("❌ New password and confirm password do not match");
-    return;
-  }
-
-  try {
-    const savedPassenger = JSON.parse(localStorage.getItem("passenger"));
-    const passengerId = savedPassenger?.PassengerID;
-
-    if (!passengerId) {
-      alert("No Passenger ID found. Please log in again.");
-      return;
-    }
-
-    const response = await axios.put(
-      `http://localhost:5000/api/passenger/change-password/${passengerId}`,
-      {
-        oldPassword: formData.currentPassword,
-        newPassword: formData.newPassword,
-      },
-      { withCredentials: true }
-    );
-
-    if (response.data.success) {
-      alert("✅ Password changed successfully!");
-      setFormData((prev) => ({
-        ...prev,
-        currentPassword: "",
-        newPassword: "",
-        confirmPassword: "",
-      }));
-      setActiveSection("passwordSuccess");
-    } else {
-      alert(`⚠️ ${response.data.message}`);
-    }
-  } catch (error) {
-    console.error("❌ Error changing password:", error);
-    alert("Server error while changing password");
-  }
-};
-
-
-
-const handleProfilePictureChange = async (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
-
-  // Validate file type and size
-  if (!file.type.startsWith('image/')) {
-    alert('Please select an image file');
-    return;
-  }
-  
-  if (file.size > 5 * 1024 * 1024) { // 5MB limit
-    alert('Image size should be less than 5MB');
-    return;
-  }
-
-  try {
-    const savedPassenger = JSON.parse(localStorage.getItem("passenger"));
-    const passengerId = savedPassenger?.PassengerID;
-    
-    if (!passengerId) {
-      alert("No Passenger ID found. Please log in again.");
-      return;
-    }
-
-    const uploadFormData = new FormData();
-    uploadFormData.append("profile", file);
-
-    const response = await axios.post(
-      `http://localhost:5000/api/passenger/profile-picture/${passengerId}`,
-      uploadFormData,
-      {
-        headers: { "Content-Type": "multipart/form-data" },
-        withCredentials: true,
+      if (!passengerId) {
+        alert("No Passenger ID found. Please log in again.");
+        console.log("❌ No PassengerID found in:", savedPassenger);
+        return;
       }
-    );
 
-    if (response.data.success) {
-      alert("✅ Profile picture updated!");
-      const newImagePath = response.data.imagePath;
-      
-      // ✅ Update UI state
-      setFormData((prev) => ({
-        ...prev,
-        profilePicture: newImagePath
-      }));
+      const response = await axios.put(
+        `http://localhost:5000/api/passenger/update-contact/${passengerId}`,
+        {
+          contactNo: formData.contactNo,
+          email: formData.email,
+        },
+        { withCredentials: true }
+      );
 
-      // ✅ Update both localStorage items to keep them in sync
-      const updatedPassenger = {
-        ...savedPassenger,
-        ProfilePicture: newImagePath,
-      };
-      
-      localStorage.setItem("passenger", JSON.stringify(updatedPassenger));
-      localStorage.setItem("user", JSON.stringify(updatedPassenger));
-      
-      // ✅ Dispatch custom event to notify Header component
-      window.dispatchEvent(new Event('userUpdated'));
-      
-      // Force refresh the image by updating state again with timestamp
-      setTimeout(() => {
+      if (response.data.success) {
+        alert("✅ Contact info updated!");
+        localStorage.setItem(
+          "passenger",
+          JSON.stringify({
+            ...savedPassenger,
+            Email: formData.email,
+            PhoneNumber: formData.contactNo,
+          })
+        );
+        setActiveSection("success");
+      } else {
+        alert("⚠️ Failed to update info");
+      }
+    } catch (error) {
+      console.error("❌ Error updating contact info:", error);
+      alert("Server error while saving contact info");
+    }
+  };
+
+
+  const handlePasswordChange = async (e) => {
+    e.preventDefault();
+
+    if (formData.newPassword !== formData.confirmPassword) {
+      alert("❌ New password and confirm password do not match");
+      return;
+    }
+
+    try {
+      const savedPassenger = getSavedPassenger();
+      const passengerId = getPassengerId(savedPassenger);
+
+      if (!passengerId) {
+        alert("No Passenger ID found. Please log in again.");
+        console.log("❌ No PassengerID found in:", savedPassenger);
+        return;
+      }
+
+      const response = await axios.put(
+        `http://localhost:5000/api/passenger/change-password/${passengerId}`,
+        {
+          oldPassword: formData.currentPassword,
+          newPassword: formData.newPassword,
+        },
+        { withCredentials: true }
+      );
+
+      if (response.data.success) {
+        alert("✅ Password changed successfully!");
         setFormData((prev) => ({
           ...prev,
-          profilePicture: `${newImagePath}?t=${Date.now()}`
+          currentPassword: "",
+          newPassword: "",
+          confirmPassword: "",
         }));
-      }, 100);
+        setActiveSection("passwordSuccess");
+      } else {
+        alert(`⚠️ ${response.data.message}`);
+      }
+    } catch (error) {
+      console.error("❌ Error changing password:", error);
+      alert("Server error while changing password");
     }
-  } catch (error) {
-    console.error("❌ Error uploading profile picture:", error);
-    if (error.response?.data?.message) {
-      alert(`Upload failed: ${error.response.data.message}`);
-    } else {
-      alert("Failed to upload profile picture. Please try again.");
-    }
-  }
-};
+  };
 
+
+
+  const handleProfilePictureChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Validate file type and size
+    if (!file.type.startsWith('image/')) {
+      alert('Please select an image file');
+      return;
+    }
+    
+    if (file.size > 5 * 1024 * 1024) { // 5MB limit
+      alert('Image size should be less than 5MB');
+      return;
+    }
+
+    try {
+      const savedPassenger = getSavedPassenger();
+      const passengerId = getPassengerId(savedPassenger);
+
+      if (!passengerId) {
+        alert("No Passenger ID found. Please log in again.");
+        console.log("❌ No PassengerID found in:", savedPassenger);
+        return;
+      }
+
+      const uploadFormData = new FormData();
+      uploadFormData.append("profile", file);
+
+      const response = await axios.post(
+        `http://localhost:5000/api/passenger/profile-picture/${passengerId}`,
+        uploadFormData,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+          withCredentials: true,
+        }
+      );
+
+      if (response.data.success) {
+        alert("✅ Profile picture updated!");
+        const newImagePath = response.data.imagePath;
+        
+        // ✅ Update UI state
+        setFormData((prev) => ({
+          ...prev,
+          profilePicture: newImagePath
+        }));
+
+        // ✅ Update both localStorage items to keep them in sync
+        const updatedPassenger = {
+          ...savedPassenger,
+          ProfilePicture: newImagePath,
+        };
+        
+        localStorage.setItem("passenger", JSON.stringify(updatedPassenger));
+        localStorage.setItem("user", JSON.stringify(updatedPassenger));
+        
+        // ✅ Dispatch custom event to notify Header component
+        window.dispatchEvent(new Event('userUpdated'));
+        
+        // Force refresh the image by updating state again with timestamp
+        setTimeout(() => {
+          setFormData((prev) => ({
+            ...prev,
+            profilePicture: `${newImagePath}?t=${Date.now()}`
+          }));
+        }, 100);
+      }
+    } catch (error) {
+      console.error("❌ Error uploading profile picture:", error);
+      if (error.response?.data?.message) {
+        alert(`Upload failed: ${error.response.data.message}`);
+      } else {
+        alert("Failed to upload profile picture. Please try again.");
+      }
+    }
+  };
 
 
   if (loading) {

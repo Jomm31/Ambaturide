@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import Header_Login from "./Header/Header_Login";
+import Header_Login from "../../src/Header.jsx";
 import "./Css/Passenger_Booking.css";
 
 // Import icons
@@ -28,6 +28,53 @@ function Passenger_Booking() {
     const distanceFare = pickup && dropoff ? 450 : 0;
     return baseFare + distanceFare;
   };
+
+  const handleConfirmBooking = async () => {
+  const savedPassenger = JSON.parse(localStorage.getItem("passenger"));
+  if (!savedPassenger || !savedPassenger.PassengerID) {
+    alert("Please log in first.");
+    return;
+  }
+
+  const bookingData = {
+    PassengerID: savedPassenger.PassengerID,
+    PickupArea: pickup,
+    DropoffArea: dropoff,
+    PickupFullAddress: pickupAddress,
+    DropoffFullAddress: dropoffAddress,
+    RideDate: date,
+    RideTime: time,
+    VehicleType: selectedVehicle === "4-seater" ? "4 Seaters" : "6 Seaters",
+    Fare: selectedVehicle === "4-seater" ? 500 : 600
+  };
+
+  try {
+    const response = await fetch("http://localhost:5000/api/passenger/book", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(bookingData)
+    });
+
+    const data = await response.json();
+    if (data.success) {
+      alert("✅ Booking confirmed!");
+      // optionally reset fields
+      setPickup("");
+      setDropoff("");
+      setPickupAddress("");
+      setDropoffAddress("");
+      setDate("");
+      setTime("");
+      setSelectedVehicle("");
+    } else {
+      alert("❌ " + data.message);
+    }
+  } catch (err) {
+    console.error("Error submitting booking:", err);
+    alert("Something went wrong.");
+  }
+};
+
 
   return (
     <>
@@ -183,9 +230,10 @@ function Passenger_Booking() {
               <button className="back-btn">
                 <span className="btn-text">Back</span>
               </button>
-              <button className="confirm-btn">
+              <button className="confirm-btn" onClick={handleConfirmBooking}>
                 <span className="btn-text">Confirm Booking</span>
               </button>
+
             </div>
           </div>
         </div>

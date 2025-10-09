@@ -24,32 +24,28 @@ function PassengerLogin() {
   }
 
   try {
-    const response = await fetch('http://localhost:5000/api/passenger/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
-      credentials: 'include'
-    });
+  // After successful login in your passenger login component
+  const response = await fetch('http://localhost:5000/api/passenger/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password }),
+    credentials: 'include'
+  });
 
-    if (response.ok) {
-      const data = await response.json();
-      localStorage.setItem('user', JSON.stringify(data.passenger));
-      navigate('/');
-    }
+  const data = await response.json();
 
+  if (!response.ok) {
+    setError(data.message || 'Login failed');
+    return;
+  }
 
-    
-    const data = await response.json();
+  // ✅ Save logged-in passenger to localStorage
+  console.log("✅ Login response:", data); // Check what's actually returned
+  localStorage.setItem('passenger', JSON.stringify(data.passenger));
+  localStorage.setItem('user', JSON.stringify(data.passenger));
 
-    if (!response.ok) {
-      setError(data.message || 'Login failed');
-      return;
-    }
+  console.log('✅ Passenger login success:', data);
 
-    // Save to local storage (optional)
-    localStorage.setItem('passenger', JSON.stringify(data.passenger));
-
-    console.log('✅ Login success:', data);
     navigate('/');
   } catch (err) {
     console.error('❌ Error:', err);

@@ -85,7 +85,7 @@ function Header() {
       <nav className={`header-right ${menuOpen ? "open" : ""}`}>
         <a href="/">Book a Ride</a>
         <a href="/">About Us</a>
-        <a href="#">Help</a>
+        <a href="/PassengerBookingStatus">Booking Status</a>
 
         {user ? (
           <div className="auth-buttons">

@@ -156,6 +156,7 @@ app.get("/api/passenger/signup", (req, res) => {
 
 
 // Passenger Login Route
+// Passenger Login Route - FIXED VERSION
 app.post('/api/passenger/login', async (req, res) => {
   const { email, password } = req.body;
 
@@ -192,15 +193,16 @@ app.post('/api/passenger/login', async (req, res) => {
     res.json({
       message: 'Login successful',
       passenger: {
-        PassengerID: passenger.PassengerID,
+        PassengerID: passenger.PassengerID, // ✅ Make sure this line exists and is correct
         FirstName: passenger.FirstName,
         LastName: passenger.LastName,
         Email: passenger.Email,
+        PhoneNumber: passenger.PhoneNumber || "", // Add other fields if needed
+        ProfilePicture: passenger.ProfilePicture || "", // Add other fields if needed
       },
     });
   });
 });
-
 
 
 
@@ -657,6 +659,94 @@ app.put("/api/driver/change-password/:id", async (req, res) => {
     });
   });
 });
+
+app.post("/api/passenger/book", (req, res) => {
+  const {
+    PassengerID,
+    PickupArea,
+    DropoffArea,
+    PickupFullAddress,
+    DropoffFullAddress,
+    RideDate,
+    RideTime,
+    VehicleType,
+    Fare
+  } = req.body;
+
+  if (!PassengerID) {
+    return res.status(400).json({ success: false, message: "Missing PassengerID" });
+  }
+
+  const sql = `
+    INSERT INTO bookings 
+    (PassengerID, PickupArea, DropoffArea, PickupFullAddress, DropoffFullAddress, RideDate, RideTime, VehicleType, Fare)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `;
+
+  db.query(sql, [
+    PassengerID,
+    PickupArea,
+    DropoffArea,
+    PickupFullAddress,
+    DropoffFullAddress,
+    RideDate,
+    RideTime,
+    VehicleType,
+    Fare
+  ], (err, result) => {
+    if (err) {
+      console.error("Booking error:", err);
+      return res.status(500).json({ success: false, message: "Database error" });
+    }
+    res.json({ success: true, message: "Booking created successfully", bookingID: result.insertId });
+  });
+});
+
+app.get("/api/driver/bookings", (req, res) => {
+  const sql = `
+  SELECT 
+    b.BookingID,
+    CONCAT(u.LastName, ', ', u.FirstName) AS PassengerName,
+    u.ProfilePicture,
+    b.PickupFullAddress AS Origin,
+    b.DropoffFullAddress AS Destination,
+    DATE_FORMAT(b.RideDate, '%b. %d, %Y') AS RideDate,
+    DATE_FORMAT(b.RideTime, '%h:%i %p') AS RideTime,
+    b.Status
+  FROM bookings b
+  JOIN passengers u ON b.PassengerID = u.PassengerID
+  WHERE b.Status = 'pending'
+  ORDER BY b.CreatedAt DESC
+`;
+
+
+  db.query(sql, (err, results) => {
+    if (err) {
+      console.error("Error fetching bookings:", err);
+      return res.status(500).json({ success: false, message: "Database error" });
+    }
+    res.json({ success: true, bookings: results });
+  });
+});
+
+app.put("/api/driver/bookings/:id/status", (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body; // "accepted" or "cancelled"
+
+  if (!["accepted", "cancelled"].includes(status)) {
+    return res.status(400).json({ success: false, message: "Invalid status" });
+  }
+
+  const sql = `UPDATE bookings SET Status = ? WHERE BookingID = ?`;
+  db.query(sql, [status, id], (err, result) => {
+    if (err) {
+      console.error("Error updating status:", err);
+      return res.status(500).json({ success: false, message: "Database error" });
+    }
+    res.json({ success: true, message: `Booking ${status}` });
+  });
+});
+
 
 // Handle all other undefined routes safely
 app.use((req, res) => {
