@@ -11,17 +11,26 @@ import PassengerLogin from "./Login/PassengerLogin/PassengerLogin.jsx"
 import PassengerSignUp from "./Login/PassengerLogin/PassengerSignUp.jsx";
 import DriverLogin from "./Login/DriverLogin/DriverLogin.jsx"
 import Dashboard from "./Driver-Interface/Dashboard.jsx"; 
+import DriverBooking from "./Driver-Interface/DriverBooking.jsx"
 import PassengerProfile from "./Passenger-Interface/PassengerProfile.jsx"
+
 import Passenger_Booking from "./Passenger-Interface/Passenger_Booking.jsx";
 import PassengerBookingStatus from "./Passenger-Interface/PassengerBookingStatus.jsx";
+
+
+// Import dashboard subpages
+import DriverProfile from "./Driver-Interface/DriverProfile.jsx";
+import Reviews from "./Driver-Interface/Reviews.jsx";
+
+
 createRoot(document.getElementById("root")).render(
   <StrictMode>
     <BrowserRouter>
       <Routes>
 
         {/*Passenger Homepage, Login, Signup*/}
-        <Route path="/" element={<LoginHomepage />} />
-        <Route path="/PassengerHomepage" element={<PassengerHomepage />} />
+        <Route path="/" element={<PassengerHomepage />} />
+        <Route path="/LoginHomepage" element={<LoginHomepage />} />
         <Route path="/PassengerLogin" element={<PassengerLogin/>}/>
         <Route path="/PassengerSignUp" element={<PassengerSignUp/>}/>
         <Route path="/Passenger_Booking" element={<Passenger_Booking/>}/>
@@ -30,13 +39,20 @@ createRoot(document.getElementById("root")).render(
         <Route path="/PassengerBookingStatus" element={<PassengerBookingStatus/>}/>
         
         {/*Driver Login, Signup*/}
-        <Route path="/DriverSignUp " element={<DriverSignUp />} />
+        <Route path="/DriverSignUp" element={<DriverSignUp />} />
         <Route path="/DriverLogin" element={<DriverLogin />} />
+        <Route path="/DriverBooking" element={<DriverBooking />} />
 
-        {/*Driver Dashboard, Sidebar*/}
-        <Route path="/Dashboard/*" element={<Dashboard />} />
+        <Route path="DriverProfile" element={<DriverProfile/>} />
+        {/*Driver Dashboard, Sidebar with nested routes*/}
+        <Route path="/Dashboard/*" element={<Dashboard />}>
 
-        
+          <Route path="DriverProfile" element={<DriverProfile/>} />
+          <Route path="reviews" element={<Reviews />} />
+        </Route>
+
+
+        {/*Admin*/}
         <Route path="/Admin" element={<Admin />} />
       </Routes>
     </BrowserRouter>

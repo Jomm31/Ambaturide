@@ -1,18 +1,32 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import manDrivingIMG from '../../assets/driving-homepage.jpg';
 import './PassengerLogin.css';
 import Header from '../../Header'
 
 function PassengerLogin() {
+  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  const [error, setError] = useState('');
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Handle login logic here
+    setError('');
+    
+    // Basic validation
+    if (!email || !password) {
+      setError('Please fill in all fields');
+      return;
+    }
+    
+    // TODO: Backend authentication will go here
     console.log('Login attempt:', { email, password, rememberMe });
+    
+    // Temporary: Navigate to homepage (will be replaced with real auth)
+    navigate('/PassengerHomepage');
   };
 
   return (
@@ -23,8 +37,10 @@ function PassengerLogin() {
         <div className="homepage-left">
           <div className="login-header">
             <h2>Welcome back</h2>
-            <p>Sign in to access your account</p>
+            <p>Sign in to continue your journey</p>
           </div>
+          
+          {error && <div className="error-message">{error}</div>}
           
           <form className="login-form" onSubmit={handleSubmit}>
             <div className="form-group">
@@ -49,8 +65,8 @@ function PassengerLogin() {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Enter your password"
                   required
-                />.
-                <button 
+                />
+                <button
                   type="button" 
                   className="password-toggle"
                   onClick={() => setShowPassword(!showPassword)}
@@ -73,13 +89,17 @@ function PassengerLogin() {
               <a href="#" className="forgot-password">Forgot password?</a>
             </div>
             
-            <button type="submit" className="login-btn">Passenger Sign In</button>
+            <button type="submit" className="login-btn">Sign In</button>
             
             <div className="divider">
               <span>or</span>
             </div>
             
-            <button type="button" className="create-account-btn">
+            <button 
+              type="button" 
+              className="create-account-btn"
+              onClick={() => navigate('/PassengerSignUp')}
+            >
               Create New Account
             </button>
           </form>

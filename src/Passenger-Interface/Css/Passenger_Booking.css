@@ -1,7 +1,7 @@
 /* Passenger_Booking.css */
 .booking-container {
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #000000 0%, #313131 100%);
   padding: 40px 20px;
   display: flex;
   align-items: center;
@@ -13,7 +13,8 @@
   background: white;
   border-radius: 24px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
-  display: grid;
+  display: grid !important;
+  flex-direction: unset !important;
   grid-template-columns: 1fr 1fr;
   max-width: 1200px;
   width: 100%;
@@ -40,7 +41,7 @@
   font-weight: 800;
   color: #1a202c;
   margin-bottom: 8px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #2b2b2b 0%, #000000 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;

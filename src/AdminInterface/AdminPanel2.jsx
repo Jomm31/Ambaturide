@@ -37,7 +37,7 @@ export function UsersPanel({ rows, onRefresh, onView }) {
           )}
           <tr>
             <td colSpan="9" style={{ textAlign: "center" }}>
-              <button onClick={onRefresh}>🔄 Refresh Data</button>
+              <button onClick={onRefresh}>Refresh Data</button>
             </td>
           </tr>
         </tbody>

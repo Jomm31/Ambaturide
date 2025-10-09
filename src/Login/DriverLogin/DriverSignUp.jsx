@@ -1,123 +1,265 @@
 import { useState } from 'react';
-import manDrivingIMG from '../../assets/driving-homepage.jpg';
+import { useNavigate } from 'react-router-dom';
 import './DriverSignUp.css';
 import DriverHeader from '../../Driver-Interface/Header/DriverHeader'
 
 function DriverSignUp() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const navigate = useNavigate();
+  const [formData, setFormData] = useState({
+    email: '',
+    password: '',
+    confirmPassword: '',
+    licenseNumber: '',
+    vehicleType: '',
+    vehiclePlate: ''
+  });
+  const [licenseImage, setLicenseImage] = useState(null);
+  const [vehicleImage, setVehicleImage] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleLicenseImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setLicenseImage(file);
+    }
+  };
+
+  const handleVehicleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setVehicleImage(file);
+    }
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Handle login logic here
-    console.log('Login attempt:', { email, password, rememberMe });
+    setError('');
+    
+    // Validation
+    const { email, password, confirmPassword, licenseNumber, vehicleType, vehiclePlate } = formData;
+    
+    if (!email || !password || !confirmPassword || !licenseNumber || !vehicleType || !vehiclePlate) {
+      setError('Please fill in all fields');
+      return;
+    }
+    
+    if (!licenseImage) {
+      setError('Please upload your driver\'s license image');
+      return;
+    }
+
+    if (!vehicleImage) {
+      setError('Please upload your vehicle image');
+      return;
+    }
+    
+    if (password !== confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+    
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters');
+      return;
+    }
+    
+    // TODO: Backend registration will go here
+    console.log('Driver sign up attempt:', { 
+      ...formData, 
+      licenseImage, 
+      vehicleImage 
+    });
+    
+    // Temporary: Navigate to login (will be replaced with real auth)
+    navigate('/DriverLogin');
   };
 
   return (
     <>
-    <DriverHeader/>
-    <div className="app-container">
-      <div className="homepage-container">
-        <div className="homepage-left">
-          <div className="login-header">
-            <h2>Driver Sign up</h2>
-            <p>Sign up to access your account</p>
-          </div>
-          
-          <form className="login-form" onSubmit={handleSubmit}>
-            <div className="form-group">
-              <label htmlFor="email">Email or Phone Number</label>
-              <input 
-                type="text" 
-                id="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your email or phone number"
-                required
-              />
+      <DriverHeader/>
+      <div className="app-container">
+        <div className="homepage-container">
+          <div className="form-content">
+            <div className="login-header">
+              <h2>Become a Driver</h2>
+              <p>Create your driver account and start earning</p>
             </div>
             
-            <div className="form-group">
-              <label htmlFor="password">Password</label>
-              <div className="password-input-container">
-                <input 
-                  type={showPassword ? "text" : "password"} 
-                  id="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter your password"
-                  required
-                />
-                <button 
-                  type="button" 
-                  className="password-toggle"
-                  onClick={() => setShowPassword(!showPassword)}
-                >
-                  {showPassword ? "Hide" : "Show"}
-                </button>
-              </div>
-            </div>
-            <div className="form-group">
-              <label htmlFor="password">Confirm Password</label>
-              <div className="password-input-container">
-                <input 
-                  type={showPassword ? "text" : "password"} 
-                  id="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter your password"
-                  required
-                />
-                <button 
-                  type="button" 
-                  className="password-toggle"
-                  onClick={() => setShowPassword(!showPassword)}
-                >
-                  {showPassword ? "Hide" : "Show"}
-                </button>
-              </div>
-            </div>
+            {error && <div className="error-message">{error}</div>}
             
-            <div className="form-options">
-              <div className="remember-me">
-                <input 
-                  type="checkbox" 
-                  id="remember"
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
-                />
-                <label htmlFor="remember">Remember me</label>
-              </div>
-              <a href="#" className="forgot-password">Forgot password?</a>
-            </div>
-            
-            <button type="submit" className="login-btn">Sign Up</button>
-            
-            <div className="divider">
-              <span>or</span>
-            </div>
-            
-            <button type="button" className="create-account-btn">
-              Login
-            </button>
-          </form>
-        </div>
+            <form className="login-form" onSubmit={handleSubmit}>
+              <div className="form-columns">
+                <div className="form-column">
+                  <div className="form-group">
+                    <label htmlFor="email">Email or Phone Number</label>
+                    <input 
+                      type="text" 
+                      id="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleInputChange}
+                      placeholder="Enter your email or phone number"
+                      required
+                    />
+                  </div>
+                  
+                  <div className="form-group">
+                    <label htmlFor="password">Password</label>
+                    <div className="password-input-container">
+                      <input 
+                        type={showPassword ? "text" : "password"} 
+                        id="password"
+                        name="password"
+                        value={formData.password}
+                        onChange={handleInputChange}
+                        placeholder="Enter your password"
+                        required
+                      />
+                      <button 
+                        type="button" 
+                        className="password-toggle"
+                        onClick={() => setShowPassword(!showPassword)}
+                      >
+                        {showPassword ? "Hide" : "Show"}
+                      </button>
+                    </div>
+                  </div>
 
-        <div className="homepage-right">
-          <div className="image-container">
-            <img src={manDrivingIMG} alt="Person driving" className="login-image" />
-            <div className="image-overlay">
-              <h3>Ride with Confidence</h3>
-              <p>Safe, reliable transportation at your fingertips</p>
-            </div>
+                  <div className="form-group">
+                    <label htmlFor="confirmPassword">Confirm Password</label>
+                    <div className="password-input-container">
+                      <input 
+                        type={showConfirmPassword ? "text" : "password"} 
+                        id="confirmPassword"
+                        name="confirmPassword"
+                        value={formData.confirmPassword}
+                        onChange={handleInputChange}
+                        placeholder="Confirm your password"
+                        required
+                      />
+                      <button 
+                        type="button" 
+                        className="password-toggle"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      >
+                        {showConfirmPassword ? "Hide" : "Show"}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Driver License Information */}
+                  <div className="form-group">
+                    <label htmlFor="licenseNumber">Driver's License Number</label>
+                    <input 
+                      type="text" 
+                      id="licenseNumber"
+                      name="licenseNumber"
+                      value={formData.licenseNumber}
+                      onChange={handleInputChange}
+                      placeholder="Enter your driver's license number"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="form-column">
+                  {/* Vehicle Information */}
+                  <div className="form-group">
+                    <label htmlFor="vehicleType">Vehicle Type</label>
+                    <select 
+                      id="vehicleType"
+                      name="vehicleType"
+                      value={formData.vehicleType}
+                      onChange={handleInputChange}
+                      required
+                      className="select-input"
+                    >
+                      <option value="">Select vehicle type</option>
+                      <option value="sedan">Sedan</option>
+                      <option value="suv">SUV</option>
+                      <option value="hatchback">Hatchback</option>
+                      <option value="van">Van</option>
+                      <option value="motorcycle">Motorcycle</option>
+                    </select>
+                  </div>
+
+                  <div className="form-group">
+                    <label htmlFor="vehiclePlate">Vehicle Plate Number</label>
+                    <input 
+                      type="text" 
+                      id="vehiclePlate"
+                      name="vehiclePlate"
+                      value={formData.vehiclePlate}
+                      onChange={handleInputChange}
+                      placeholder="Enter your vehicle plate number"
+                      required
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label htmlFor="licenseImage">Driver's License Image</label>
+                    <input 
+                      type="file" 
+                      id="licenseImage"
+                      accept="image/*"
+                      onChange={handleLicenseImageChange}
+                      required
+                      className="file-input"
+                    />
+                    {licenseImage && (
+                      <div className="file-preview">
+                        <span>Selected: {licenseImage.name}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="form-group">
+                    <label htmlFor="vehicleImage">Vehicle Image</label>
+                    <input 
+                      type="file" 
+                      id="vehicleImage"
+                      accept="image/*"
+                      onChange={handleVehicleImageChange}
+                      required
+                      className="file-input"
+                    />
+                    {vehicleImage && (
+                      <div className="file-preview">
+                        <span>Selected: {vehicleImage.name}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+              
+              <button type="submit" className="login-btn">Sign Up as Driver</button>
+              
+              <div className="divider">
+                <span>Already have an account?</span>
+              </div>
+              
+              <button 
+                type="button" 
+                className="create-account-btn"
+                onClick={() => navigate('/DriverLogin')}
+              >
+                Sign In
+              </button>
+            </form>
           </div>
         </div>
       </div>
-    </div>
     </>
-    
   );
 }
 
