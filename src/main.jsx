@@ -19,8 +19,7 @@ import PassengerBookingStatus from "./Passenger-Interface/PassengerBookingStatus
 
 
 // Import dashboard subpages
-import Account from "./Driver-Interface/Account.jsx";
-import Earnings from "./Driver-Interface/Earnings.jsx";
+import DriverProfile from "./Driver-Interface/DriverProfile.jsx";
 import Reviews from "./Driver-Interface/Reviews.jsx";
 
 
@@ -43,11 +42,12 @@ createRoot(document.getElementById("root")).render(
         <Route path="/DriverSignUp" element={<DriverSignUp />} />
         <Route path="/DriverLogin" element={<DriverLogin />} />
         <Route path="/DriverBooking" element={<DriverBooking />} />
+
+        <Route path="DriverProfile" element={<DriverProfile/>} />
         {/*Driver Dashboard, Sidebar with nested routes*/}
         <Route path="/Dashboard/*" element={<Dashboard />}>
 
-          <Route path="account" element={<Account />} />
-          <Route path="earnings" element={<Earnings />} />
+          <Route path="DriverProfile" element={<DriverProfile/>} />
           <Route path="reviews" element={<Reviews />} />
         </Route>
 
