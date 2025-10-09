@@ -39,7 +39,7 @@ createRoot(document.getElementById("root")).render(
         <Route path="/DriverSignUp" element={<DriverSignUp />} />
         <Route path="/DriverLogin" element={<DriverLogin />} />
 
-                <Route index element={<DriverBooking />} /> 
+        <Route path="/DriverBooking" element={<DriverBooking />} /> 
         <Route path="DriverBooking" element={<DriverBooking />} />
         <Route path="DriverProfile" element={<DriverProfile/>} />
         <Route path="Reviews" element={<Reviews />} />

@@ -23,27 +23,11 @@ const ensureDir = (dir) => {
 
 ensureDir(path.join(__dirname, "uploads/driver-license"));
 ensureDir(path.join(__dirname, "uploads/vehicle-images"));
+ensureDir(path.join(__dirname, "uploads/profile-pictures"));
 
 
 const app = express();
 
-const storage = multer.diskStorage({
-  destination: path.join(__dirname, "uploads/profile-pictures"),
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + path.extname(file.originalname)); // unique filename
-  }
-});
-
-const upload = multer({ storage });
-
-app.post("/api/passenger/upload-profile", upload.single("profile"), (req, res) => {
-  if (!req.file) {
-    return res.status(400).json({ message: "No file uploaded" });
-  }
-
-  const imagePath = `/uploads/profile-pictures/${req.file.filename}`;
-  res.json({ success: true, imagePath });
-});
 
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
@@ -57,11 +41,22 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 
 
-// Middlewares
-app.use(cors({
-  origin: "http://localhost:5173", // your React frontend
-  credentials: true
-}));
+const allowedOrigins = ["http://localhost:5173", "http://localhost:5174"];
+
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      // Allow requests with no origin (like mobile apps or Postman)
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("❌ Not allowed by CORS"));
+      }
+    },
+    credentials: true,
+  })
+);
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
@@ -347,7 +342,149 @@ app.get("/api/driver/login", (req, res) => {
   res.send("✅ You reached the Driver SignUp route! Use POST to submit data.");
 });
 
+// ✅ Get full passenger profile by ID
+app.get("/api/passenger/profile/:id", (req, res) => {
+  const passengerId = req.params.id;
 
+  const sql = `
+    SELECT PassengerID, FirstName, LastName, Email, PhoneNumber, Address, BirthDate, Gender, ProfilePicture, Status
+    FROM passengers
+    WHERE PassengerID = ?
+  `;
+
+  db.query(sql, [passengerId], (err, results) => {
+    if (err) {
+      console.error("❌ Database error:", err);
+      return res.status(500).json({ message: "Database error" });
+    }
+
+    if (results.length === 0) {
+      return res.status(404).json({ message: "Passenger not found" });
+    }
+
+    res.json(results[0]);
+  });
+});
+
+// ✅ Passenger Profile Picture Upload & Update
+const profileStorage = multer.diskStorage({
+  destination: path.join(__dirname, "uploads/profile-pictures"),
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + path.extname(file.originalname));
+  }
+});
+
+const profileUpload = multer({ storage: profileStorage });
+
+app.post("/api/passenger/profile-picture/:id", profileUpload.single("profile"), (req, res) => {
+  const passengerId = req.params.id;
+
+  if (!req.file) {
+    return res.status(400).json({ message: "No file uploaded" });
+  }
+
+  const imagePath = `/uploads/profile-pictures/${req.file.filename}`;
+
+  const sql = "UPDATE passengers SET ProfilePicture = ? WHERE PassengerID = ?";
+  db.query(sql, [imagePath, passengerId], (err, result) => {
+    if (err) {
+      console.error("❌ Database error:", err);
+      return res.status(500).json({ message: "Database error" });
+    }
+
+    res.json({ success: true, imagePath, message: "Profile picture updated successfully" });
+  });
+});
+
+// ✅ Update Passenger Info (Name, Gender, Birthdate, etc.)
+app.put("/api/passenger/update/:id", (req, res) => {
+  const passengerId = req.params.id;
+  const { firstName, lastName, gender, birthdate } = req.body;
+
+  const sql = `
+    UPDATE passengers 
+    SET FirstName = ?, LastName = ?, Gender = ?, BirthDate = ?
+    WHERE PassengerID = ?
+  `;
+
+  db.query(sql, [firstName, lastName, gender, birthdate, passengerId], (err, result) => {
+    if (err) {
+      console.error("❌ Database error:", err);
+      return res.status(500).json({ message: "Database error" });
+    }
+
+    res.json({ success: true, message: "Profile updated successfully!" });
+  });
+});
+// ✅ Update Passenger Contact and Email
+app.put("/api/passenger/update-contact/:id", (req, res) => {
+  const passengerId = req.params.id;
+  const { contactNo, email } = req.body;
+
+  if (!contactNo || !email) {
+    return res.status(400).json({ success: false, message: "Contact number and email are required" });
+  }
+
+  const sql = `
+    UPDATE passengers 
+    SET PhoneNumber = ?, Email = ?
+    WHERE PassengerID = ?
+  `;
+
+  db.query(sql, [contactNo, email, passengerId], (err, result) => {
+    if (err) {
+      console.error("❌ Database error:", err);
+      return res.status(500).json({ success: false, message: "Database error" });
+    }
+
+    res.json({ success: true, message: "Contact info updated successfully!" });
+  });
+});
+
+
+
+// ✅ Change Passenger Password
+app.put("/api/passenger/change-password/:id", async (req, res) => {
+  const passengerId = req.params.id;
+  const { oldPassword, newPassword } = req.body;
+
+  if (!oldPassword || !newPassword) {
+    return res.status(400).json({ success: false, message: "Both old and new passwords are required" });
+  }
+
+  // Get the current password hash from the DB
+  const getSql = `SELECT Password FROM passengers WHERE PassengerID = ?`;
+  db.query(getSql, [passengerId], async (err, results) => {
+    if (err) {
+      console.error("❌ Database error:", err);
+      return res.status(500).json({ success: false, message: "Database error" });
+    }
+
+    if (results.length === 0) {
+      return res.status(404).json({ success: false, message: "Passenger not found" });
+    }
+
+    const storedHash = results[0].Password;
+    const isMatch = await bcrypt.compare(oldPassword, storedHash);
+
+    if (!isMatch) {
+      return res.status(401).json({ success: false, message: "Old password is incorrect" });
+    }
+
+    // Hash the new password
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    const updateSql = `UPDATE passengers SET Password = ? WHERE PassengerID = ?`;
+
+    db.query(updateSql, [hashedPassword, passengerId], (err) => {
+      if (err) {
+        console.error("❌ Database error:", err);
+        return res.status(500).json({ success: false, message: "Failed to update password" });
+      }
+
+      res.json({ success: true, message: "Password changed successfully!" });
+    });
+  });
+});
 
 
 

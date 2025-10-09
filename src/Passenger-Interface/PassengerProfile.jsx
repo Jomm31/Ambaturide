@@ -1,23 +1,94 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react"; // Added useEffect import
 import "./Css/PassengerProfile.css";
 import Header from "../Header";
+import axios from "axios"; // Added axios for API calls (install if needed: npm i axios)
 
 function PassengerProfile() {
   const [activeSection, setActiveSection] = useState("profile");
   const [editingField, setEditingField] = useState(null);
   const [formData, setFormData] = useState({
-    lastName: "Tingson",
-    firstName: "Carlos John",
-    gender: "Male",
-    birthdate: "2004-12-25",
+    lastName: "",
+    firstName: "",
+    gender: "",
+    birthdate: "",
     contactNo: "",
     email: "",
     currentPassword: "",
     newPassword: "",
     confirmPassword: ""
   });
-
   const [tempData, setTempData] = useState({ ...formData });
+  const [loading, setLoading] = useState(true); // Added loading state
+  const [error, setError] = useState(""); // Added error state
+
+  // Function to load data from localStorage (fallback)
+// Function to load data from localStorage (fallback)
+const loadFromLocalStorage = () => {
+  try {
+    const savedPassenger = localStorage.getItem("passenger");
+    if (savedPassenger) {
+      const passengerData = JSON.parse(savedPassenger);
+      setFormData(prev => ({
+        ...prev,
+        firstName: passengerData.FirstName || "",
+        lastName: passengerData.LastName || "",
+        email: passengerData.Email || "",
+        profilePicture: passengerData.ProfilePicture || "" // Add this line
+      }));
+      return true;
+    }
+    return false;
+  } catch (err) {
+    console.error("Error loading from localStorage:", err);
+    return false;
+  }
+};
+
+  // Function to fetch full profile from backend (optional, for complete data)
+// Function to fetch full profile from backend (optional, for complete data)
+const fetchProfileFromDB = async (passengerId) => {
+  try {
+    const response = await axios.get(`http://localhost:5000/api/passenger/profile/${passengerId}`, {
+      withCredentials: true // For session-based auth
+    });
+    const fullData = response.data;
+    setFormData({
+      firstName: fullData.FirstName || "",
+      lastName: fullData.LastName || "",
+      gender: fullData.Gender || "",
+      birthdate: fullData.BirthDate || "",
+      contactNo: fullData.PhoneNumber || "",
+      email: fullData.Email || "",
+      profilePicture: fullData.ProfilePicture || "", // Add this line
+      currentPassword: "",
+      newPassword: "",
+      confirmPassword: ""
+    });
+  } catch (err) {
+    console.error("Error fetching profile from DB:", err);
+    setError("Failed to load full profile. Using cached data.");
+    loadFromLocalStorage(); // Fallback to localStorage
+  }
+};
+  useEffect(() => {
+    setLoading(true);
+    const savedPassenger = localStorage.getItem("passenger");
+    if (savedPassenger) {
+      const passengerData = JSON.parse(savedPassenger);
+      // First, try to fetch full data from DB using PassengerID
+      if (passengerData.PassengerID) {
+        fetchProfileFromDB(passengerData.PassengerID);
+      } else {
+        // Fallback to localStorage only
+        loadFromLocalStorage();
+      }
+    } else {
+      // No saved data – redirect to login or show error
+      setError("No profile data found. Please log in.");
+      loadFromLocalStorage(); // Try anyway
+    }
+    setLoading(false);
+  }, []);
 
   const handleInputChange = (e) => {
     setFormData({
@@ -38,35 +109,236 @@ function PassengerProfile() {
     setTempData({ ...formData });
   };
 
-  const saveEdit = (fieldName) => {
+const saveEdit = async (fieldName) => {
+  try {
+    const savedPassenger = JSON.parse(localStorage.getItem("passenger"));
+    const passengerId = savedPassenger?.PassengerID;
+
+    if (!passengerId) {
+      alert("No Passenger ID found. Please log in again.");
+      return;
+    }
+
+    // Update local UI first
     setFormData({ ...tempData });
     setEditingField(null);
-  };
+
+    // Send update request to backend
+    const response = await axios.put(
+      `http://localhost:5000/api/passenger/update/${passengerId}`,
+      {
+        firstName: tempData.firstName,
+        lastName: tempData.lastName,
+        gender: tempData.gender,
+        birthdate: tempData.birthdate,
+      },
+      { withCredentials: true }
+    );
+
+    if (response.data.success) {
+      alert("✅ Profile updated successfully!");
+      // Optionally update localStorage
+      localStorage.setItem(
+        "passenger",
+        JSON.stringify({
+          ...savedPassenger,
+          FirstName: tempData.firstName,
+          LastName: tempData.lastName,
+          Gender: tempData.gender,
+          BirthDate: tempData.birthdate,
+        })
+      );
+    } else {
+      alert("⚠️ Failed to update profile.");
+    }
+  } catch (error) {
+    console.error("❌ Error updating profile:", error);
+    alert("An error occurred while saving changes.");
+  }
+};
+
 
   const cancelEdit = () => {
     setEditingField(null);
     setTempData({ ...formData });
   };
 
-  const handleSaveChanges = (e) => {
-    e.preventDefault();
-    setActiveSection("success");
-  };
+const handleSaveChanges = async (e) => {
+  e.preventDefault();
+  try {
+    const savedPassenger = JSON.parse(localStorage.getItem("passenger"));
+    const passengerId = savedPassenger?.PassengerID;
 
-  const handlePasswordChange = (e) => {
-    e.preventDefault();
-    setActiveSection("passwordSuccess");
-  };
+    if (!passengerId) {
+      alert("No Passenger ID found. Please log in again.");
+      return;
+    }
 
-  const handleProfilePictureChange = (e) => {
-    // Handle profile picture upload logic here
-    console.log("Profile picture changed");
-  };
+    const response = await axios.put(
+      `http://localhost:5000/api/passenger/update-contact/${passengerId}`,
+      {
+        contactNo: formData.contactNo,
+        email: formData.email,
+      },
+      { withCredentials: true }
+    );
+
+    if (response.data.success) {
+      alert("✅ Contact info updated!");
+      localStorage.setItem(
+        "passenger",
+        JSON.stringify({
+          ...savedPassenger,
+          Email: formData.email,
+          PhoneNumber: formData.contactNo,
+        })
+      );
+      setActiveSection("success");
+    } else {
+      alert("⚠️ Failed to update info");
+    }
+  } catch (error) {
+    console.error("❌ Error updating contact info:", error);
+    alert("Server error while saving contact info");
+  }
+};
+
+
+const handlePasswordChange = async (e) => {
+  e.preventDefault();
+
+  if (formData.newPassword !== formData.confirmPassword) {
+    alert("❌ New password and confirm password do not match");
+    return;
+  }
+
+  try {
+    const savedPassenger = JSON.parse(localStorage.getItem("passenger"));
+    const passengerId = savedPassenger?.PassengerID;
+
+    if (!passengerId) {
+      alert("No Passenger ID found. Please log in again.");
+      return;
+    }
+
+    const response = await axios.put(
+      `http://localhost:5000/api/passenger/change-password/${passengerId}`,
+      {
+        oldPassword: formData.currentPassword,
+        newPassword: formData.newPassword,
+      },
+      { withCredentials: true }
+    );
+
+    if (response.data.success) {
+      alert("✅ Password changed successfully!");
+      setFormData((prev) => ({
+        ...prev,
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      }));
+      setActiveSection("passwordSuccess");
+    } else {
+      alert(`⚠️ ${response.data.message}`);
+    }
+  } catch (error) {
+    console.error("❌ Error changing password:", error);
+    alert("Server error while changing password");
+  }
+};
+
+
+
+const handleProfilePictureChange = async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  // Validate file type and size
+  if (!file.type.startsWith('image/')) {
+    alert('Please select an image file');
+    return;
+  }
+  
+  if (file.size > 5 * 1024 * 1024) { // 5MB limit
+    alert('Image size should be less than 5MB');
+    return;
+  }
+
+  try {
+    const savedPassenger = JSON.parse(localStorage.getItem("passenger"));
+    const passengerId = savedPassenger?.PassengerID;
+    
+    if (!passengerId) {
+      alert("No Passenger ID found. Please log in again.");
+      return;
+    }
+
+    const uploadFormData = new FormData();
+    uploadFormData.append("profile", file);
+
+    const response = await axios.post(
+      `http://localhost:5000/api/passenger/profile-picture/${passengerId}`,
+      uploadFormData,
+      {
+        headers: { "Content-Type": "multipart/form-data" },
+        withCredentials: true,
+      }
+    );
+
+    if (response.data.success) {
+      alert("✅ Profile picture updated!");
+      const newImagePath = response.data.imagePath;
+      
+      // ✅ Update UI state
+      setFormData((prev) => ({
+        ...prev,
+        profilePicture: newImagePath
+      }));
+
+      // ✅ Update both localStorage items to keep them in sync
+      const updatedPassenger = {
+        ...savedPassenger,
+        ProfilePicture: newImagePath,
+      };
+      
+      localStorage.setItem("passenger", JSON.stringify(updatedPassenger));
+      localStorage.setItem("user", JSON.stringify(updatedPassenger));
+      
+      // ✅ Dispatch custom event to notify Header component
+      window.dispatchEvent(new Event('userUpdated'));
+      
+      // Force refresh the image by updating state again with timestamp
+      setTimeout(() => {
+        setFormData((prev) => ({
+          ...prev,
+          profilePicture: `${newImagePath}?t=${Date.now()}`
+        }));
+      }, 100);
+    }
+  } catch (error) {
+    console.error("❌ Error uploading profile picture:", error);
+    if (error.response?.data?.message) {
+      alert(`Upload failed: ${error.response.data.message}`);
+    } else {
+      alert("Failed to upload profile picture. Please try again.");
+    }
+  }
+};
+
+
+
+  if (loading) {
+    return <div className="profile-container">Loading profile...</div>; // Simple loading UI
+  }
+
+  if (error) {
+    console.warn(error); // Log error but don't break UI
+  }
 
   return (
     <>
       <Header />
-      
       <div className="profile-container">
         {/* Header Section */}
         <div className="profile-header">
@@ -100,7 +372,7 @@ function PassengerProfile() {
                       </div>
                     ) : (
                       <>
-                        <span className="info-value">{formData.lastName}</span>
+                        <span className="info-value">{formData.lastName || "N/A"}</span>
                         <span className="edit-icon" onClick={() => startEditing('lastName')}>✏️</span>
                       </>
                     )}
@@ -127,7 +399,7 @@ function PassengerProfile() {
                       </div>
                     ) : (
                       <>
-                        <span className="info-value">{formData.firstName}</span>
+                        <span className="info-value">{formData.firstName || "N/A"}</span>
                         <span className="edit-icon" onClick={() => startEditing('firstName')}>✏️</span>
                       </>
                     )}
@@ -146,6 +418,7 @@ function PassengerProfile() {
                           onChange={handleTempChange}
                           name="gender"
                         >
+                          <option value="">Select Gender</option>
                           <option value="Male">Male</option>
                           <option value="Female">Female</option>
                           <option value="Other">Other</option>
@@ -157,7 +430,7 @@ function PassengerProfile() {
                       </div>
                     ) : (
                       <>
-                        <span className="gender-badge">{formData.gender}</span>
+                        <span className="gender-badge">{formData.gender || "N/A"}</span>
                         <span className="edit-icon" onClick={() => startEditing('gender')}>✏️</span>
                       </>
                     )}
@@ -186,11 +459,11 @@ function PassengerProfile() {
                       <>
                         <span className="birthdate-value">
                           <span className="calendar-icon">📅</span>
-                          {new Date(formData.birthdate).toLocaleDateString('en-US', {
+                          {formData.birthdate ? new Date(formData.birthdate).toLocaleDateString('en-US', {
                             month: 'short',
                             day: 'numeric',
                             year: 'numeric'
-                          })}
+                          }) : "N/A"}
                         </span>
                         <span className="edit-icon" onClick={() => startEditing('birthdate')}>✏️</span>
                       </>
@@ -202,8 +475,25 @@ function PassengerProfile() {
               <div className="profile-picture-section">
                 <div className="profile-picture-container">
                   <div className="profile-picture">
-                    <span className="profile-number">8</span>
+                    {formData.profilePicture ? (
+                      <img
+                        src={`http://localhost:5000${formData.profilePicture}?t=${Date.now()}`}
+                        alt="Profile"
+                        className="profile-img"
+                        onError={(e) => {
+                          // If image fails to load, show default
+                          e.target.src = "/profile-pictures/default.jpg";
+                        }}
+                      />
+                    ) : (
+                      <img
+                        src="/profile-pictures/default.jpg"
+                        alt="Default profile"
+                        className="profile-img"
+                      />
+                    )}
                   </div>
+
                   <label className="profile-edit-label">
                     <span className="edit-icon profile-edit-icon">✏️</span>
                     <input

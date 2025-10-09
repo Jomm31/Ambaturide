@@ -539,3 +539,79 @@
     align-self: flex-end;
   }
 }
+
+/* Update the .profile-img class in your CSS */
+.profile-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+/* Also update the .profile-picture container to ensure proper sizing */
+.profile-picture {
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  background: #3b82f6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 3px solid #e5e7eb;
+  position: relative;
+  overflow: hidden; /* Add this to prevent image overflow */
+}
+
+/* For a smaller profile picture (e.g., 150px) */
+.profile-picture {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  background: #3b82f6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 3px solid #e5e7eb;
+  position: relative;
+  overflow: hidden;
+}
+
+.profile-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+/* Also update the profile number size for consistency */
+.profile-number {
+  color: white;
+  font-size: 3rem; /* Adjust based on container size */
+  font-weight: 700;
+}
+
+@media (max-width: 768px) {
+  /* ... existing mobile styles ... */
+  
+  .profile-picture {
+    width: 120px;
+    height: 120px;
+  }
+
+  .profile-number {
+    font-size: 2rem;
+  }
+}
+
+@media (max-width: 480px) {
+  /* ... existing small screen styles ... */
+  
+  .profile-picture {
+    width: 100px;
+    height: 100px;
+  }
+
+  .profile-number {
+    font-size: 1.8rem;
+  }
+}
