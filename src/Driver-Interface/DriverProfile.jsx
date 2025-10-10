@@ -19,7 +19,7 @@ function DriverProfile() {
     confirmPassword: "",
     carBrand: "",
     carModel: "",
-    carColor: "",
+
     plateNumber: "",
     profilePicture: ""
   });
@@ -50,7 +50,6 @@ function DriverProfile() {
             email: fullData.Email || "",
             carBrand: fullData.VehicleBrand || "",
             carModel: fullData.VehicleType || "",
-            carColor: "", // You might need to add this field to your database
             plateNumber: fullData.PlateNumber || "",
             profilePicture: fullData.ProfilePicture || "",
             currentPassword: "",
@@ -109,38 +108,90 @@ function DriverProfile() {
         return;
       }
 
-      // Update local UI first
-      setFormData({ ...tempData });
-      setEditingField(null);
+      // Prepare default: update basic profile endpoint
+      let endpoint = `/api/driver/update/${driverId}`;
+      let payload = {};
 
-      // Send update request to backend
-      const response = await axios.put(
-        `http://localhost:5000/api/driver/update/${driverId}`,
-        {
+      // Decide payload and endpoint based on field edited
+      if (["firstName", "lastName", "gender", "birthdate"].includes(fieldName)) {
+        payload = {
           firstName: tempData.firstName,
           lastName: tempData.lastName,
           gender: tempData.gender,
           birthdate: tempData.birthdate,
-        },
+        };
+      } else if (["carBrand", "carModel", "plateNumber"].includes(fieldName)) {
+        // update vehicle info
+        endpoint = `/api/driver/update-vehicle/${driverId}`;
+        payload = {
+          vehicleBrand: tempData.carBrand,
+          vehicleType: tempData.carModel,
+          plateNumber: tempData.plateNumber,
+        };
+      } else if (["contactNo", "email"].includes(fieldName)) {
+        endpoint = `/api/driver/update-contact/${driverId}`;
+        payload = {
+          contactNo: tempData.contactNo,
+          email: tempData.email,
+        };
+      } else {
+        // unknown field — just apply locally
+        setFormData({ ...tempData });
+        setEditingField(null);
+        return;
+      }
+
+      // Optimistically update UI
+      setFormData({ ...tempData });
+      setEditingField(null);
+
+      const response = await axios.put(
+        `http://localhost:5000${endpoint}`,
+        payload,
         { withCredentials: true }
       );
 
       if (response.data.success) {
-        alert("✅ Profile updated successfully!");
-        // Update both localStorage items
-        const updatedDriver = {
-          ...savedDriver,
-          FirstName: tempData.firstName,
-          LastName: tempData.lastName,
-          Gender: tempData.gender,
-          BirthDate: tempData.birthdate,
-        };
-        
+        // Build updated localStorage object mapping to DB keys
+        const updatedDriver = { ...savedDriver };
+
+        // Map fields returned / edited to the stored keys used elsewhere
+        if (payload.firstName !== undefined) {
+          updatedDriver.FirstName = payload.firstName;
+        }
+        if (payload.lastName !== undefined) {
+          updatedDriver.LastName = payload.lastName;
+        }
+        if (payload.gender !== undefined) {
+          updatedDriver.Gender = payload.gender;
+        }
+        if (payload.birthdate !== undefined) {
+          updatedDriver.BirthDate = payload.birthdate;
+        }
+        if (payload.vehicleBrand !== undefined) {
+          // database column is VehicleBrand
+          updatedDriver.VehicleBrand = payload.vehicleBrand;
+        }
+        if (payload.vehicleType !== undefined) {
+          updatedDriver.VehicleType = payload.vehicleType;
+        }
+        if (payload.plateNumber !== undefined) {
+          updatedDriver.PlateNumber = payload.plateNumber;
+        }
+        if (payload.contactNo !== undefined) {
+          updatedDriver.PhoneNumber = payload.contactNo;
+        }
+        if (payload.email !== undefined) {
+          updatedDriver.Email = payload.email;
+        }
+
         localStorage.setItem("driver", JSON.stringify(updatedDriver));
         localStorage.setItem("user", JSON.stringify(updatedDriver));
-        window.dispatchEvent(new Event('userUpdated'));
+        window.dispatchEvent(new Event("userUpdated"));
+
+        alert("✅ Updated successfully!");
       } else {
-        alert("⚠️ Failed to update profile.");
+        alert("⚠️ Failed to update.");
       }
     } catch (error) {
       console.error("❌ Error updating profile:", error);
@@ -257,7 +308,7 @@ function DriverProfile() {
           vehicleBrand: formData.carBrand,
           vehicleType: formData.carModel,
           plateNumber: formData.plateNumber,
-          // Add carColor if you have it in your database
+
         },
         { withCredentials: true }
       );
@@ -634,31 +685,7 @@ function DriverProfile() {
                   </div>
                 </div>
                 
-                <div className="form-group">
-                  <label className="form-label">Car Color</label>
-                  <div className="car-input-container">
-                    {editingField === 'carColor' ? (
-                      <div className="edit-mode">
-                        <input
-                          type="text"
-                          className="edit-input"
-                          value={tempData.carColor}
-                          onChange={handleTempChange}
-                          name="carColor"
-                        />
-                        <div className="edit-actions">
-                          <button className="save-btn" onClick={() => saveEdit('carColor')}>✓</button>
-                          <button className="cancel-btn" onClick={cancelEdit}>✕</button>
-                        </div>
-                      </div>
-                    ) : (
-                      <>
-                        <span className="info-value">{formData.carColor || "N/A"}</span>
-                        <span className="edit-icon" onClick={() => startEditing('carColor')}>✏️</span>
-                      </>
-                    )}
-                  </div>
-                </div>
+                
                 
                 <div className="form-group">
                   <label className="form-label">Plate Number</label>

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import "./Css/PassengerBookingStatus.css";
 import logo from "../assets/ambaturide-logo.png";
+import Header from "../../src/Header.jsx"
 
 function PassengerBookingStatus() {
   const [booking, setBooking] = useState(null);
@@ -9,7 +10,8 @@ function PassengerBookingStatus() {
   const [rating, setRating] = useState(0);
   const [passengerProfile, setPassengerProfile] = useState(null);
   const [passengerPhone, setPassengerPhone] = useState("");
-
+  const [driverProfile, setDriverProfile] = useState(null);
+  
   // Read PassengerID from localStorage with fallbacks (normalized)
   const getSavedPassengerId = () => {
     try {
@@ -55,6 +57,17 @@ function PassengerBookingStatus() {
           } catch (err) {
             console.warn("Failed to fetch passenger profile:", err);
           }
+
+          // Fetch driver profile if a driver is assigned
+          const driverId = res.data.booking.DriverID || res.data.booking.DriverId || res.data.booking.driverId;
+          if (driverId) {
+            try {
+              const d = await axios.get(`http://localhost:5000/api/driver/profile/${driverId}`);
+              setDriverProfile(d.data);
+            } catch (err) {
+              console.warn("Failed to fetch driver profile:", err);
+            }
+          }
         } else {
           setStatus("none");
         }
@@ -65,6 +78,27 @@ function PassengerBookingStatus() {
 
     fetchBooking();
   }, [passengerId]);
+
+  const formatDate = (iso) => {
+    if (!iso) return "";
+    // Use locale-aware date (may adjust for local timezone)
+    const d = new Date(iso);
+    if (isNaN(d)) return iso; // fallback if not a valid date
+    return d.toLocaleDateString();
+    // If you want the raw YYYY-MM-DD exactly as stored (no timezone shift), use:
+    // return String(iso).split("T")[0];
+  };
+
+  const formatTime = (isoOrTime) => {
+    if (!isoOrTime) return "";
+    // If already a time like "07:35:00" return trimmed hh:mm
+    if (/^\d{2}:\d{2}(:\d{2})?$/.test(isoOrTime)) {
+      return isoOrTime.slice(0,5);
+    }
+    const d = new Date(isoOrTime);
+    if (isNaN(d)) return isoOrTime;
+    return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  };
 
   // if none
   if (status === "none") {
@@ -79,7 +113,9 @@ function PassengerBookingStatus() {
   }
 
   return (
-    <div className="booking-status-container">
+    <>
+    <Header/>
+      <div className="booking-status-container">
       <div className="booking-card">
         {/* Left Section */}
         <div className="left-section">
@@ -97,14 +133,16 @@ function PassengerBookingStatus() {
 
               <div className="driver-profile">
                 <div className="profile-picture">
-                  {/* Show passenger profile picture (the rider) */}
+                  {/* Show driver profile picture (fallback to booking field or default) */}
                   <img
                     src={
-                      passengerProfile && passengerProfile.ProfilePicture
-                        ? `http://localhost:5000${passengerProfile.ProfilePicture}`
+                      driverProfile && driverProfile.ProfilePicture
+                        ? `http://localhost:5000${driverProfile.ProfilePicture}`
+                        : booking.DriverProfilePicture
+                        ? `http://localhost:5000${booking.DriverProfilePicture}`
                         : "/profile-pictures/default.jpg"
                     }
-                    alt={passengerProfile?.FullName || "Passenger"}
+                    alt={driverProfile?.FullName || booking.DriverName || "Driver"}
                     className="passenger-img"
                     onError={(e) => {
                       e.target.src = "/profile-pictures/default.jpg";
@@ -125,10 +163,15 @@ function PassengerBookingStatus() {
                   <div className="detail-row">
                     <span className="label">Plate Number:</span>
                     <span className="value">{booking.PlateNumber}</span>
+                    
                   </div>
                   <div className="detail-row">
                     <span className="label">Model:</span>
                     <span className="value">{booking.VehicleBrand}</span>
+                  </div>
+                  <div className="vehicle-row">
+                    <span className="label">Type of vehicle:</span>
+                    <span className="value">{booking.VehicleType}</span>
                   </div>
                 </div>
                 <div className="status-indicator">
@@ -165,23 +208,7 @@ function PassengerBookingStatus() {
         {/* Right Section - Trip Details */}
         {booking && (
           <div className="right-section">
-            {/* Show passenger summary at top-right */}
-            <div className="passenger-summary">
-              <img
-                src={
-                  passengerProfile && passengerProfile.ProfilePicture
-                    ? `http://localhost:5000${passengerProfile.ProfilePicture}`
-                    : "/profile-pictures/default.jpg"
-                }
-                alt={passengerProfile?.FullName || "Passenger"}
-                className="summary-passenger-img"
-                onError={(e) => (e.target.src = "/profile-pictures/default.jpg")}
-              />
-              <div className="summary-info">
-                <div className="summary-name">{passengerProfile?.FullName || `${booking.FirstName || ""} ${booking.LastName || ""}`.trim() || "You"}</div>
-                <div className="summary-phone">📞 {passengerPhone || sanitizePhone(booking.PhoneNumber)}</div>
-              </div>
-            </div>
+
 
             <div className="address-section">
               <div className="address-group">
@@ -204,15 +231,11 @@ function PassengerBookingStatus() {
               <div className="detail-grid">
                 <div className="detail-item">
                   <div className="detail-label">📅 Date</div>
-                  <div className="detail-value">{booking.RideDate}</div>
+                  <div className="detail-value">{formatDate(booking.RideDate)}</div>
                 </div>
                 <div className="detail-item">
                   <div className="detail-label">🕐 Time</div>
-                  <div className="detail-value">{booking.RideTime}</div>
-                </div>
-                <div className="detail-item full-width">
-                  <div className="detail-label">🚗 Type of Vehicle</div>
-                  <div className="detail-value">{booking.VehicleType}</div>
+                  <div className="detail-value">{formatTime(booking.RideTime || booking.RideDate)}</div>
                 </div>
               </div>
             </div>
@@ -234,7 +257,8 @@ function PassengerBookingStatus() {
         )}
       </div>
     </div>
-  );
+    </>
+  )
 }
 
 export default PassengerBookingStatus;
