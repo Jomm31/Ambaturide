@@ -18,7 +18,7 @@ import PassengerBookingStatus from "./Passenger-Interface/PassengerBookingStatus
 import DriverBooking from "./Driver-Interface/DriverBooking.jsx";
 import DriverProfile from "./Driver-Interface/DriverProfile.jsx";
 import Reviews from "./Driver-Interface/Reviews.jsx";
-
+import DriverBookingStatus from "./Driver-Interface/DriverBookingStatus.jsx";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
@@ -43,8 +43,7 @@ createRoot(document.getElementById("root")).render(
         <Route path="DriverBooking" element={<DriverBooking />} />
         <Route path="DriverProfile" element={<DriverProfile/>} />
         <Route path="Reviews" element={<Reviews />} />
-       
-       {/*Driver Dashboard, Sidebar with nested routes*/}
+        <Route path="DriverBookingStatus" element={<DriverBookingStatus />} />
 
 
 

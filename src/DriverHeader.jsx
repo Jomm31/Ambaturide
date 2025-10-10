@@ -89,8 +89,8 @@ function DriverHeader() {
       <nav className={`header-right ${menuOpen ? "open" : ""}`}>
         {/* ✅ Driver-specific navigation */}
         <a href="/DriverBooking">Passenger Bookings</a>
-        <a href="/DriverTransactions">Transactions</a>
-        <a href="/DriverReviews">Reviews</a>
+        <a href="/DriverBookingStatus">Booking Status</a>
+        <a href="/Reviews">Reviews</a>
 
         {user ? (
           <div className="auth-buttons">

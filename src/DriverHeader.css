@@ -147,3 +147,22 @@
 .profile-pic:hover {
   transform: scale(1.1);
 }
+
+.logout{
+  background-color: #111111;
+  color: white;
+  border: 1px solid #00C853;
+  padding: 10px;
+  border-radius: 10px;
+
+}
+.logout:hover {
+  background-color: #00C853;
+  color: black;
+  cursor: pointer;
+  transform: scale(1.05);
+
+}
+.logout:active{
+  transform: scale(0.95);
+}

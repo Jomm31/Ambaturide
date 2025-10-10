@@ -139,7 +139,7 @@ function DriverBooking() {
                     clipRule="evenodd"
                   />
                 </svg>
-                <h1>Toril Area</h1>
+                <h1>Passenger Bookings</h1>
               </div>
               <span className="booking-count">
                 {filteredBookings.length} pending{" "}

@@ -27,6 +27,20 @@ function DriverProfile() {
 
   const [tempData, setTempData] = useState({ ...formData });
 
+  // Normalize image path -> full URL and append timestamp safely
+  const buildImageUrl = (path) => {
+    if (!path) return "/profile-pictures/default.jpg";
+    const raw = String(path);
+    // if already an absolute url, return as-is
+    if (/^https?:\/\//i.test(raw) || /^\/\//.test(raw)) return raw;
+    // ensure leading slash
+    const clean = raw.startsWith("/") ? raw : `/${raw}`;
+    return `http://localhost:5000${clean}`;
+  };
+
+  const withTimestamp = (url) =>
+    url.includes("?") ? `${url}&t=${Date.now()}` : `${url}?t=${Date.now()}`;
+
   // Load driver data on component mount
   useEffect(() => {
     const loadDriverData = async () => {
@@ -908,12 +922,14 @@ function DriverProfile() {
                         {formData.vehicleImage ? (
                           <div className="image-with-actions">
                             <img
-                              src={`http://localhost:5000${formData.vehicleImage}?t=${Date.now()}`}
+                              src={withTimestamp(buildImageUrl(formData.vehicleImage))}
                               alt="Vehicle"
                               className="uploaded-image"
                               onError={(e) => {
-                                e.target.style.display = 'none';
-                                e.target.nextSibling.style.display = 'flex';
+                                // prevent infinite loop if default also fails
+                                e.currentTarget.onerror = null;
+                                e.currentTarget.src = "/profile-pictures/default.jpg";
+                                e.currentTarget.style.display = "block";
                               }}
                             />
                             <button 

@@ -51,7 +51,7 @@ function ReviewCard({ userName, date, isVerified, rating, avatarGradient, review
   );
 }
 
-function ReviewsPage() {
+function Reviews() {
   const reviewsData = [
     {
       id: 1,
@@ -91,4 +91,4 @@ function ReviewsPage() {
   );
 }
 
-export default ReviewsPage;
+export default Reviews;

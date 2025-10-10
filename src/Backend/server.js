@@ -697,24 +697,48 @@ app.post("/api/driver/license-image/:id", driverUpload.single("license"), (req, 
 });
 
 // ✅ Driver Vehicle Image Upload & Update
-app.post("/api/driver/vehicle-image/:id", driverUpload.single("vehicle"), (req, res) => {
-  const driverId = req.params.id;
+// Multer storage for vehicle images
+const vehicleStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, path.join(__dirname, "uploads", "vehicle-images"));
+  },
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname);
+    const name = Date.now() + "-" + file.originalname.replace(/\s+/g, "-");
+    cb(null, name);
+  },
+});
+const uploadVehicle = multer({ storage: vehicleStorage });
 
-  if (!req.file) {
-    return res.status(400).json({ message: "No file uploaded" });
-  }
-
-  const imagePath = `/uploads/vehicle-images/${req.file.filename}`;
-
-  const sql = "UPDATE drivers SET VehiclePicture = ? WHERE DriverID = ?";
-  db.query(sql, [imagePath, driverId], (err, result) => {
-    if (err) {
-      console.error("❌ Database error:", err);
-      return res.status(500).json({ message: "Database error" });
+// Route: upload vehicle image & save to DB
+app.post("/api/driver/vehicle-image/:id", uploadVehicle.single("vehicle"), async (req, res) => {
+  try {
+    const driverId = req.params.id;
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: "No file uploaded" });
     }
 
-    res.json({ success: true, imagePath, message: "Vehicle image updated successfully" });
-  });
+    const imagePath = `/uploads/vehicle-images/${req.file.filename}`;
+
+    // Update drivers.VehiclePicture so subsequent profile fetches include the image
+    const sql = "UPDATE drivers SET VehiclePicture = ? WHERE DriverID = ?";
+    db.query(sql, [imagePath, driverId], (err, result) => {
+      if (err) {
+        console.error("❌ DB error updating VehiclePicture:", err);
+        return res.status(500).json({ success: false, message: "Database error" });
+      }
+
+      // Return the saved path so client can update UI/localStorage immediately
+      return res.json({
+        success: true,
+        imagePath,
+        message: "Vehicle image uploaded and saved to database"
+      });
+    });
+  } catch (err) {
+    console.error("vehicle upload error:", err);
+    return res.status(500).json({ success: false, message: "Server error" });
+  }
 });
 
 app.post("/api/passenger/book", (req, res) => {
