@@ -791,6 +791,38 @@ app.put("/api/driver/bookings/:id/status", (req, res) => {
   });
 });
 
+// ✅ Get latest booking of a passenger with driver info
+app.get("/api/passenger/:id/booking", (req, res) => {
+  const passengerId = req.params.id;
+
+  const sql = `
+    SELECT 
+      b.*,
+      CONCAT(d.FirstName, ' ', d.LastName) AS DriverName,
+      d.PhoneNumber AS DriverPhone,
+      d.VehicleBrand,
+      d.VehicleType,
+      d.PlateNumber
+    FROM bookings AS b
+    LEFT JOIN drivers AS d ON b.DriverID = d.DriverID
+    WHERE b.PassengerID = ?
+    ORDER BY b.BookingID DESC
+    LIMIT 1
+  `;
+
+  db.query(sql, [passengerId], (err, results) => {
+    if (err) {
+      console.error("❌ Error fetching booking:", err);
+      return res.status(500).json({ success: false, message: "Database error" });
+    }
+
+    if (results.length === 0) {
+      return res.json({ success: true, booking: null }); // No active booking
+    }
+
+    res.json({ success: true, booking: results[0] });
+  });
+});
 
 
 
