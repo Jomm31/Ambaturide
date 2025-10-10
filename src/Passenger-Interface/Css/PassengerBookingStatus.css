@@ -532,3 +532,45 @@
         margin: -25px -20px 0 -20px;
     }
 }
+
+/* Input with right-side icon/logo */
+.input-with-icon {
+  position: relative;
+  display: inline-block;
+  width: 100%;
+}
+
+.input-with-icon input[type="text"],
+.input-with-icon input[type="search"],
+.input-with-icon .search-input {
+  width: 100%;
+  padding-right: 44px; /* leave room for the icon on the right */
+  box-sizing: border-box;
+}
+
+/* right-side logo / icon */
+.input-with-icon .input-logo {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  pointer-events: none; /* change to auto if it should be clickable */
+  opacity: 0.95;
+}
+
+/* small screens: reduce icon size */
+@media (max-width: 480px) {
+  .input-with-icon .input-logo {
+    width: 22px;
+    height: 22px;
+    right: 6px;
+  }
+
+  .input-with-icon input[type="text"],
+  .input-with-icon .search-input {
+    padding-right: 36px;
+  }
+}

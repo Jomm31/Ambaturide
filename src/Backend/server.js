@@ -504,13 +504,26 @@ app.put("/api/passenger/change-password/:id", async (req, res) => {
 });
 
 
-// ✅ Get full driver profile by ID
 app.get("/api/driver/profile/:id", (req, res) => {
   const driverId = req.params.id;
 
   const sql = `
-    SELECT DriverID, FirstName, LastName, Email, PhoneNumber, Address, BirthDate, Gender, ProfilePicture, 
-           VehicleBrand, VehicleType, PlateNumber, Status
+    SELECT 
+      DriverID,
+      FirstName,
+      LastName,
+      Email,
+      PhoneNumber,
+      Address,
+      BirthDate,
+      Gender,
+      ProfilePicture,
+      LicenseImage,
+      VehiclePicture,
+      VehicleBrand,
+      VehicleType,
+      PlateNumber,
+      Status
     FROM drivers
     WHERE DriverID = ?
   `;
@@ -525,9 +538,11 @@ app.get("/api/driver/profile/:id", (req, res) => {
       return res.status(404).json({ message: "Driver not found" });
     }
 
-    res.json(results[0]);
+    // Send profile with image paths
+    res.json({ success: true, driver: results[0] });
   });
 });
+
 
 // ✅ Driver Profile Picture Upload & Update
 app.post("/api/driver/profile-picture/:id", profileUpload.single("profile"), (req, res) => {
@@ -660,6 +675,48 @@ app.put("/api/driver/change-password/:id", async (req, res) => {
   });
 });
 
+// ✅ Driver License Image Upload & Update
+app.post("/api/driver/license-image/:id", driverUpload.single("license"), (req, res) => {
+  const driverId = req.params.id;
+
+  if (!req.file) {
+    return res.status(400).json({ message: "No file uploaded" });
+  }
+
+  const imagePath = `/uploads/driver-license/${req.file.filename}`;
+
+  const sql = "UPDATE drivers SET LicenseImage = ? WHERE DriverID = ?";
+  db.query(sql, [imagePath, driverId], (err, result) => {
+    if (err) {
+      console.error("❌ Database error:", err);
+      return res.status(500).json({ message: "Database error" });
+    }
+
+    res.json({ success: true, imagePath, message: "License image updated successfully" });
+  });
+});
+
+// ✅ Driver Vehicle Image Upload & Update
+app.post("/api/driver/vehicle-image/:id", driverUpload.single("vehicle"), (req, res) => {
+  const driverId = req.params.id;
+
+  if (!req.file) {
+    return res.status(400).json({ message: "No file uploaded" });
+  }
+
+  const imagePath = `/uploads/vehicle-images/${req.file.filename}`;
+
+  const sql = "UPDATE drivers SET VehiclePicture = ? WHERE DriverID = ?";
+  db.query(sql, [imagePath, driverId], (err, result) => {
+    if (err) {
+      console.error("❌ Database error:", err);
+      return res.status(500).json({ message: "Database error" });
+    }
+
+    res.json({ success: true, imagePath, message: "Vehicle image updated successfully" });
+  });
+});
+
 app.post("/api/passenger/book", (req, res) => {
   const {
     PassengerID,
@@ -727,6 +784,8 @@ app.get("/api/driver/bookings", (req, res) => {
     LEFT JOIN passengers AS p ON b.PassengerID = p.PassengerID
     ORDER BY b.BookingID DESC
   `;
+
+  
 
   db.query(sql, (err, results) => {
     if (err) {

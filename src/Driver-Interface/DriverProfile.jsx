@@ -19,9 +19,10 @@ function DriverProfile() {
     confirmPassword: "",
     carBrand: "",
     carModel: "",
-
     plateNumber: "",
-    profilePicture: ""
+    profilePicture: "",
+    licenseImage: "",
+    vehicleImage: ""
   });
 
   const [tempData, setTempData] = useState({ ...formData });
@@ -40,18 +41,39 @@ function DriverProfile() {
             withCredentials: true
           });
           
-          const fullData = response.data;
+          // Response shape can vary: normalize it and accept aliases
+          let fullData = response.data;
+          if (fullData.driver) fullData = fullData.driver;
+          if (Array.isArray(fullData) && fullData.length) fullData = fullData[0];
+
+          const norm = {
+            FirstName: fullData.FirstName || fullData.firstName || fullData.First_Name || "",
+            LastName: fullData.LastName || fullData.lastName || "",
+            Gender: fullData.Gender || fullData.gender || "",
+            BirthDate: fullData.BirthDate || fullData.birthdate || fullData.Birth_Date || "",
+            PhoneNumber: fullData.PhoneNumber || fullData.contactNo || fullData.phone || "",
+            Email: fullData.Email || fullData.email || "",
+            VehicleBrand: fullData.VehicleBrand || fullData.carBrand || fullData.vehicleBrand || "",
+            VehicleType: fullData.VehicleType || fullData.carModel || fullData.vehicleType || "",
+            PlateNumber: fullData.PlateNumber || fullData.plateNumber || "",
+            ProfilePicture: fullData.ProfilePicture || fullData.profilePicture || fullData.ProfilePic || "",
+            LicenseImage: fullData.LicenseImage || fullData.licenseImage || fullData.License || "",
+            VehiclePicture: fullData.VehiclePicture || fullData.vehicleImage || fullData.VehicleImage || fullData.vehiclePicture || ""
+          };
+
           setFormData({
-            firstName: fullData.FirstName || "",
-            lastName: fullData.LastName || "",
-            gender: fullData.Gender || "",
-            birthdate: fullData.BirthDate || "",
-            contactNo: fullData.PhoneNumber || "",
-            email: fullData.Email || "",
-            carBrand: fullData.VehicleBrand || "",
-            carModel: fullData.VehicleType || "",
-            plateNumber: fullData.PlateNumber || "",
-            profilePicture: fullData.ProfilePicture || "",
+            firstName: norm.FirstName,
+            lastName: norm.LastName,
+            gender: norm.Gender,
+            birthdate: norm.BirthDate,
+            contactNo: norm.PhoneNumber,
+            email: norm.Email,
+            carBrand: norm.VehicleBrand,
+            carModel: norm.VehicleType,
+            plateNumber: norm.PlateNumber,
+            profilePicture: norm.ProfilePicture,
+            licenseImage: norm.LicenseImage,
+            vehicleImage: norm.VehiclePicture,
             currentPassword: "",
             newPassword: "",
             confirmPassword: ""
@@ -65,10 +87,12 @@ function DriverProfile() {
           const driverData = JSON.parse(savedDriver);
           setFormData(prev => ({
             ...prev,
-            firstName: driverData.FirstName || "",
-            lastName: driverData.LastName || "",
-            email: driverData.Email || "",
-            profilePicture: driverData.ProfilePicture || ""
+            firstName: driverData.FirstName || driverData.firstName || "",
+            lastName: driverData.LastName || driverData.lastName || "",
+            email: driverData.Email || driverData.email || "",
+            profilePicture: driverData.ProfilePicture || driverData.profilePicture || "",
+            licenseImage: driverData.LicenseImage || driverData.licenseImage || driverData.License || "",
+            vehicleImage: driverData.VehiclePicture || driverData.vehiclePicture || driverData.VehicleImage || ""
           }));
         }
       } finally {
@@ -308,7 +332,6 @@ function DriverProfile() {
           vehicleBrand: formData.carBrand,
           vehicleType: formData.carModel,
           plateNumber: formData.plateNumber,
-
         },
         { withCredentials: true }
       );
@@ -404,6 +427,140 @@ function DriverProfile() {
     } catch (error) {
       console.error("❌ Error uploading profile picture:", error);
       alert("Failed to upload profile picture. Please try again.");
+    }
+  };
+
+  // Function to handle license image upload
+  const handleLicenseImageChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      alert('Please select an image file');
+      return;
+    }
+    
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Image size should be less than 5MB');
+      return;
+    }
+
+    try {
+      const savedDriver = JSON.parse(localStorage.getItem("driver"));
+      const driverId = savedDriver?.DriverID;
+      
+      if (!driverId) {
+        alert("No Driver ID found. Please log in again.");
+        return;
+      }
+
+      const uploadFormData = new FormData();
+      uploadFormData.append("license", file);
+
+      const response = await axios.post(
+        `http://localhost:5000/api/driver/license-image/${driverId}`,
+        uploadFormData,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+          withCredentials: true,
+        }
+      );
+
+      if (response.data.success) {
+        alert("✅ License image updated!");
+        const newImagePath = response.data.imagePath;
+        
+        setFormData((prev) => ({
+          ...prev,
+          licenseImage: newImagePath
+        }));
+
+        const updatedDriver = {
+          ...savedDriver,
+          LicenseImage: newImagePath,
+        };
+        
+        localStorage.setItem("driver", JSON.stringify(updatedDriver));
+        localStorage.setItem("user", JSON.stringify(updatedDriver));
+        window.dispatchEvent(new Event('userUpdated'));
+        
+        setTimeout(() => {
+          setFormData((prev) => ({
+            ...prev,
+            licenseImage: `${newImagePath}?t=${Date.now()}`
+          }));
+        }, 100);
+      }
+    } catch (error) {
+      console.error("❌ Error uploading license image:", error);
+      alert("Failed to upload license image. Please try again.");
+    }
+  };
+
+  // Function to handle vehicle image upload
+  const handleVehicleImageChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      alert('Please select an image file');
+      return;
+    }
+    
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Image size should be less than 5MB');
+      return;
+    }
+
+    try {
+      const savedDriver = JSON.parse(localStorage.getItem("driver"));
+      const driverId = savedDriver?.DriverID;
+      
+      if (!driverId) {
+        alert("No Driver ID found. Please log in again.");
+        return;
+      }
+
+      const uploadFormData = new FormData();
+      uploadFormData.append("vehicle", file);
+
+      const response = await axios.post(
+        `http://localhost:5000/api/driver/vehicle-image/${driverId}`,
+        uploadFormData,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+          withCredentials: true,
+        }
+      );
+
+      if (response.data.success) {
+        alert("✅ Vehicle image updated!");
+        const newImagePath = response.data.imagePath;
+        
+        setFormData((prev) => ({
+          ...prev,
+          vehicleImage: newImagePath
+        }));
+
+        const updatedDriver = {
+          ...savedDriver,
+          VehiclePicture: newImagePath,
+        };
+        
+        localStorage.setItem("driver", JSON.stringify(updatedDriver));
+        localStorage.setItem("user", JSON.stringify(updatedDriver));
+        window.dispatchEvent(new Event('userUpdated'));
+        
+        setTimeout(() => {
+          setFormData((prev) => ({
+            ...prev,
+            vehicleImage: `${newImagePath}?t=${Date.now()}`
+          }));
+        }, 100);
+      }
+    } catch (error) {
+      console.error("❌ Error uploading vehicle image:", error);
+      alert("Failed to upload vehicle image. Please try again.");
     }
   };
 
@@ -583,7 +740,6 @@ function DriverProfile() {
               </div>
             </div>
 
-            {/* Rest of your JSX remains the same, just update the car info section to use the new functions */}
             {/* Main Content - Three Columns */}
             <div className="main-content">
               {/* Privacy Panel - Left */}
@@ -630,91 +786,219 @@ function DriverProfile() {
               <div className="vertical-divider"></div>
 
               {/* Car Information Panel - Middle */}
+
               <div className="car-panel">
                 <h2 className="panel-title">Car Information</h2>
                 
-                <div className="form-group">
-                  <label className="form-label">Car Brand</label>
-                  <div className="car-input-container">
-                    {editingField === 'carBrand' ? (
-                      <div className="edit-mode">
-                        <input
-                          type="text"
-                          className="edit-input"
-                          value={tempData.carBrand}
-                          onChange={handleTempChange}
-                          name="carBrand"
-                        />
-                        <div className="edit-actions">
-                          <button className="save-btn" onClick={() => saveEdit('carBrand')}>✓</button>
-                          <button className="cancel-btn" onClick={cancelEdit}>✕</button>
+                {/* Car Details in a Card Layout */}
+                <div className="car-details-card">
+                  {/* Car Brand */}
+                  <div className="car-info-item">
+                    <label className="car-info-label">Car Brand</label>
+                    <div className="car-info-value-container">
+                      {editingField === 'carBrand' ? (
+                        <div className="edit-mode">
+                          <input
+                            type="text"
+                            className="edit-input car-edit-input"
+                            value={tempData.carBrand}
+                            onChange={handleTempChange}
+                            name="carBrand"
+                            placeholder="Enter car brand"
+                          />
+                          <div className="edit-actions">
+                            <button className="save-btn" onClick={() => saveEdit('carBrand')}>✓</button>
+                            <button className="cancel-btn" onClick={cancelEdit}>✕</button>
+                          </div>
                         </div>
-                      </div>
-                    ) : (
-                      <>
-                        <span className="info-value">{formData.carBrand || "N/A"}</span>
-                        <span className="edit-icon" onClick={() => startEditing('carBrand')}>✏️</span>
-                      </>
-                    )}
+                      ) : (
+                        <div className="display-mode">
+                          <span className="car-info-value">{formData.carBrand || "Not set"}</span>
+                          <button 
+                            className="edit-btn car-edit-btn"
+                            onClick={() => startEditing('carBrand')}
+                          >
+                            <span className="edit-icon">✏️</span>
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  
+                  {/* Car Model */}
+                  <div className="car-info-item">
+                    <label className="car-info-label">Car Model</label>
+                    <div className="car-info-value-container">
+                      {editingField === 'carModel' ? (
+                        <div className="edit-mode">
+                          <input
+                            type="text"
+                            className="edit-input car-edit-input"
+                            value={tempData.carModel}
+                            onChange={handleTempChange}
+                            name="carModel"
+                            placeholder="Enter car model"
+                          />
+                          <div className="edit-actions">
+                            <button className="save-btn" onClick={() => saveEdit('carModel')}>✓</button>
+                            <button className="cancel-btn" onClick={cancelEdit}>✕</button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="display-mode">
+                          <span className="car-info-value">{formData.carModel || "Not set"}</span>
+                          <button 
+                            className="edit-btn car-edit-btn"
+                            onClick={() => startEditing('carModel')}
+                          >
+                            <span className="edit-icon">✏️</span>
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  
+                  {/* Plate Number */}
+                  <div className="car-info-item">
+                    <label className="car-info-label">Plate Number</label>
+                    <div className="car-info-value-container">
+                      {editingField === 'plateNumber' ? (
+                        <div className="edit-mode">
+                          <input
+                            type="text"
+                            className="edit-input car-edit-input"
+                            value={tempData.plateNumber}
+                            onChange={handleTempChange}
+                            name="plateNumber"
+                            placeholder="Enter plate number"
+                          />
+                          <div className="edit-actions">
+                            <button className="save-btn" onClick={() => saveEdit('plateNumber')}>✓</button>
+                            <button className="cancel-btn" onClick={cancelEdit}>✕</button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="display-mode">
+                          <span className="car-info-value plate-number">
+                            {formData.plateNumber || "Not set"}
+                          </span>
+                          <button 
+                            className="edit-btn car-edit-btn"
+                            onClick={() => startEditing('plateNumber')}
+                          >
+                            <span className="edit-icon">✏️</span>
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
-                
-                <div className="form-group">
-                  <label className="form-label">Car Model</label>
-                  <div className="car-input-container">
-                    {editingField === 'carModel' ? (
-                      <div className="edit-mode">
-                        <input
-                          type="text"
-                          className="edit-input"
-                          value={tempData.carModel}
-                          onChange={handleTempChange}
-                          name="carModel"
-                        />
-                        <div className="edit-actions">
-                          <button className="save-btn" onClick={() => saveEdit('carModel')}>✓</button>
-                          <button className="cancel-btn" onClick={cancelEdit}>✕</button>
-                        </div>
+
+                {/* Image Upload Sections */}
+                <div className="car-images-section">
+                  {/* Vehicle Image */}
+                  <div className="image-upload-card">
+                    <div className="image-upload-header">
+                      <h3 className="image-upload-title">Vehicle Image</h3>
+                      <span className="image-required-badge">Required</span>
+                    </div>
+                    
+                    <div className="image-upload-container">
+                      <div className="image-preview">
+                        {formData.vehicleImage ? (
+                          <div className="image-with-actions">
+                            <img
+                              src={`http://localhost:5000${formData.vehicleImage}?t=${Date.now()}`}
+                              alt="Vehicle"
+                              className="uploaded-image"
+                              onError={(e) => {
+                                e.target.style.display = 'none';
+                                e.target.nextSibling.style.display = 'flex';
+                              }}
+                            />
+                            <button 
+                              className="replace-image-btn"
+                              onClick={() => document.querySelector('.vehicle-file-input').click()}
+                            >
+                              Replace Image
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="image-placeholder">
+                            <span className="placeholder-icon">🚗</span>
+                            <span className="placeholder-text">No vehicle image uploaded</span>
+                            <span className="placeholder-subtext">Upload a clear photo of your vehicle</span>
+                          </div>
+                        )}
                       </div>
-                    ) : (
-                      <>
-                        <span className="info-value">{formData.carModel || "N/A"}</span>
-                        <span className="edit-icon" onClick={() => startEditing('carModel')}>✏️</span>
-                      </>
-                    )}
+                      
+                      <label className="image-upload-label">
+                        <span className="upload-btn primary-upload-btn">
+                          {formData.vehicleImage ? 'Change Vehicle Image' : 'Upload Vehicle Image'}
+                        </span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleVehicleImageChange}
+                          className="image-file-input vehicle-file-input"
+                        />
+                      </label>
+                    </div>
                   </div>
-                </div>
-                
-                
-                
-                <div className="form-group">
-                  <label className="form-label">Plate Number</label>
-                  <div className="car-input-container">
-                    {editingField === 'plateNumber' ? (
-                      <div className="edit-mode">
-                        <input
-                          type="text"
-                          className="edit-input"
-                          value={tempData.plateNumber}
-                          onChange={handleTempChange}
-                          name="plateNumber"
-                        />
-                        <div className="edit-actions">
-                          <button className="save-btn" onClick={() => saveEdit('plateNumber')}>✓</button>
-                          <button className="cancel-btn" onClick={cancelEdit}>✕</button>
-                        </div>
+
+                  {/* License Image */}
+                  <div className="image-upload-card">
+                    <div className="image-upload-header">
+                      <h3 className="image-upload-title">Driver's License</h3>
+                      <span className="image-required-badge">Required</span>
+                    </div>
+                    
+                    <div className="image-upload-container">
+                      <div className="image-preview">
+                        {formData.licenseImage ? (
+                          <div className="image-with-actions">
+                            <img
+                              src={`http://localhost:5000${formData.licenseImage}?t=${Date.now()}`}
+                              alt="Driver's License"
+                              className="uploaded-image"
+                              onError={(e) => {
+                                e.target.style.display = 'none';
+                                e.target.nextSibling.style.display = 'flex';
+                              }}
+                            />
+                            <button 
+                              className="replace-image-btn"
+                              onClick={() => document.querySelector('.license-file-input').click()}
+                            >
+                              Replace License
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="image-placeholder">
+                            <span className="placeholder-icon">📄</span>
+                            <span className="placeholder-text">No license image uploaded</span>
+                            <span className="placeholder-subtext">Upload a clear photo of your driver's license</span>
+                          </div>
+                        )}
                       </div>
-                    ) : (
-                      <>
-                        <span className="info-value">{formData.plateNumber || "N/A"}</span>
-                        <span className="edit-icon" onClick={() => startEditing('plateNumber')}>✏️</span>
-                      </>
-                    )}
+                      
+                      <label className="image-upload-label">
+                        <span className="upload-btn primary-upload-btn">
+                          {formData.licenseImage ? 'Change License Image' : 'Upload License'}
+                        </span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleLicenseImageChange}
+                          className="image-file-input license-file-input"
+                        />
+                      </label>
+                    </div>
                   </div>
                 </div>
                 
                 <button className="yellow-btn confirm-car-btn" onClick={handleCarInfoChange}>
-                  Update Car Info
+                  Update Car Information
                 </button>
               </div>
 
@@ -722,51 +1006,123 @@ function DriverProfile() {
               <div className="vertical-divider"></div>
 
               {/* Change Password Panel - Right */}
-              <div className="password-panel">
-                <h2 className="panel-title">Change Password</h2>
-                
-                <div className="form-group">
-                  <label className="form-label">Current Password</label>
-                  <input 
-                    type="password"
-                    className="password-input"
-                    value={formData.currentPassword}
-                    onChange={handleInputChange}
-                    name="currentPassword"
-                  />
+              {/* Change Password Panel - Right */}
+                <div className="password-panel">
+                  <div className="password-header">
+                    <h2 className="panel-title">Change Password</h2>
+                    <div className="password-security-badge">
+                      <span className="security-icon">🔒</span>
+                      Security
+                    </div>
+                  </div>
+                  
+                  <div className="password-form-card">
+                    <div className="form-group">
+                      <label className="form-label">
+                        Current Password
+                        <span className="required-asterisk">*</span>
+                      </label>
+                      <div className="password-input-container">
+                        <input 
+                          type="password"
+                          className="password-input"
+                          value={formData.currentPassword}
+                          onChange={handleInputChange}
+                          name="currentPassword"
+                          placeholder="Enter current password"
+                        />
+                        <span className="input-icon">🔑</span>
+                      </div>
+                    </div>
+                    
+                    <div className="form-group">
+                      <label className="form-label">
+                        New Password
+                        <span className="required-asterisk">*</span>
+                      </label>
+                      <div className="password-input-container">
+                        <input 
+                          type="password"
+                          className="password-input"
+                          value={formData.newPassword}
+                          onChange={handleInputChange}
+                          name="newPassword"
+                          placeholder="Enter new password"
+                        />
+                        <span className="input-icon">🔄</span>
+                      </div>
+                      {formData.newPassword && (
+                        <div className="password-strength">
+                          <div className={`strength-bar ${formData.newPassword.length >= 8 ? 'strong' : 'weak'}`}></div>
+                          <span className="strength-text">
+                            {formData.newPassword.length >= 8 ? 'Strong password' : 'Weak password'}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className="form-group">
+                      <label className="form-label">
+                        Confirm New Password
+                        <span className="required-asterisk">*</span>
+                      </label>
+                      <div className="password-input-container">
+                        <input 
+                          type="password"
+                          className={`password-input ${formData.confirmPassword && formData.newPassword !== formData.confirmPassword ? 'error' : ''}`}
+                          value={formData.confirmPassword}
+                          onChange={handleInputChange}
+                          name="confirmPassword"
+                          placeholder="Confirm new password"
+                        />
+                        <span className="input-icon">✅</span>
+                      </div>
+                      {formData.confirmPassword && formData.newPassword !== formData.confirmPassword && (
+                        <div className="error-message">
+                          ❌ Passwords do not match
+                        </div>
+                      )}
+                      {formData.confirmPassword && formData.newPassword === formData.confirmPassword && (
+                        <div className="success-message">
+                          ✅ Passwords match
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="password-requirements">
+                      <h4 className="requirements-title">Password Requirements:</h4>
+                      <ul className="requirements-list">
+                        <li className={formData.newPassword.length >= 8 ? 'met' : ''}>
+                          {formData.newPassword.length >= 8 ? '✓' : '○'} At least 8 characters
+                        </li>
+                        <li className={/[A-Z]/.test(formData.newPassword) ? 'met' : ''}>
+                          {/[A-Z]/.test(formData.newPassword) ? '✓' : '○'} One uppercase letter
+                        </li>
+                        <li className={/[0-9]/.test(formData.newPassword) ? 'met' : ''}>
+                          {/[0-9]/.test(formData.newPassword) ? '✓' : '○'} One number
+                        </li>
+                        <li className={/[!@#$%^&*]/.test(formData.newPassword) ? 'met' : ''}>
+                          {/[!@#$%^&*]/.test(formData.newPassword) ? '✓' : '○'} One special character
+                        </li>
+                      </ul>
+                    </div>
+                    
+                    <button 
+                      className={`yellow-btn confirm-password-btn ${
+                        !formData.currentPassword || !formData.newPassword || !formData.confirmPassword || formData.newPassword !== formData.confirmPassword ? 'disabled' : ''
+                      }`}
+                      onClick={handlePasswordChange}
+                      disabled={!formData.currentPassword || !formData.newPassword || !formData.confirmPassword || formData.newPassword !== formData.confirmPassword}
+                    >
+                      Update Password
+                    </button>
+                  </div>
                 </div>
-                
-                <div className="form-group">
-                  <label className="form-label">New Password</label>
-                  <input 
-                    type="password"
-                    className="password-input"
-                    value={formData.newPassword}
-                    onChange={handleInputChange}
-                    name="newPassword"
-                  />
-                </div>
-                
-                <div className="form-group">
-                  <label className="form-label">Confirm New Password</label>
-                  <input 
-                    type="password"
-                    className="password-input"
-                    value={formData.confirmPassword}
-                    onChange={handleInputChange}
-                    name="confirmPassword"
-                  />
-                </div>
-                
-                <button className="yellow-btn confirm-password-btn" onClick={handlePasswordChange}>
-                  Confirm New Password
-                </button>
-              </div>
             </div>
           </div>
         )}
 
-        {/* Success Modals (same as before) */}
+        {/* Success Modals */}
         {activeSection === "success" && (
           <div className="modal-overlay">
             <div className="success-modal">
