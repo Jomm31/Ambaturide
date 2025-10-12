@@ -166,3 +166,16 @@
 .logout:active{
   transform: scale(0.95);
 }
+
+.nav-link{
+  background-color: black;
+  color: white;
+}
+
+.nav-link:hover {
+  background-color: #00C853 !important;
+  color: black !important;
+  cursor: pointer;
+  transform: scale(1.05);
+
+}

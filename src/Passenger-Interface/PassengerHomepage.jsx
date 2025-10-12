@@ -1,5 +1,5 @@
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import React, { useState, useEffect } from "react";
 import "./Css/PassengerHomepage.css";
 
@@ -35,6 +35,22 @@ function PassengerHomepage() {
   const [contactFile, setContactFile] = useState(null);
   const [contactSubmitting, setContactSubmitting] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    // If navigated with state.scrollTo, scroll to that section
+    const target = location?.state?.scrollTo;
+    if (target) {
+      // small delay to ensure element rendered
+      setTimeout(() => {
+        const el = document.getElementById(target);
+        if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+        // clear state so subsequent navigations don't re-scroll
+        try { window.history.replaceState({}, document.title); } catch (e) {}
+      }, 150);
+    }
+  }, [location]);
+
   const handleBookClick = async () => {
     try {
       const res = await axios.get("http://localhost:5000/api/check-auth", { withCredentials: true });
@@ -116,10 +132,10 @@ function PassengerHomepage() {
 
   return (
     <>
-  <Header />
+      <Header />
 
       {/* Hero Section */}
-      <section className="hero-section">
+      <section id="hero" className="hero-section">
         <div className="hero-container">
           <div className="hero-content">
             <div className="hero-text">
@@ -171,7 +187,7 @@ function PassengerHomepage() {
       </section>
 
       {/* How it Works Section - KEEPING ORIGINAL DESIGN */}
-      <div className="how-it-works-section">
+      <div id="how" className="how-it-works-section">
         <h2 className="how-headline">This is how it works</h2>
 
         <div className="how-step">
@@ -211,7 +227,7 @@ function PassengerHomepage() {
       </div>
 
       {/* About Section */}
-      <section className="about-section">
+      <section id="about" className="about-section">
         <div className="about-container">
           <div className="about-content">
             <div className="about-brand">
@@ -253,7 +269,7 @@ function PassengerHomepage() {
       </section>
 
       {/* Contact Section */}
-      <section className="contact-section">
+      <section id="contact" className="contact-section">
         <div className="contact-container">
           <h2 className="section-title">Get In Touch</h2>
           <form className="contact-form" onSubmit={handleContactSubmit}>
@@ -308,7 +324,6 @@ function PassengerHomepage() {
       </section>
 
       <Footer/>
-
     </>
   );
 }

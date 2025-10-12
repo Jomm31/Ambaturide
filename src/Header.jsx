@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "./Header.css";
 import darkLogo from "../public/ambaturide-darklogo.png";
 import defaultProfile from "../public/profile-pictures/default.jpg";
@@ -6,6 +7,7 @@ import defaultProfile from "../public/profile-pictures/default.jpg";
 function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [user, setUser] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const updateUserFromStorage = () => {
@@ -68,6 +70,21 @@ function Header() {
     return `http://localhost:5000${profilePicture}?t=${Date.now()}`;
   };
 
+  const navigateToSection = (id) => {
+    // If already on home, scroll directly
+    if (window.location.pathname === "/") {
+      const el = document.getElementById(id);
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "start" });
+        setMenuOpen(false);
+        return;
+      }
+    }
+    // otherwise navigate to home and pass desired section in location state
+    navigate("/", { state: { scrollTo: id } });
+    setMenuOpen(false);
+  };
+
   return (
     <header className="header">
       <div className="header-left">
@@ -83,9 +100,10 @@ function Header() {
       </div>
 
       <nav className={`header-right ${menuOpen ? "open" : ""}`}>
-        <a href="/">Book a Ride</a>
-        <a href="/">About Us</a>
-        <a href="/PassengerBookingStatus">Booking Status</a>
+        <button className="nav-link" onClick={() => navigateToSection("hero")}>Book a Ride</button>
+        <button className="nav-link" onClick={() => navigateToSection("about")}>About Us</button>
+        <button className="nav-link" onClick={() => navigate('/PassengerBookingStatus')}>Booking Status</button>
+        <button className="nav-link" onClick={() => navigateToSection("contact")}>Contact us</button>
 
         {user ? (
           <div className="auth-buttons">
