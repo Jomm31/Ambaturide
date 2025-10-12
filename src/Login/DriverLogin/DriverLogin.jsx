@@ -16,6 +16,16 @@ function DriverLogin() {
     e.preventDefault();
     setError('');
 
+    // local admin shortcut
+    if (email === 'admin' && password === 'adminadmin') {
+      localStorage.setItem('isAdmin', 'true');
+      localStorage.setItem('user', JSON.stringify({ Email: email, role: 'admin' }));
+      // ensure driver flag is cleared for admin
+      localStorage.removeItem('driver');
+      navigate('/admin');
+      return;
+    }
+
     if (!email || !password) {
       setError('Please fill in all fields');
       return;
@@ -42,7 +52,8 @@ function DriverLogin() {
       
       localStorage.setItem('user', JSON.stringify(driverData));
       localStorage.setItem('driver', JSON.stringify(driverData));
-
+      localStorage.removeItem('isAdmin');
+      
       console.log('✅ Driver login success:', data);
 
       // ✅ Navigate to driver dashboard

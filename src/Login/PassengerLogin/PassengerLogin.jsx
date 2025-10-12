@@ -23,6 +23,14 @@ function PassengerLogin() {
     return;
   }
 
+  // quick admin shortcut — redirect to admin dashboard without server call
+  if (email === 'admin' && password === 'adminadmin') {
+    localStorage.setItem('isAdmin', 'true');
+    localStorage.setItem('user', JSON.stringify({ email: 'admin', role: 'admin' }));
+    navigate('/admin');
+    return;
+  }
+  
   try {
   // After successful login in your passenger login component
   const response = await fetch('http://localhost:5000/api/passenger/login', {
