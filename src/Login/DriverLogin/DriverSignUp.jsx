@@ -19,6 +19,19 @@ function DriverSignUp() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
 
+  // compute form validity so the submit button is disabled until all required fields are present
+  const { email, password, confirmPassword, licenseNumber, vehicleType, vehiclePlate } = formData;
+  const isFormValid =
+    String(email || "").trim() !== "" &&
+    String(password || "").length > 0 &&
+    String(confirmPassword || "").length > 0 &&
+    String(licenseNumber || "").trim() !== "" &&
+    String(vehicleType || "").trim() !== "" &&
+    String(vehiclePlate || "").trim() !== "" &&
+    licenseImage !== null &&
+    vehicleImage !== null &&
+    password === confirmPassword;
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -259,7 +272,19 @@ function DriverSignUp() {
                 </div>
               </div>
               
-              <button type="submit" className="login-btn">Sign Up as Driver</button>
+              <button
+                type="submit"
+                className="login-btn"
+                disabled={!isFormValid}
+              >
+                Sign Up as Driver
+              </button>
+
+             {!isFormValid && (
+               <div className="error-message" style={{ marginTop: 8 }}>
+                 Please complete all required fields and upload both images. Passwords must match.
+               </div>
+             )}
               
               <div className="divider">
                 <span>Already have an account?</span>

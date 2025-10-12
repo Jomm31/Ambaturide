@@ -62,8 +62,58 @@ function PassengerBookingStatus() {
       try {
         const res = await axios.get(`http://localhost:5000/api/passenger/${passengerId}/booking`);
         if (res.data.booking) {
-          setBooking(res.data.booking);
-          setStatus(res.data.booking.Status?.toLowerCase() || "pending");
+          const b = res.data.booking;
+
+          // decide ratingSubmitted / rating using local checks and backend data without
+          // resetting state prematurely — compute in local vars first
+          let alreadySubmitted = false;
+          let initialRating = 0;
+
+          // 1) localStorage short-circuit: if user already rated this booking earlier
+          try {
+            const ratedRaw = localStorage.getItem("ratedBookings");
+            const ratedList = ratedRaw ? JSON.parse(ratedRaw) : [];
+            if (Array.isArray(ratedList) && ratedList.includes(Number(b.BookingID))) {
+              alreadySubmitted = true;
+            }
+          } catch (e) {
+            // ignore parse errors
+          }
+
+          // 2) prefer any rating fields already attached to booking
+          const existingRating =
+            Number(b.Rating) ||
+            Number(b.PassengerRating) ||
+            0;
+          if (existingRating > 0) {
+            alreadySubmitted = true;
+            initialRating = existingRating;
+          }
+
+          // 3) If booking completed and still not determined, check driver_ratings table
+          if (!alreadySubmitted && b.Status?.toLowerCase() === "completed" && b.DriverID && b.BookingID) {
+            try {
+              const rr = await axios.get(`http://localhost:5000/api/driver/${b.DriverID}/ratings`);
+              const ratings = rr.data.ratings || rr.data || [];
+              const found = ratings.find(r =>
+                Number(r.BookingID) === Number(b.BookingID) &&
+                Number(r.PassengerID) === Number(passengerId)
+              );
+              if (found) {
+                alreadySubmitted = true;
+                initialRating = Number(found.Rating) || initialRating;
+              }
+            } catch (err) {
+              console.warn("Could not verify booking rating from ratings endpoint:", err);
+            }
+          }
+
+          setBooking(b);
+          setStatus(b.Status?.toLowerCase() || "pending");
+          // set rating state once based on computed values
+          setRating(initialRating);
+          setRatingSubmitted(Boolean(alreadySubmitted));
+
           // Fetch passenger profile (to get profile picture / canonical phone)
           try {
             const p = await axios.get(`http://localhost:5000/api/passenger/profile/${passengerId}`);
@@ -74,11 +124,10 @@ function PassengerBookingStatus() {
           }
 
           // Fetch driver profile if a driver is assigned
-          const driverId = res.data.booking.DriverID || res.data.booking.DriverId || res.data.booking.driverId;
+          const driverId = b.DriverID || b.DriverId || b.driverId;
           if (driverId) {
             try {
               const d = await axios.get(`http://localhost:5000/api/driver/profile/${driverId}`);
-              // server returns { success: true, driver: { ... } }
               const driverObj = d.data?.driver || d.data;
               setDriverProfile(driverObj);
             } catch (err) {
@@ -150,7 +199,21 @@ function PassengerBookingStatus() {
         rating, comment
       }, { withCredentials: true });
       if (res.data.success) {
+        // mark submitted and update local booking so refresh/state keeps rating state
         setRatingSubmitted(true);
+        setBooking(prev => prev ? { ...prev, Rating: rating, PassengerRating: rating, RatingComment: comment, RatingID: res.data.ratingId || res.data.id || true } : prev);
+
+        // locally remember this booking as rated to avoid UI showing again until backend reflects it
+        try {
+          const raw = localStorage.getItem("ratedBookings");
+          let list = raw ? JSON.parse(raw) : [];
+          if (!Array.isArray(list)) list = [];
+          if (!list.includes(Number(booking.BookingID))) {
+            list.push(Number(booking.BookingID));
+            localStorage.setItem("ratedBookings", JSON.stringify(list));
+          }
+        } catch (e) { /* ignore */ }
+
       } else {
         alert("Failed to submit rating");
       }
@@ -375,13 +438,15 @@ function PassengerBookingStatus() {
               </div>
 
               <div className="action-buttons">
-                <button
-                  className="btn cancel-ride-btn"
-                  onClick={handleCancelBooking}
-                  disabled={canceling}
-                >
-                  {canceling ? "Cancelling..." : "Cancel Ride"}
-                </button>
+                {booking?.Status?.toLowerCase() !== "completed" && (
+                  <button
+                    className="btn cancel-ride-btn"
+                    onClick={handleCancelBooking}
+                    disabled={canceling}
+                  >
+                    {canceling ? "Cancelling..." : "Cancel Ride"}
+                  </button>
+                )}
                 <button
                   className="btn home-btn"
                   onClick={() => navigate("/")}

@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Oct 12, 2025 at 05:23 PM
+-- Generation Time: Oct 12, 2025 at 11:22 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.0.30
 
@@ -48,10 +48,7 @@ CREATE TABLE `bookings` (
 --
 
 INSERT INTO `bookings` (`BookingID`, `PassengerID`, `PickupArea`, `DropoffArea`, `PickupFullAddress`, `DropoffFullAddress`, `RideDate`, `RideTime`, `VehicleType`, `Fare`, `Status`, `CreatedAt`, `DriverID`) VALUES
-(18, 15, 'Mintal', 'Sasa', '', '', '2025-10-17', '07:16:00', '6 Seaters', 600.00, 'pending', '2025-10-12 08:13:44', NULL),
-(25, 10, 'Ulas', 'Lanang', '', '', '2025-10-12', '17:58:00', '6 Seaters', 600.00, 'completed', '2025-10-12 09:58:38', 5),
-(26, 17, 'Catalunan', 'Catalunan', '', '', '2025-10-12', '17:59:00', '6 Seaters', 600.00, 'accepted', '2025-10-12 09:59:31', 5),
-(28, 10, 'Mintal', 'Buhangin', '', '', '2025-10-30', '00:00:00', '6 Seaters', 600.00, 'accepted', '2025-10-12 14:36:25', 5);
+(33, 18, 'Toril', 'Lanang', 'chowking', 'sm', '2025-10-14', '05:13:00', '6 Seaters', 550.00, 'completed', '2025-10-12 21:13:29', 8);
 
 -- --------------------------------------------------------
 
@@ -75,15 +72,6 @@ CREATE TABLE `bookings_backup` (
   `DriverID` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Dumping data for table `bookings_backup`
---
-
-INSERT INTO `bookings_backup` (`BookingID`, `PassengerID`, `PickupArea`, `DropoffArea`, `PickupFullAddress`, `DropoffFullAddress`, `RideDate`, `RideTime`, `VehicleType`, `Fare`, `Status`, `CreatedAt`, `DriverID`) VALUES
-(1, 10, 'Toril', 'Mintal', '', '', '2025-10-11', '06:28:00', '6 Seaters', 600.00, 'accepted', '2025-10-09 22:26:27', NULL),
-(2, 10, 'Toril', 'Catalunan', '', '', '2025-10-01', '07:35:00', '6 Seaters', 600.00, 'accepted', '2025-10-09 22:35:17', NULL),
-(3, 10, 'Bankal', 'Lanang', '', '', '2025-10-03', '10:15:00', '6 Seaters', 600.00, 'accepted', '2025-10-09 23:11:48', NULL);
-
 -- --------------------------------------------------------
 
 --
@@ -97,24 +85,6 @@ CREATE TABLE `booking_declines` (
   `Reason` varchar(255) DEFAULT NULL,
   `DeclinedAt` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `booking_declines`
---
-
-INSERT INTO `booking_declines` (`id`, `BookingID`, `DriverID`, `Reason`, `DeclinedAt`) VALUES
-(1, 18, 5, NULL, '2025-10-12 08:19:53'),
-(2, 18, 5, NULL, '2025-10-12 08:19:56'),
-(3, 18, 5, NULL, '2025-10-12 08:19:57'),
-(4, 18, 5, NULL, '2025-10-12 08:19:58'),
-(5, 18, 5, NULL, '2025-10-12 08:19:59'),
-(6, 18, 5, NULL, '2025-10-12 08:20:01'),
-(7, 18, 5, NULL, '2025-10-12 08:20:09'),
-(8, 18, 5, NULL, '2025-10-12 08:22:34'),
-(9, 18, 5, NULL, '2025-10-12 08:22:36'),
-(10, 18, 5, NULL, '2025-10-12 08:22:37'),
-(11, 19, 5, NULL, '2025-10-12 08:23:14'),
-(12, 21, 5, NULL, '2025-10-12 09:01:56');
 
 -- --------------------------------------------------------
 
@@ -150,11 +120,7 @@ CREATE TABLE `drivers` (
 --
 
 INSERT INTO `drivers` (`DriverID`, `TransactionID`, `FirstName`, `LastName`, `Gender`, `BirthDate`, `Email`, `Password`, `PhoneNumber`, `Address`, `ProfilePicture`, `LicenseNumber`, `LicenseImage`, `VehicleType`, `PlateNumber`, `VehicleBrand`, `VehiclePicture`, `Status`, `CreatedAt`, `Reports`) VALUES
-(1, NULL, 'jomm', 'jommax', 'Female', '2025-06-08', 'asdf@asdf', '$2b$10$DYQEE4JSfGyDUdUtkd.E0exf31oiWa7pbI.FVNIDkBLpuHqtHNElq', '123', '', '/uploads/profile-pictures/1760045839788.png', '111111', '/uploads/driver-license/1760037738467.jpg', '', '123', '', '/uploads/vehicle-images/1760037738475.png', 'active', '2025-10-09 19:22:18', 0),
-(3, NULL, 'Driver', 'aa', '', '0000-00-00', 'asd@asd', '$2b$10$5MYO83YfW6LhFylGaelohe5M6yxgkrjgICbJhgp98RGcmzMihYfyS', '', '', '/uploads/profile-pictures/1760046302833.png', 'License Number', '/uploads/driver-license/1760045951573.png', '', 'Vehicle Plate Number', '', '/uploads/vehicle-images/1760045951573.jpg', 'active', '2025-10-09 21:39:11', 0),
-(4, NULL, 'Driver', 'User', NULL, NULL, 'dsa@dsa', '$2b$10$FP7SAyxu6ByljPmXbJtf5.noAAxL/D7/y9zhovjhhtr6fxQIBPHXG', '', '', NULL, '111', '/uploads/driver-license/1760046333518.png', 'SUV', '123', '', '/uploads/vehicle-images/1760046333519.jpg', 'active', '2025-10-09 21:45:33', 0),
-(5, NULL, 'az', 'jmma', 'Female', '2025-09-28', '123@123', '$2b$10$E7DZN.sYjQ9k8F77.GOq4eslOCOKQzYHPapw2KqXw4.FEtQSX372m', '7563425', '', '/uploads/profile-pictures/1760088331525.png', '11432', '/uploads/driver-license/1760120164970.png', 'Hatchback', '123432', 'carvra', '/uploads/vehicle-images/1760120690300-totoy.png', 'banned', '2025-10-10 09:23:55', 4),
-(6, NULL, 'Driver', 'User', NULL, NULL, '12345@12345', '$2b$10$w./2DbrXXoTFQD..Ud4bp.KjqVGW6fZBCNA8T9bzyC1NbTfHyBpLq', '', '', NULL, '1234', '/uploads/driver-license/1760279894408.jpg', 'Sedan', '123', '', '/uploads/vehicle-images/1760279894409.jpg', 'active', '2025-10-12 14:38:14', 0);
+(8, NULL, 'batumbakal', 'totoy', 'Male', '0000-00-00', 'driver@gmail.com', '$2b$10$wS4QlPHZcu1/9krgHHAp8.QM9LYQVPTzXXv1Snt4XmM7BOLkniBES', '0923234', '', '/uploads/profile-pictures/1760304065190.png', '123-543-653', '/uploads/driver-license/1760303704793.jpg', 'Sedan', 'LIC-143', '', '/uploads/vehicle-images/1760303704794.jpg', 'active', '2025-10-12 21:15:04', 1);
 
 -- --------------------------------------------------------
 
@@ -177,8 +143,9 @@ CREATE TABLE `driver_ratings` (
 --
 
 INSERT INTO `driver_ratings` (`RatingID`, `BookingID`, `DriverID`, `PassengerID`, `Rating`, `Comment`, `CreatedAt`) VALUES
-(1, 25, 5, 10, 4, 'good', '2025-10-12 10:08:37'),
-(2, 27, 5, 10, 4, 'a', '2025-10-12 10:13:12');
+(5, 33, 8, 18, 4, 'gewd', '2025-10-12 21:16:03'),
+(6, 33, 8, 18, 4, 'a', '2025-10-12 21:17:59'),
+(7, 33, 8, 18, 3, 'gews', '2025-10-12 21:21:39');
 
 -- --------------------------------------------------------
 
@@ -200,10 +167,34 @@ CREATE TABLE `driver_reports` (
 --
 
 INSERT INTO `driver_reports` (`ReportID`, `DriverID`, `PassengerID`, `BookingID`, `Message`, `CreatedAt`) VALUES
-(1, 5, 10, 28, 'a', '2025-10-12 15:12:43'),
-(2, 5, 10, 28, 'a', '2025-10-12 15:12:47'),
-(3, 5, 10, 28, 'a', '2025-10-12 15:15:17'),
-(4, 5, 10, 28, 'a', '2025-10-12 15:15:19');
+(7, 8, 18, 33, 'smell bad car', '2025-10-12 21:17:01');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `inquiries`
+--
+
+CREATE TABLE `inquiries` (
+  `InquiryID` int(11) NOT NULL,
+  `FirstName` varchar(100) NOT NULL,
+  `LastName` varchar(100) NOT NULL,
+  `Country` varchar(100) DEFAULT 'Philippines',
+  `CountryCode` varchar(10) DEFAULT '+63',
+  `PhoneNumber` varchar(32) DEFAULT NULL,
+  `Email` varchar(150) DEFAULT NULL,
+  `Message` text DEFAULT NULL,
+  `AttachmentPath` varchar(255) DEFAULT NULL,
+  `CreatedAt` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `inquiries`
+--
+
+INSERT INTO `inquiries` (`InquiryID`, `FirstName`, `LastName`, `Country`, `CountryCode`, `PhoneNumber`, `Email`, `Message`, `AttachmentPath`, `CreatedAt`) VALUES
+(4, 'Joemire', 'Loremas', 'Philippines', '+63', '093289746', 'jomm@gmail.com', 'how to do this and this', '/uploads/inquiries/1760303549460-still-life-documents-stack_23-2151088805.jpg', '2025-10-12 21:12:29'),
+(5, 'jomm', 'loremas', 'Philippines', '+63', '093425423', 'jomm@gmail.com', 'hey please contact me', NULL, '2025-10-12 21:12:55');
 
 -- --------------------------------------------------------
 
@@ -233,12 +224,7 @@ CREATE TABLE `passengers` (
 --
 
 INSERT INTO `passengers` (`PassengerID`, `TransactionID`, `FirstName`, `LastName`, `Email`, `Password`, `PhoneNumber`, `Address`, `BirthDate`, `Gender`, `ProfilePicture`, `Status`, `CreatedAt`, `FullName`) VALUES
-(3, NULL, 'Passenger', 'User', 'j.loremas.550813@umindanao.edu.ph', '$2b$10$i69fApAXwmDztANX/oApSujRYW.GFGKmCL6Up4MZ6fSubnNOEgWjK', '0000000000', 'Unknown', '2000-01-01', NULL, NULL, 'active', '2025-10-09 16:38:07', 'Passenger User'),
-(4, NULL, 'Passenger', 'Userasdas', 'ljoemiredave@gmail.com', '$2b$10$ws8DWIVb3kLM3OaXlnjMGuQltGObOxRHWoGgtzXE4o1i/XwMePLFi', '0000000000', 'Unknown', '1999-12-31', '', '/uploads/profile-pictures/1760048361935.jpg', 'active', '2025-10-09 16:39:25', 'Passenger Userasdas'),
-(10, NULL, 'naynay', 'niga', 'jomm21212@gmail.com', '$2b$10$M6nCcYUF5JNV1qKDQqvQa.md0o9lTc2gsiYB3pSUbCCPUXI1lmpK2', '876534', 'Unknown', '2025-09-09', 'Male', '/uploads/profile-pictures/1760044576337.jpg', 'active', '2025-10-09 17:38:58', 'naynay niga'),
-(14, NULL, 'Passenger', 'User', 'abc@abc', '$2b$10$bnrximL6RoedDJz17lQEJOheav6PtOHvx7EKqUQ46WkDo/ITqK/p.', '0000000000', 'Unknown', '2000-01-01', NULL, NULL, 'active', '2025-10-09 17:43:18', 'Passenger User'),
-(15, NULL, 'Passenger', 'User', '321@321', '$2b$10$nPIbe/LvMeJJkdfYdXXybOQ0QV9GfUNMNPHl/m5jRTkjxb5ycvWse', '0000000000', 'Unknown', '2000-01-01', NULL, NULL, 'active', '2025-10-12 08:13:26', NULL),
-(17, NULL, 'Passenger', 'User', '1234@1234', '$2b$10$p27A7chrsTfQI6dZVd4MJOYqaefmcE68rPqRrIQhPbtNt4/l9LUme', '0000000000', 'Unknown', '2000-01-01', NULL, NULL, 'active', '2025-10-12 09:59:16', NULL);
+(18, NULL, 'Passenger', 'User', 'jomm21212@gmail.com', '$2b$10$QZwGOC32FnKdoNQLZZvC.ejviOWm/xwEWC.Su8DwLYpKPnCWKjxiC', '0000000000', 'Unknown', '2000-01-01', NULL, NULL, 'active', '2025-10-12 21:09:54', NULL);
 
 -- --------------------------------------------------------
 
@@ -270,17 +256,6 @@ CREATE TABLE `users` (
   `Type` enum('Rider','Driver') DEFAULT NULL,
   `Offenses` int(2) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `users`
---
-
-INSERT INTO `users` (`UserID`, `Email`, `Password`, `Name`, `Age`, `Gender`, `Type`, `Offenses`) VALUES
-(1, 'alice@example.com', 'alice123', 'Alice', 25, 'Female', 'Rider', 0),
-(2, 'bob@example.com', 'bob123', 'Bob', 30, 'Male', 'Driver', 1),
-(3, 'carol@example.com', 'carol123', 'Carol', 28, 'Female', 'Rider', 0),
-(4, 'dave@example.com', 'dave123', 'Dave', 35, 'Male', 'Driver', 2),
-(5, 'eve@example.com', 'eve123', 'Eve', 22, 'Other', 'Rider', 0);
 
 --
 -- Indexes for dumped tables
@@ -333,6 +308,12 @@ ALTER TABLE `driver_reports`
   ADD KEY `PassengerID` (`PassengerID`);
 
 --
+-- Indexes for table `inquiries`
+--
+ALTER TABLE `inquiries`
+  ADD PRIMARY KEY (`InquiryID`);
+
+--
 -- Indexes for table `passengers`
 --
 ALTER TABLE `passengers`
@@ -361,7 +342,7 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `bookings`
 --
 ALTER TABLE `bookings`
-  MODIFY `BookingID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=29;
+  MODIFY `BookingID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=34;
 
 --
 -- AUTO_INCREMENT for table `bookings_backup`
@@ -379,25 +360,31 @@ ALTER TABLE `booking_declines`
 -- AUTO_INCREMENT for table `drivers`
 --
 ALTER TABLE `drivers`
-  MODIFY `DriverID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `DriverID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT for table `driver_ratings`
 --
 ALTER TABLE `driver_ratings`
-  MODIFY `RatingID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `RatingID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT for table `driver_reports`
 --
 ALTER TABLE `driver_reports`
-  MODIFY `ReportID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `ReportID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+
+--
+-- AUTO_INCREMENT for table `inquiries`
+--
+ALTER TABLE `inquiries`
+  MODIFY `InquiryID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT for table `passengers`
 --
 ALTER TABLE `passengers`
-  MODIFY `PassengerID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
+  MODIFY `PassengerID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
 
 --
 -- AUTO_INCREMENT for table `reports`
