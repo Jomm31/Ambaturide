@@ -229,6 +229,14 @@ button.yellow {
     border-color: #f57c00;
 }
 
+/* Small Button Variant */
+button.small {
+    font-size: 0.8rem;
+    padding: 6px 12px;
+    min-width: 60px;
+    border-width: 1px;
+}
+
 /* Drivers List Styles */
 .drivers-list {
     display: flex;
@@ -239,7 +247,7 @@ button.yellow {
 .driver-row {
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-start;
     padding: 20px;
     background: #fafafa;
     border: 2px solid #000000;
@@ -254,14 +262,14 @@ button.yellow {
 
 .driver-info {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 15px;
     flex: 1;
 }
 
 .driver-info img {
-    width: 60px;
-    height: 60px;
+    width: 50px;
+    height: 50px;
     border-radius: 8px;
     object-fit: cover;
     border: 2px solid #000000;
@@ -300,6 +308,8 @@ button.yellow {
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.5px;
+    display: inline-block;
+    margin-top: 8px;
 }
 
 .status-pending {
@@ -355,6 +365,165 @@ button.yellow {
 
 .panels-grid .panel {
     margin-bottom: 0;
+}
+
+/* Improved Media Thumbnails */
+.driver-media {
+    display: flex;
+    gap: 10px;
+    margin-top: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.media-thumb {
+    width: 80px;
+    height: 60px;
+    background: #f6f6f6;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #666;
+    font-size: 10px;
+    border: 1px solid #e0e0e0;
+    overflow: hidden;
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.media-thumb:hover {
+    transform: scale(1.05);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.media-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.media-thumb.placeholder {
+    background: #f0f0f0;
+    color: #999;
+    font-weight: 500;
+}
+
+.zoom-btn {
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    width: 20px;
+    height: 20px;
+    font-size: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.media-thumb:hover .zoom-btn {
+    opacity: 1;
+}
+
+.zoom-btn:hover {
+    background: rgba(0, 0, 0, 0.9);
+}
+
+/* Image Modal */
+.image-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    opacity: 0;
+    animation: modalFadeIn 0.3s ease forwards;
+    padding: 24px; /* allow some breathing room on small screens */
+    box-sizing: border-box;
+}
+
+@keyframes modalFadeIn {
+    to { opacity: 1; }
+}
+
+.modal-content {
+    position: relative;
+    max-width: 95vw;
+    max-height: 95vh;
+    background: transparent; /* keep background dark overlay outside image */
+    border-radius: 12px;
+    overflow: visible; /* allow caption / close to render outside if needed */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 8px;
+    
+}
+
+.modal-content img {
+    width: auto;
+    height: auto;
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain; /* ensure entire image is visible within the modal */
+    display: block;
+    border-radius: 8px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+    margin-top: 12px !important; /* added top margin so image isn't flush to the top */
+}
+
+/* Keep close button visible */
+.modal-close {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    z-index: 2;
+}
+
+/* Caption below image (non-overlapping) */
+.modal-caption {
+    position: static;
+    background: transparent;
+    color: #fff;
+    padding: 6px 10px;
+    font-size: 0.95rem;
+    text-align: center;
+    max-width: 95%;
+    overflow-wrap: break-word;
+}
+
+/* responsive tweaks */
+@media (max-width: 640px) {
+  .image-modal { padding: 12px; }
+  .modal-close { top: 8px; right: 8px; width:36px; height:36px; }
+  .modal-caption { font-size: 0.9rem; }
 }
 
 /* Responsive Design */
@@ -440,6 +609,11 @@ button.yellow {
     .admin-table td {
         padding: 12px 8px;
     }
+    
+    .media-thumb {
+        width: 70px;
+        height: 52px;
+    }
 }
 
 @media (max-width: 480px) {
@@ -462,5 +636,15 @@ button.yellow {
     
     .admin-sidebar ul {
         padding: 0 15px;
+    }
+    
+    .driver-media {
+        gap: 8px;
+    }
+    
+    .media-thumb {
+        width: 60px;
+        height: 45px;
+        font-size: 9px;
     }
 }

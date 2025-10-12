@@ -26,6 +26,7 @@ import NewDriversPanel from "./AdminInterface/NewDrivers.jsx";
 import DriverListPanel from "./AdminInterface/DriverList.jsx";
 import BookingListPanel from "./AdminInterface/BookingList.jsx";
 import Inquiries from "./AdminInterface/Inquiries.jsx";
+import DriverReports from "./AdminInterface/DriverReports.jsx";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
@@ -50,11 +51,12 @@ createRoot(document.getElementById("root")).render(
 
         {/* Admin layout with nested routes (lowercase /admin) */}
         <Route path="/admin" element={<Admin />}>
-          <Route index element={<AdminPanel />} /> {/* default dashboard */}
+          <Route index element={<NewDriversPanel />} />
           <Route path="new-drivers" element={<NewDriversPanel />} />
           <Route path="drivers" element={<DriverListPanel />} />
-          <Route path="inquiries" element={<Inquiries />} />
           <Route path="bookings" element={<BookingListPanel />} />
+          <Route path="inquiries" element={<Inquiries />} />
+          <Route path="DriverReports" element={<DriverReports />} />
         </Route>
       </Routes>
     </BrowserRouter>

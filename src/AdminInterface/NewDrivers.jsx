@@ -5,6 +5,7 @@ export default function NewDriversPanel({ onChange }) {
   const [drivers, setDrivers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [processingId, setProcessingId] = useState(null);
+  const [modalImage, setModalImage] = useState(null);
 
   const fetchPending = async () => {
     setLoading(true);
@@ -43,6 +44,21 @@ export default function NewDriversPanel({ onChange }) {
     }
   };
 
+  const buildImageUrl = (path) => {
+    if (!path) return null;
+    const raw = String(path);
+    if (/^https?:\/\//i.test(raw) || /^\/\//.test(raw)) return raw;
+    return `http://localhost:5000${raw.startsWith("/") ? raw : `/${raw}`}`;
+  };
+
+  const openImageModal = (imageUrl, caption) => {
+    setModalImage({ url: imageUrl, caption });
+  };
+
+  const closeImageModal = () => {
+    setModalImage(null);
+  };
+
   return (
     <div className="panel">
       <h2>New Drivers (Pending)</h2>
@@ -60,7 +76,7 @@ export default function NewDriversPanel({ onChange }) {
             <div key={d.DriverID} className="driver-row">
               <div className="driver-info">
                 <img 
-                  src={d.ProfilePicture ? `http://localhost:5000${d.ProfilePicture}` : "/profile-pictures/default.jpg"}
+                  src={d.ProfilePicture ? buildImageUrl(d.ProfilePicture) : "/profile-pictures/default.jpg"}
                   alt={`${d.FirstName} ${d.LastName}`}
                   onError={(e) => {
                     e.currentTarget.onerror = null;
@@ -72,6 +88,55 @@ export default function NewDriversPanel({ onChange }) {
                   <div>📧 {d.Email}</div>
                   <div>📞 {d.PhoneNumber}</div>
                   <div className="status-badge status-pending">Pending Review</div>
+
+                  {/* Media thumbnails with zoom buttons */}
+                  <div className="driver-media">
+                    {/* Vehicle Image */}
+                    {d.VehiclePicture ? (
+                      <div className="media-thumb vehicle-thumb">
+                        <img
+                          src={buildImageUrl(d.VehiclePicture)}
+                          alt="Vehicle"
+                          onError={(e) => { 
+                            e.currentTarget.onerror = null; 
+                            e.currentTarget.src = "/profile-pictures/default-car.jpg"; 
+                          }}
+                        />
+                        <button 
+                          className="zoom-btn small"
+                          onClick={() => openImageModal(buildImageUrl(d.VehiclePicture), `${d.FirstName}'s Vehicle`)}
+                          title="Zoom vehicle image"
+                        >
+                          🔍
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="media-thumb placeholder">No vehicle</div>
+                    )}
+
+                    {/* License Image */}
+                    {d.LicenseImage ? (
+                      <div className="media-thumb license-thumb">
+                        <img
+                          src={buildImageUrl(d.LicenseImage)}
+                          alt="License"
+                          onError={(e) => { 
+                            e.currentTarget.onerror = null; 
+                            e.currentTarget.src = "/profile-pictures/default.jpg"; 
+                          }}
+                        />
+                        <button 
+                          className="zoom-btn small"
+                          onClick={() => openImageModal(buildImageUrl(d.LicenseImage), `${d.FirstName}'s License`)}
+                          title="Zoom license image"
+                        >
+                          🔍
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="media-thumb placeholder">No license</div>
+                    )}
+                  </div>
                 </div>
               </div>
               <div className="driver-actions">
@@ -92,6 +157,17 @@ export default function NewDriversPanel({ onChange }) {
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Image Modal */}
+      {modalImage && (
+        <div className="image-modal" onClick={closeImageModal}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <img src={modalImage.url} alt={modalImage.caption} />
+            <button className="modal-close" onClick={closeImageModal}>×</button>
+            <div className="modal-caption">{modalImage.caption}</div>
+          </div>
         </div>
       )}
     </div>

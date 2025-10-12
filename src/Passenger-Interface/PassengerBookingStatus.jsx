@@ -16,6 +16,7 @@ function PassengerBookingStatus() {
   const [passengerPhone, setPassengerPhone] = useState("");
   const [driverProfile, setDriverProfile] = useState(null);
   const [canceling, setCanceling] = useState(false);
+  const [reporting, setReporting] = useState(false);
   const navigate = useNavigate();
   
   // Read PassengerID from localStorage with fallbacks (normalized)
@@ -161,6 +162,41 @@ function PassengerBookingStatus() {
     }
   }
 
+  const handleReportDriver = async () => {
+    if (!booking?.DriverID) return;
+    
+    const reportReason = prompt("Please briefly describe the issue with this driver:");
+    if (!reportReason || reportReason.trim() === "") return;
+
+    try {
+      setReporting(true);
+      const res = await axios.post(`http://localhost:5000/api/drivers/${booking.DriverID}/report`, {
+        reason: reportReason.trim(),
+        bookingId: booking.BookingID,
+        passengerId: passengerId
+      }, { withCredentials: true });
+
+      if (res.data.success) {
+        alert("Thank you for your report. We will review this driver.");
+      } else {
+        // server returned success:false with 200
+        alert("Failed to submit report: " + (res.data.message || "Unknown error"));
+      }
+    } catch (err) {
+      // handle 429 / other server errors
+      const status = err?.response?.status;
+      const serverMsg = err?.response?.data?.message;
+      if (status === 429) {
+        alert(serverMsg || "You have reached the report limit for this driver.");
+      } else {
+        console.error("Error reporting driver:", err);
+        alert("An error occurred while submitting your report.");
+      }
+    } finally {
+      setReporting(false);
+    }
+  };
+
   // if none — include Header so header always shows
   if (status === "none") {
     return (
@@ -212,6 +248,23 @@ function PassengerBookingStatus() {
                   <div className="driver-details">
                     <h3>{booking.DriverName}</h3>
                     <p>📞 {sanitizePhone(booking.DriverPhone)}</p>
+                    <button 
+                      className="btn report-btn" 
+                      onClick={handleReportDriver}
+                      disabled={reporting}
+                      style={{
+                        marginTop: '8px',
+                        padding: '6px 12px',
+                        fontSize: '0.8rem',
+                        background: '#ff6b6b',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      {reporting ? "Reporting..." : "Report Driver"}
+                    </button>
                   </div>
                 </div>
 

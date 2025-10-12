@@ -1045,6 +1045,87 @@ app.get("/api/driver/:id/ratings", (req, res) => {
   });
 });
 
+// Passenger -> report a driver (called from PassengerBookingStatus)
+app.post("/api/drivers/:id/report", (req, res) => {
+  const driverId = Number(req.params.id);
+  const { passengerId, bookingId, reason } = req.body || {};
+
+  if (!driverId || !passengerId || !reason) {
+    return res.status(400).json({ success: false, message: "Missing driverId, passengerId or reason" });
+  }
+
+  // limit reports per passenger -> driver to 2
+  const countSql = "SELECT COUNT(*) AS cnt FROM driver_reports WHERE DriverID = ? AND PassengerID = ?";
+  db.query(countSql, [driverId, passengerId], (errCount, rows) => {
+    if (errCount) {
+      console.error("DB error counting reports:", errCount);
+      return res.status(500).json({ success: false, message: "Database error" });
+    }
+    const cnt = (rows && rows[0] && rows[0].cnt) ? Number(rows[0].cnt) : 0;
+    const LIMIT_PER_PASSENGER_DRIVER = 2;
+    if (cnt >= LIMIT_PER_PASSENGER_DRIVER) {
+      return res.status(429).json({
+        success: false,
+        message: `Report limit reached. You can only report the same driver ${LIMIT_PER_PASSENGER_DRIVER} times.`,
+      });
+    }
+
+    const insertSql = "INSERT INTO driver_reports (DriverID, PassengerID, BookingID, Message) VALUES (?, ?, ?, ?)";
+    db.query(insertSql, [driverId, passengerId, bookingId || null, reason], (err, result) => {
+      if (err) {
+        console.error("DB error inserting driver report:", err);
+        return res.status(500).json({ success: false, message: "Database error" });
+      }
+
+      // increment driver's Reports counter
+      const upd = "UPDATE drivers SET Reports = IFNULL(Reports,0) + 1 WHERE DriverID = ?";
+      db.query(upd, [driverId], (err2) => {
+        if (err2) {
+          console.error("DB error incrementing report count:", err2);
+          // Still return success for report insertion
+        }
+        return res.json({ success: true, message: "Report submitted" });
+      });
+    });
+  });
+});
+
+// Admin: list driver reports with passenger & driver info
+app.get("/api/admin/driver-reports", (req, res) => {
+  const sql = `
+    SELECT r.ReportID, r.DriverID, r.PassengerID, r.BookingID, r.Message, r.CreatedAt,
+           CONCAT(d.FirstName, ' ', d.LastName) AS DriverName, d.ProfilePicture AS DriverPicture, d.Reports,
+           CONCAT(p.FirstName, ' ', p.LastName) AS PassengerName, p.ProfilePicture AS PassengerPicture
+    FROM driver_reports r
+    LEFT JOIN drivers d ON r.DriverID = d.DriverID
+    LEFT JOIN passengers p ON r.PassengerID = p.PassengerID
+    ORDER BY r.CreatedAt DESC
+  `;
+  db.query(sql, (err, results) => {
+    if (err) {
+      console.error("DB error fetching driver reports:", err);
+      return res.status(500).json({ success: false, message: "Database error" });
+    }
+    res.json({ success: true, reports: results || [] });
+  });
+});
+
+// Admin: ban driver (convenience endpoint; admin panel may already call /api/admin/drivers/:id/status)
+app.put("/api/admin/drivers/:id/ban", (req, res) => {
+  const id = req.params.id;
+  if (!id) return res.status(400).json({ success: false, message: "Missing driver id" });
+
+  const sql = "UPDATE drivers SET Status = 'banned' WHERE DriverID = ?";
+  db.query(sql, [id], (err, result) => {
+    if (err) {
+      console.error("DB error banning driver:", err);
+      return res.status(500).json({ success: false, message: "Database error" });
+    }
+    if (result.affectedRows === 0) return res.status(404).json({ success: false, message: "Driver not found" });
+    return res.json({ success: true, message: "Driver banned" });
+  });
+});
+
 // Handle all other undefined routes safely
 app.use((req, res) => {
   res.status(404).send("❌ Route not found");

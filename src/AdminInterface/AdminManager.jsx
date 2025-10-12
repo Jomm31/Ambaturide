@@ -32,6 +32,11 @@ export default function AdminManager() {
           </NavLink>
         </li>
         <li>
+          <NavLink to="/admin/DriverReports" className={({ isActive }) => (isActive ? "active" : "")}>
+            ⚠️ Driver Reports
+          </NavLink>
+        </li>
+        <li>
           <NavLink to="/">🚪 Exit Admin</NavLink>
         </li>
       </ul>
