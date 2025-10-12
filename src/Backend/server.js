@@ -986,32 +986,62 @@ app.post("/api/driver/bookings/:id/decline", (req, res) => {
   });
 });
 
-// Get ratings for a specific driver (includes passenger name + avatar)
+// Admin: list drivers by status
+app.get("/api/admin/drivers", (req, res) => {
+  const status = req.query.status || "active";
+  const sql = "SELECT * FROM drivers WHERE Status = ?";
+  db.query(sql, [status], (err, results) => {
+    if (err) { console.error(err); return res.status(500).json({ success:false, message:"DB error" }); }
+    res.json({ success:true, drivers: results || [] });
+  });
+});
+
+// Admin: update driver status
+app.put("/api/admin/drivers/:id/status", (req, res) => {
+  const id = req.params.id;
+  const { status } = req.body || {};
+  if (!id || !status) return res.status(400).json({ success:false, message:"Missing params" });
+  const allowed = ["pending","active","inactive","banned"];
+  if (!allowed.includes(status)) return res.status(400).json({ success:false, message:"Invalid status" });
+
+  const sql = "UPDATE drivers SET Status = ? WHERE DriverID = ?";
+  db.query(sql, [status, id], (err, result) => {
+    if (err) { console.error(err); return res.status(500).json({ success:false, message:"DB error" }); }
+    if (result.affectedRows === 0) return res.status(404).json({ success:false, message:"Driver not found" });
+    res.json({ success:true, message:"Status updated" });
+  });
+});
+
+// Admin: bookings list (with passenger and driver names when available)
+app.get("/api/admin/bookings", (req, res) => {
+  const sql = `
+    SELECT b.*, 
+           CONCAT(p.FirstName, ' ', p.LastName) AS PassengerName,
+           CONCAT(d.FirstName, ' ', d.LastName) AS DriverName
+    FROM bookings b
+    LEFT JOIN passengers p ON b.PassengerID = p.PassengerID
+    LEFT JOIN drivers d ON b.DriverID = d.DriverID
+    ORDER BY b.CreatedAt DESC
+  `;
+  db.query(sql, (err, results) => {
+    if (err) { console.error(err); return res.status(500).json({ success:false, message:"DB error" }); }
+    res.json({ success:true, bookings: results || [] });
+  });
+});
+
+// (optional) ratings endpoint if not present
 app.get("/api/driver/:id/ratings", (req, res) => {
   const driverId = req.params.id;
-  if (!driverId) return res.status(400).json({ success: false, message: "Missing driverId" });
-
   const sql = `
-    SELECT 
-      r.Rating,
-      r.Comment,
-      r.CreatedAt,
-      p.PassengerID,
-      p.FirstName,
-      p.LastName,
-      p.ProfilePicture AS PassengerPicture
+    SELECT r.Rating, r.Comment, r.CreatedAt, p.FirstName, p.LastName, p.ProfilePicture AS PassengerPicture
     FROM driver_ratings r
     LEFT JOIN passengers p ON r.PassengerID = p.PassengerID
     WHERE r.DriverID = ?
     ORDER BY r.CreatedAt DESC
   `;
-
   db.query(sql, [driverId], (err, results) => {
-    if (err) {
-      console.error("DB error fetching ratings:", err);
-      return res.status(500).json({ success: false, message: "Database error" });
-    }
-    res.json({ success: true, ratings: results || [] });
+    if (err) { console.error(err); return res.status(500).json({ success:false, message:"DB error" }); }
+    res.json({ success:true, ratings: results || [] });
   });
 });
 

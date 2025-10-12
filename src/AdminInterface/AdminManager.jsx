@@ -1,32 +1,40 @@
-import { useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React from "react";
+import { NavLink } from "react-router-dom";
+import "./Admin.css";
 
-function AdminManager() {
-    useEffect(() => {
-    import ('./Admin.css');
-    
-    fetch("http://localhost:3001/users")
-      .then(res => res.json())
-      .then(data => setUsers(data));
-  }, []);
-
-    const navigate = useNavigate();
-
-    return (
-        <>
-            <div className='card'>
-                <ul>
-                    <li onClick={() => navigate('/Admin')}>Users List</li>
-                    <li onClick={() => navigate('/Admin')}>Drivers List</li>
-                    <li onClick={() => navigate('/Admin')}>Riders List</li>
-                    <li onClick={() => navigate('/Admin')}>Transactions List</li>
-                    <li onClick={() => navigate('/Admin')}>Reports List</li>
-                    <li onClick={() => navigate('/Admin')}>Bookings List</li>
-                    <li onClick={() => navigate('/')}>Exit</li>
-                    </ul>
-            </div>
-        </>
-    )
+export default function AdminManager() {
+  return (
+    <aside className="admin-sidebar">
+      <ul>
+        <li>
+          <NavLink to="/admin" end className={({ isActive }) => (isActive ? "active" : "")}>
+            🏠 Dashboard
+          </NavLink>
+        </li>
+        <li>
+          <NavLink to="/admin/new-drivers" className={({ isActive }) => (isActive ? "active" : "")}>
+            👤 New Drivers
+          </NavLink>
+        </li>
+        <li>
+          <NavLink to="/admin/drivers" className={({ isActive }) => (isActive ? "active" : "")}>
+            🚗 Drivers List
+          </NavLink>
+        </li>
+        <li>
+          <NavLink to="/admin/inquiries" className={({ isActive }) => (isActive ? "active" : "")}>
+            📝 Inquiries
+          </NavLink>
+        </li>
+        <li>
+          <NavLink to="/admin/bookings" className={({ isActive }) => (isActive ? "active" : "")}>
+            📋 Booking List
+          </NavLink>
+        </li>
+        <li>
+          <NavLink to="/">🚪 Exit Admin</NavLink>
+        </li>
+      </ul>
+    </aside>
+  );
 }
-
-export default AdminManager;

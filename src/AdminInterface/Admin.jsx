@@ -1,25 +1,24 @@
-import { useEffect , useLayoutEffect} from 'react';
-
-import AdminManager from './AdminManager.jsx';
-import AdminPanel from './AdminPanel.jsx';
-import AdminPanel2 from './AdminPanel2.jsx';
-
-import bg_img from '../assets/homepage-driver.jpg'
+import { useEffect } from "react";
+import { Outlet } from "react-router-dom";
+import AdminManager from "./AdminManager.jsx";
+import "./Admin.css";
 
 function Admin() {
+  useEffect(() => {
+    document.title = "Admin Dashboard";
+  }, []);
 
-    useEffect(() => {
-        import("./Admin.css");
-    }, []);
+  return (
+    <div className="admin-main-container">
+      {/* Sidebar */}
+      <AdminManager />
 
-    return (
-        <>
-            <div className='main-container'>
-                <AdminManager />
-                <AdminPanel2 />
-            </div>
-        </>
-    )
+      {/* Dynamic content area */}
+      <div className="admin-content">
+        <Outlet />
+      </div>
+    </div>
+  );
 }
 
 export default Admin;
