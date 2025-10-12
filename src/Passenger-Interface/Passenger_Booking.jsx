@@ -25,9 +25,53 @@ function Passenger_Booking() {
     "Magsaysay", "Agdao", "Buhangin", "Lanang", "Sasa"
   ];
 
+  // Local distance matrix (km) between major areas — add / tweak values as needed.
+  const distanceMatrix = {
+    "Toril": { "Mintal": 8, "Catalunan": 12, "Bago Gallera": 5, "Ulas": 15, "Lanang": 25, "Maa": 18 },
+    "Mintal": { "Toril": 8, "Catalunan": 6, "Ulas": 12, "Roxas": 18, "Lanang": 22 },
+    "Catalunan": { "Mintal": 6, "Maa": 10, "Ecoland": 13, "Lanang": 20 },
+    "Bago Gallera": { "Toril": 5, "Ulas": 10, "Maa": 13 },
+    "Ulas": { "Matina Crossing": 5, "Maa": 6, "Ecoland": 8, "Lanang": 15 },
+    "Matina Crossing": { "Maa": 3, "Ecoland": 4, "Roxas": 6, "Lanang": 12 },
+    "Maa": { "Ecoland": 5, "Roxas": 7, "Lanang": 10, "Sasa": 12 },
+    "Ecoland": { "Roxas": 5, "Agdao": 8, "Lanang": 10 },
+    "Roxas": { "Magsaysay": 2, "Agdao": 4, "Buhangin": 6 },
+    "Magsaysay": { "Agdao": 3, "Buhangin": 5 },
+    "Agdao": { "Buhangin": 4, "Lanang": 6, "Sasa": 8 },
+    "Buhangin": { "Lanang": 5, "Sasa": 7 },
+    "Lanang": { "Sasa": 3, "Toril": 25 },
+    "Sasa": { "Lanang": 3 },
+    // add more if needed
+  };
+
+  // helper: get local YYYY-MM-DD (avoid timezone shift)
+  const getTodayLocal = () => {
+    const t = new Date();
+    const y = t.getFullYear();
+    const m = String(t.getMonth() + 1).padStart(2, "0");
+    const d = String(t.getDate()).padStart(2, "0");
+    return `${y}-${m}-${d}`;
+  };
+  const todayMin = getTodayLocal();
+
+  // calculate fare using distance matrix
+  const getDistance = () => {
+    if (!pickup || !dropoff || pickup === dropoff) return 0;
+    return (
+      distanceMatrix[pickup]?.[dropoff] ||
+      distanceMatrix[dropoff]?.[pickup] ||
+      10
+    ); // default km when unknown
+  };
+
   const calculateTotal = () => {
     const baseFare = 50;
-    const distanceFare = pickup && dropoff ? 450 : 0;
+    const ratePerKm = selectedVehicle === "6-seater" ? 20 : 15;
+
+    const dist = getDistance();
+    if (dist === 0) return baseFare;
+
+    const distanceFare = Math.round(dist * ratePerKm);
     return baseFare + distanceFare;
   };
 
@@ -37,6 +81,16 @@ function Passenger_Booking() {
       alert("Please log in first.");
       return;
     }
+
+    // client-side validation: all fields required
+    if (!pickup) { alert("Please select Pickup Area."); return; }
+    if (!dropoff) { alert("Please select Dropoff Area."); return; }
+    if (pickup === dropoff) { alert("Pickup and Dropoff cannot be the same."); return; }
+    if (!pickupAddress.trim()) { alert("Please enter the full pickup address."); return; }
+    if (!dropoffAddress.trim()) { alert("Please enter the full dropoff address."); return; }
+    if (!date) { alert("Please choose a ride date."); return; }
+    if (!time) { alert("Please choose a ride time."); return; }
+    if (!selectedVehicle) { alert("Please choose a vehicle type."); return; }
 
     // Prevent multiple active bookings: check existing booking first
     try {
@@ -65,10 +119,10 @@ function Passenger_Booking() {
       DropoffArea: dropoff,
       PickupFullAddress: pickupAddress,
       DropoffFullAddress: dropoffAddress,
-      RideDate: date,
+      RideDate: date, // keep as YYYY-MM-DD string to avoid timezone shifting on server
       RideTime: time,
       VehicleType: selectedVehicle === "4-seater" ? "4 Seaters" : "6 Seaters",
-      Fare: selectedVehicle === "4-seater" ? 500 : 600
+      Fare: calculateTotal()
     };
 
     try {
@@ -158,6 +212,7 @@ function Passenger_Booking() {
                   <input 
                     type="date" 
                     value={date}
+                    min={todayMin}
                     onChange={(e) => setDate(e.target.value)}
                     className="form-input"
                   />
@@ -182,14 +237,30 @@ function Passenger_Booking() {
               <div className="price-breakdown">
                 <div className="price-row">
                   <span>Base Fare</span>
-                  <span>₱50</span>
+                  <span>₱15/km</span>
                 </div>
-                {pickup && dropoff && (
+
+                {pickup && dropoff && pickup !== dropoff && (
+                  <>
+                    <div className="price-row">
+                      <span>{pickup} - {dropoff}</span>
+                      <span>₱{Math.round(getDistance() * (selectedVehicle === "6-seater" ? 20 : 15))}</span>
+                    </div>
+
+                    <div className="price-row">
+                      <span>Distance</span>
+                      <span>{getDistance()} km</span>
+                    </div>
+                  </>
+                )}
+
+                {selectedVehicle && (
                   <div className="price-row">
-                    <span>{pickup} - {dropoff}</span>
-                    <span>₱450</span>
+                    <span>Vehicle</span>
+                    <span>{selectedVehicle === "6-seater" ? "6 Seaters (₱20/km)" : "4 Seaters (₱15/km)"}</span>
                   </div>
                 )}
+
                 <div className="price-divider"></div>
                 <div className="price-row total">
                   <span>TOTAL</span>
@@ -233,7 +304,7 @@ function Passenger_Booking() {
                 >
                   <img src={Car4Icon} alt="4 Seaters" className="car-icon" />
                   <span className="vehicle-name">4 Seaters</span>
-                  <span className="vehicle-price">₱500</span>
+                  <span className="vehicle-price">₱50</span>
                 </button>
                 <button 
                   className={`vehicle-btn ${selectedVehicle === '6-seater' ? 'selected six' : 'six'}`}
@@ -241,7 +312,7 @@ function Passenger_Booking() {
                 >
                   <img src={Car6Icon} alt="6 Seaters" className="car-icon" />
                   <span className="vehicle-name">6 Seaters</span>
-                  <span className="vehicle-price">₱600</span>
+                  <span className="vehicle-price">₱20/km</span>
                 </button>
               </div>
             </div>
