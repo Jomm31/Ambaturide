@@ -24,10 +24,16 @@ const ensureDir = (dir) => {
 ensureDir(path.join(__dirname, "uploads/driver-license"));
 ensureDir(path.join(__dirname, "uploads/vehicle-images"));
 ensureDir(path.join(__dirname, "uploads/profile-pictures"));
-
+// ensure inquiries upload folder exists
+ensureDir(path.join(__dirname, "uploads/inquiries"));
 
 const app = express();
 
+// basic request logger to help debug 404s
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+  next();
+});
 
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
@@ -1125,6 +1131,68 @@ app.put("/api/admin/drivers/:id/ban", (req, res) => {
     return res.json({ success: true, message: "Driver banned" });
   });
 });
+
+// ensure inquiries upload folder exists
+ensureDir(path.join(__dirname, "uploads/inquiries"));
+
+// multer for inquiries attachments
+const inquiriesStorage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, path.join(__dirname, "uploads/inquiries")),
+  filename: (req, file, cb) => {
+    const name = Date.now() + "-" + file.originalname.replace(/\s+/g, "-");
+    cb(null, name);
+  }
+});
+const uploadInquiry = multer({ storage: inquiriesStorage, limits: { fileSize: 5 * 1024 * 1024 } }); // 5MB
+
+// POST new inquiry (public)
+app.post("/api/inquiries", uploadInquiry.single("attachment"), (req, res) => {
+  const { firstName, lastName, phoneNumber, email, message, country, countryCode } = req.body;
+  const attachmentPath = req.file ? `/uploads/inquiries/${req.file.filename}` : null;
+
+  if (!firstName || !lastName || !phoneNumber || !message) {
+    return res.status(400).json({ success: false, message: "Missing required fields" });
+  }
+
+  const sql = `INSERT INTO inquiries (FirstName, LastName, Country, CountryCode, PhoneNumber, Email, Message, AttachmentPath)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
+  db.query(sql, [
+    firstName, lastName, country || "Philippines", countryCode || "+63",
+    phoneNumber, email || null, message, attachmentPath
+  ], (err, result) => {
+    if (err) {
+      console.error("DB error inserting inquiry:", err);
+      return res.status(500).json({ success: false, message: "Database error" });
+    }
+    res.json({ success: true, message: "Inquiry submitted", inquiryId: result.insertId });
+  });
+});
+
+// Admin: fetch inquiries
+app.get("/api/admin/inquiries", (req, res) => {
+  const sql = `SELECT InquiryID, FirstName, LastName, Country, CountryCode, PhoneNumber, Email, Message, AttachmentPath, CreatedAt
+               FROM inquiries ORDER BY CreatedAt DESC`;
+  db.query(sql, (err, results) => {
+    if (err) {
+      console.error("DB error fetching inquiries:", err);
+      return res.status(500).json({ success: false, message: "Database error" });
+    }
+    res.json({ success: true, inquiries: results || [] });
+  });
+});
+
+// Serve frontend build in production and fallback to index.html for client routes
+if (process.env.NODE_ENV === "production") {
+  const clientDist = path.join(__dirname, "..", "dist"); // adjust if your build output is different
+  if (fs.existsSync(clientDist)) {
+    app.use(express.static(clientDist));
+    app.get("*", (req, res) => {
+      res.sendFile(path.join(clientDist, "index.html"));
+    });
+  } else {
+    console.warn("Client dist folder not found:", clientDist);
+  }
+}
 
 // Handle all other undefined routes safely
 app.use((req, res) => {

@@ -27,6 +27,13 @@ function PassengerHomepage() {
   const [dropoff, setDropoff] = useState("");
   const [date, setDate] = useState("Today");
   const [time, setTime] = useState("Now");
+  const [contactFirst, setContactFirst] = useState("");
+  const [contactLast, setContactLast] = useState("");
+  const [contactPhone, setContactPhone] = useState("");
+  const [contactEmail, setContactEmail] = useState("");
+  const [contactMessage, setContactMessage] = useState("");
+  const [contactFile, setContactFile] = useState(null);
+  const [contactSubmitting, setContactSubmitting] = useState(false);
   const navigate = useNavigate();
   const handleBookClick = async () => {
     try {
@@ -73,6 +80,40 @@ function PassengerHomepage() {
       navigate("/LoginHomepage");
     }
   };
+
+  const handleContactSubmit = async (e) => {
+    e.preventDefault();
+    if (!contactFirst || !contactLast || !contactPhone || !contactMessage) {
+      alert("Please fill required fields (name, phone, message).");
+      return;
+    }
+    try {
+      setContactSubmitting(true);
+      const form = new FormData();
+      form.append("firstName", contactFirst);
+      form.append("lastName", contactLast);
+      form.append("phoneNumber", contactPhone);
+      form.append("email", contactEmail);
+      form.append("message", contactMessage);
+      if (contactFile) form.append("attachment", contactFile);
+
+      const res = await axios.post("http://localhost:5000/api/inquiries", form, {
+        headers: { "Content-Type": "multipart/form-data" }
+      });
+      if (res.data.success) {
+        alert("Inquiry submitted. Thank you.");
+        setContactFirst(""); setContactLast(""); setContactPhone(""); setContactEmail(""); setContactMessage(""); setContactFile(null);
+      } else {
+        alert(res.data.message || "Failed to submit inquiry.");
+      }
+    } catch (err) {
+      console.error("Contact submit error", err);
+      alert("Failed to submit inquiry.");
+    } finally {
+      setContactSubmitting(false);
+    }
+  };
+
   return (
     <>
   <Header />
@@ -215,17 +256,17 @@ function PassengerHomepage() {
       <section className="contact-section">
         <div className="contact-container">
           <h2 className="section-title">Get In Touch</h2>
-          <form className="contact-form">
+          <form className="contact-form" onSubmit={handleContactSubmit}>
             <div className="form-grid">
               <div className="form-column">
                 <div className="form-group">
                   <label>First Name</label>
-                  <input type="text" className="form-input" />
+                  <input type="text" className="form-input" value={contactFirst} onChange={(e)=>setContactFirst(e.target.value)} required />
                 </div>
                 
                 <div className="form-group">
                   <label>Last Name</label>
-                  <input type="text" className="form-input" />
+                  <input type="text" className="form-input" value={contactLast} onChange={(e)=>setContactLast(e.target.value)} required />
                 </div>
                 
                 <div className="form-group">
@@ -233,31 +274,33 @@ function PassengerHomepage() {
                   <div className="phone-input">
                     <img src={phFlag} alt="Philippines" className="flag" />
                     <span className="country-code">+63</span>
-                    <input type="tel" className="phone-field" placeholder="920 401 4206" />
+                    <input type="tel" className="phone-field" placeholder="9204014206" value={contactPhone} onChange={(e)=>setContactPhone(e.target.value)} required />
                   </div>
                 </div>
                 
                 <div className="form-group">
                   <label>Email Address</label>
-                  <input type="email" className="form-input" />
+                  <input type="email" className="form-input" value={contactEmail} onChange={(e)=>setContactEmail(e.target.value)} />
                 </div>
               </div>
               
               <div className="form-column">
                 <div className="form-group">
                   <label>Message</label>
-                  <textarea className="message-input" rows="5" placeholder="How can we help you?"></textarea>
+                  <textarea className="message-input" rows="5" placeholder="How can we help you?" value={contactMessage} onChange={(e)=>setContactMessage(e.target.value)} required></textarea>
                 </div>
                 
                 <div className="form-group">
                   <label>Attachment</label>
                   <div className="file-upload">
-                    <input type="file" className="file-input" />
-                    <span className="file-label">Choose file</span>
+                    <input type="file" className="file-input" onChange={(e)=>setContactFile(e.target.files?.[0]||null)} />
+                    <span className="file-label">{contactFile ? contactFile.name : "Choose file"}</span>
                   </div>
                 </div>
                 
-                <button type="submit" className="cta-button secondary">Send Message</button>
+                <button type="submit" className="cta-button secondary" disabled={contactSubmitting}>
+                  {contactSubmitting ? "Sending…" : "Send Message"}
+                </button>
               </div>
             </div>
           </form>

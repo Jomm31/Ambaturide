@@ -5,6 +5,28 @@ export default function BookingListPanel() {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const dateOptions = { year: "numeric", month: "short", day: "numeric" };
+
+  const formatDate = (val, fallbackTime) => {
+    if (!val && !fallbackTime) return "";
+    // If string is exactly YYYY-MM-DD, use it directly (no timezone shift)
+    if (typeof val === "string" && /^\d{4}-\d{2}-\d{2}$/.test(val)) {
+      return new Date(val + "T00:00:00").toLocaleDateString("en-PH", dateOptions);
+    }
+    // Try normal Date parsing
+    const d = new Date(val);
+    if (!isNaN(d.getTime()) && d.getFullYear() >= 1970) {
+      return d.toLocaleDateString("en-PH", dateOptions);
+    }
+    // Try extracting a yyyy-mm-dd part from the string
+    if (typeof val === "string") {
+      const m = val.match(/(\d{4}-\d{2}-\d{2})/);
+      if (m) return new Date(m[1] + "T00:00:00").toLocaleDateString("en-PH", dateOptions);
+    }
+    // If only a time was stored or date invalid, show fallback (RideTime) or empty
+    return fallbackTime || "";
+  };
+
   const fetchBookings = async () => {
     setLoading(true);
     try {
@@ -71,11 +93,7 @@ export default function BookingListPanel() {
                     {b.DropoffFullAddress && <div style={{ color: '#666', fontSize: '0.8rem' }}>{b.DropoffFullAddress}</div>}
                   </div>
                 </td>
-                <td>{new Date(b.RideDate).toLocaleDateString('en-PH', {
-                  year: 'numeric',
-                  month: 'short',
-                  day: 'numeric'
-                })}</td>
+                <td>{formatDate(b.RideDate, b.RideTime)}</td>
 
                 <td>{b.RideTime}</td>
                 <td>{b.VehicleType}</td>
