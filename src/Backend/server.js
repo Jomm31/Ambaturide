@@ -786,7 +786,10 @@ app.post("/api/passenger/book", (req, res) => {
 // ✅ Get all bookings (joined with driver details)
 // ✅ Get bookings + passenger info
 app.get("/api/driver/bookings", (req, res) => {
-  const sql = `
+  const driverId = req.query.driverId; // optional
+
+  // base select
+  let sql = `
     SELECT 
       b.BookingID,
       b.PassengerID,
@@ -806,71 +809,81 @@ app.get("/api/driver/bookings", (req, res) => {
       p.Gender
     FROM bookings AS b
     LEFT JOIN passengers AS p ON b.PassengerID = p.PassengerID
-    ORDER BY b.BookingID DESC
   `;
 
-  
+  const params = [];
 
-  db.query(sql, (err, results) => {
+  if (driverId) {
+    // only pending bookings and exclude those this driver already declined
+    sql += ` WHERE b.Status = 'pending' AND b.BookingID NOT IN (
+      SELECT BookingID FROM booking_declines WHERE DriverID = ?
+    )`;
+    params.push(driverId);
+  }
+
+  sql += ` ORDER BY b.BookingID DESC`;
+
+  db.query(sql, params, (err, results) => {
     if (err) {
       console.error("❌ Error fetching bookings:", err);
       return res.status(500).json({ success: false, message: "Database error" });
     }
-
-    // Send results to frontend
     res.json({ success: true, bookings: results });
   });
 });
 
+// GET assigned bookings for a specific driver
+app.get("/api/driver/assigned-bookings/:driverId", (req, res) => {
+  const driverId = req.params.driverId;
+  if (!driverId) return res.status(400).json({ success: false, message: "Missing driverId" });
 
-
-
-
-
-
-// ✅ Update booking status (accept / cancel / complete)
-// ✅ Update booking status and assign driver
-app.put("/api/driver/bookings/:id/status", (req, res) => {
-  const bookingId = req.params.id;
-  const { status, driverId } = req.body;
-
-  if (!status || !driverId) {
-    return res.status(400).json({ 
-      success: false, 
-      message: "Missing status or driverId" 
-    });
-  }
-
-  // ✅ Update both Status and DriverID
   const sql = `
-    UPDATE bookings 
-    SET Status = ?, DriverID = ? 
-    WHERE BookingID = ?
+    SELECT b.*, 
+           CONCAT(p.FirstName, ' ', p.LastName) AS PassengerName,
+           p.ProfilePicture AS PassengerImage,
+           p.PhoneNumber
+    FROM bookings b
+    LEFT JOIN passengers p ON b.PassengerID = p.PassengerID
+    WHERE b.DriverID = ? 
+      AND b.Status IN ('accepted', 'pending') 
+    ORDER BY b.CreatedAt DESC
   `;
-
-  db.query(sql, [status, driverId, bookingId], (err, result) => {
+  db.query(sql, [driverId], (err, results) => {
     if (err) {
-      console.error("❌ Error updating booking status:", err);
+      console.error("DB error fetching assigned bookings:", err);
       return res.status(500).json({ success: false, message: "Database error" });
     }
+    res.json({ success: true, bookings: results });
+  });
+});
 
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ success: false, message: "Booking not found" });
-    }
+// Update booking status (driver can set accepted/completed/cancelled)
+app.put("/api/bookings/:id/status", (req, res) => {
+  const bookingId = req.params.id;
+  const { status, driverId } = req.body;
+  if (!bookingId || !status) return res.status(400).json({ success: false, message: "Missing params" });
 
-    // ✅ Optional: Fetch the updated booking to confirm
-    db.query(`SELECT * FROM bookings WHERE BookingID = ?`, [bookingId], (err, rows) => {
-      if (err) {
-        console.error("❌ Error fetching updated booking:", err);
-        return res.status(500).json({ success: false, message: "Database error" });
-      }
+  // Only allow expected statuses
+  const allowed = ["pending", "accepted", "completed", "cancelled"];
+  if (!allowed.includes(status)) return res.status(400).json({ success: false, message: "Invalid status" });
 
-      res.json({ 
-        success: true, 
-        message: "Booking accepted successfully!", 
-        updatedBooking: rows[0] 
-      });
+  // If accepting, set DriverID as well and ensure booking is still pending to avoid race conditions
+  if (status === "accepted") {
+    const sql = "UPDATE bookings SET Status = ?, DriverID = ? WHERE BookingID = ? AND Status = 'pending'";
+    db.query(sql, [status, driverId, bookingId], (err, result) => {
+      if (err) return res.status(500).json({ success: false, message: "DB error" });
+      if (result.affectedRows === 0) return res.status(409).json({ success: false, message: "Booking already taken or not pending" });
+      return res.json({ success: true, message: "Assigned and accepted" });
     });
+    return;
+  }
+
+  // other status updates
+  const sql = "UPDATE bookings SET Status = ? WHERE BookingID = ?";
+  db.query(sql, [status, bookingId], (err, result) => {
+    if (err) return res.status(500).json({ success: false, message: "DB error" });
+    if (result.affectedRows === 0) return res.status(404).json({ success: false, message: "Booking not found" });
+    return res.json({ success: true, message: "Status updated" });
   });
 });
 
@@ -907,8 +920,46 @@ app.get("/api/passenger/:id/booking", (req, res) => {
   });
 });
 
+// Add this after your other API routes (near other booking endpoints)
 
+// Delete booking by BookingID (passenger can cancel)
+// This permanently removes the row. If you prefer to keep history, change to update Status='cancelled'.
+app.delete("/api/bookings/:id", (req, res) => {
+  const bookingId = req.params.id;
+  if (!bookingId) return res.status(400).json({ success: false, message: "Missing booking id" });
 
+  const sql = "DELETE FROM bookings WHERE BookingID = ?";
+  db.query(sql, [bookingId], (err, result) => {
+    if (err) {
+      console.error("DB error deleting booking:", err);
+      return res.status(500).json({ success: false, message: "Database error" });
+    }
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ success: false, message: "Booking not found" });
+    }
+
+    return res.json({ success: true, message: "Booking cancelled and deleted" });
+  });
+});
+
+app.post("/api/driver/bookings/:id/decline", (req, res) => {
+  const bookingId = req.params.id;
+  const { driverId, reason } = req.body || {};
+  if (!bookingId || !driverId) return res.status(400).json({ success: false, message: "Missing bookingId or driverId" });
+
+  // record decline so same driver won't see it again
+  const sql = "INSERT INTO booking_declines (BookingID, DriverID, Reason) VALUES (?, ?, ?)";
+  db.query(sql, [bookingId, driverId, reason || null], (err) => {
+    if (err) {
+      console.error("DB error recording decline:", err);
+      return res.status(500).json({ success: false, message: "Database error" });
+    }
+
+    // Optionally: return updated booking so client can refresh if needed
+    return res.json({ success: true, message: "Recorded decline" });
+  });
+});
 
 // Handle all other undefined routes safely
 app.use((req, res) => {

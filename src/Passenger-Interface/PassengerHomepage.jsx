@@ -31,11 +31,43 @@ function PassengerHomepage() {
   const handleBookClick = async () => {
     try {
       const res = await axios.get("http://localhost:5000/api/check-auth", { withCredentials: true });
-      if (res.data.loggedIn) {
-        navigate("/Passenger_Booking");
-      } else {
+      if (!res.data.loggedIn) {
         navigate("/LoginHomepage");
+        return;
       }
+
+      // Resolve passenger ID: prefer localStorage, fallback to check-auth response
+      let passengerId = null;
+      try {
+        const raw = localStorage.getItem("passenger");
+        if (raw) {
+          const obj = JSON.parse(raw);
+          passengerId = obj.PassengerID || obj.id || obj.PassengerId || null;
+        }
+      } catch (err) {
+        // ignore parse errors
+      }
+      passengerId = passengerId || res.data.PassengerID || res.data.user?.PassengerID || res.data.user?.id || null;
+
+      // If we have a passenger id, check for an existing active booking
+      if (passengerId) {
+        try {
+          const check = await axios.get(`http://localhost:5000/api/passenger/${passengerId}/booking`, { withCredentials: true });
+          const existing = check.data.booking;
+          const activeStatuses = ["pending", "accepted", "assigned", "active"];
+          if (existing && activeStatuses.includes((existing.Status || "").toLowerCase())) {
+            alert("You already have an active booking. Please cancel it first to book another.");
+            navigate("/PassengerBookingStatus", { state: { booking: existing } });
+            return;
+          }
+        } catch (err) {
+          console.warn("Could not verify existing booking — proceeding to booking page", err);
+          // fall through to booking page
+        }
+      }
+
+      // No blocking booking found — go to booking flow
+      navigate("/Passenger_Booking");
     } catch (err) {
       console.error("Auth check failed", err);
       navigate("/LoginHomepage");

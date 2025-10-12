@@ -12,7 +12,13 @@ function DriverBooking() {
   useEffect(() => {
     const fetchBookings = async () => {
       try {
-        const response = await fetch("http://localhost:5000/api/driver/bookings");
+        const driverData = JSON.parse(localStorage.getItem("driver") || "{}");
+        const driverId = driverData?.DriverID;
+        const url = driverId
+          ? `http://localhost:5000/api/driver/bookings?driverId=${driverId}`
+          : "http://localhost:5000/api/driver/bookings";
+
+        const response = await fetch(url);
         const data = await response.json();
 
         if (data.success) {
@@ -64,53 +70,64 @@ function DriverBooking() {
   const handleAccept = async (id) => {
     setLoadingId(id);
     try {
-      const driverData = JSON.parse(localStorage.getItem("driver")); // 👈 make sure you save this at login
+      const driverData = JSON.parse(localStorage.getItem("driver") || "{}");
       const driverId = driverData?.DriverID;
-
       if (!driverId) {
         alert("Driver ID not found. Please log in again.");
+        setLoadingId(null);
         return;
       }
 
-      const response = await fetch(`http://localhost:5000/api/driver/bookings/${id}/status`, {
+      // use the backend route that updates booking status (and assign driver)
+      const response = await fetch(`http://localhost:5000/api/bookings/${id}/status`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: "accepted", driverId }), // ✅ include driverId
+        body: JSON.stringify({ status: "accepted", driverId }),
+        credentials: "include" // include cookies if your server uses sessions
       });
 
       const data = await response.json();
       if (data.success) {
+        // update local list or refetch to get fresh data from server
         setBookings((prev) =>
-          prev.map((b) => (b.BookingID === id ? { ...b, Status: "accepted" } : b))
+          prev.map((b) => (b.BookingID === id ? { ...b, Status: "accepted", DriverID: driverId } : b))
         );
       } else {
         console.error("Failed to accept:", data.message);
+        alert("Could not accept ride: " + (data.message || "server error"));
       }
     } catch (err) {
       console.error("Accept error:", err);
+      alert("Network or server error while accepting ride.");
+    } finally {
+      setLoadingId(null);
     }
-    setLoadingId(null);
   };
 
   // ✅ Reject ride
   const handleReject = async (id) => {
     setLoadingId(id);
     try {
-      const response = await fetch(`http://localhost:5000/api/driver/bookings/${id}/status`, {
-        method: "PUT",
+      const driverData = JSON.parse(localStorage.getItem("driver"));
+      const driverId = driverData?.DriverID;
+      // tell backend this driver declined the booking
+      const res = await fetch(`http://localhost:5000/api/driver/bookings/${id}/decline`, {
+        method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: "cancelled" }),
+        body: JSON.stringify({ driverId }),
       });
-      const data = await response.json();
+      const data = await res.json();
       if (data.success) {
-        setBookings((prev) =>
-          prev.map((b) => (b.BookingID === id ? { ...b, Status: "cancelled" } : b))
-        );
+        // remove from this driver's list immediately
+        setBookings((prev) => prev.filter((b) => b.BookingID !== id));
+      } else {
+        console.error("Decline failed:", data.message);
       }
     } catch (err) {
       console.error("Reject error:", err);
+    } finally {
+      setLoadingId(null);
     }
-    setLoadingId(null);
   };
 
   const clearSearch = () => setSearchLocation("");

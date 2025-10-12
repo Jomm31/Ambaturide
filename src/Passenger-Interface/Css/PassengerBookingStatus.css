@@ -419,41 +419,56 @@
 
 .action-buttons {
     display: flex;
-    gap: 15px;
+    flex-direction: column; /* stack Cancel above Back to Home */
+    gap: 12px;
     margin-top: auto;
+    align-items: stretch;
 }
 
-.btn {
-    padding: 15px;
+/* Cancel button styling */
+.cancel-ride-btn {
+    background: #ff5c5c;
+    color: #fff;
     border: none;
+    padding: 12px 18px;
     border-radius: 10px;
-    font-size: 1.1rem;
-    font-weight: 600;
+    font-weight: 700;
     cursor: pointer;
-    transition: all 0.3s;
+    transition: transform 0.12s ease, background 0.12s ease;
+    display: inline-block;
     text-align: center;
 }
 
-.confirm-btn {
-    background: #FFD700;
-    color: #2c3e50;
-    flex: 1;
+.cancel-ride-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
 }
 
-.confirm-btn:hover {
-    background: #FFC700;
-    transform: translateY(-2px);
+.cancel-ride-btn:hover:not(:disabled) {
+    transform: translateY(-3px);
+    background: #ff4242;
 }
 
+/* Keep existing home-btn rules but ensure vertical sizing matches */
 .home-btn {
     background: #FFD700;
     color: #2c3e50;
-    flex: 1;
+    flex: none;
+    padding: 12px 18px;
+    border-radius: 10px;
+    font-weight: 700;
+    width: 50% !important;
 }
 
-.home-btn:hover {
-    background: #FFC700;
-    transform: translateY(-2px);
+/* Responsive: make buttons sit side-by-side on very wide screens if preferred */
+@media (min-width: 1400px) {
+  .action-buttons {
+    flex-direction: row;
+    justify-content: flex-end;
+  }
+  .action-buttons .btn {
+    min-width: 160px;
+  }
 }
 
 /* Avatar container: fixed size, no extra padding, small border */
