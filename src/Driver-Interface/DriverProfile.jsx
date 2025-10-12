@@ -2,8 +2,11 @@ import React, { useState, useEffect } from "react";
 import "./DriverProfile.css";
 import DriverHeader from '../../src/DriverHeader.jsx';
 import axios from "axios";
+import { useRequireDriver } from "../utils/authGuards.jsx";
 
 function DriverProfile() {
+  useRequireDriver();
+
   const [activeSection, setActiveSection] = useState("profile");
   const [editingField, setEditingField] = useState(null);
   const [loading, setLoading] = useState(true);

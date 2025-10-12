@@ -34,8 +34,27 @@ function PassengerHomepage() {
   const [contactMessage, setContactMessage] = useState("");
   const [contactFile, setContactFile] = useState(null);
   const [contactSubmitting, setContactSubmitting] = useState(false);
+  const [isDriverAccount, setIsDriverAccount] = useState(false); // added
   const navigate = useNavigate();
   const location = useLocation();
+
+  // detect driver account from localStorage (quick client-side guard)
+  useEffect(() => {
+    try {
+      const drvRaw = localStorage.getItem("driver");
+      if (drvRaw) {
+        setIsDriverAccount(true);
+        return;
+      }
+      const userRaw = localStorage.getItem("user") || localStorage.getItem("passenger");
+      if (userRaw) {
+        const obj = JSON.parse(userRaw);
+        if (obj && (obj.DriverID || obj.role === "driver")) setIsDriverAccount(true);
+      }
+    } catch (e) {
+      // ignore
+    }
+  }, []);
 
   useEffect(() => {
     // If navigated with state.scrollTo, scroll to that section
@@ -52,6 +71,13 @@ function PassengerHomepage() {
   }, [location]);
 
   const handleBookClick = async () => {
+    // prevent drivers from requesting a passenger booking
+    if (isDriverAccount) {
+      alert("Driver accounts cannot request bookings. Please use the driver dashboard.");
+      navigate("/DriverBooking");
+      return;
+    }
+
     try {
       const res = await axios.get("http://localhost:5000/api/check-auth", { withCredentials: true });
       if (!res.data.loggedIn) {
@@ -69,6 +95,12 @@ function PassengerHomepage() {
         }
       } catch (err) {
         // ignore parse errors
+      }
+      // also block if server reports this user is a driver
+      if (res.data.user && (res.data.user.DriverID || res.data.user.role === "driver")) {
+        alert("Driver accounts cannot request bookings. Please use the driver dashboard.");
+        navigate("/DriverBooking");
+        return;
       }
       passengerId = passengerId || res.data.PassengerID || res.data.user?.PassengerID || res.data.user?.id || null;
 
@@ -173,9 +205,15 @@ function PassengerHomepage() {
                   </button>
                 </div>
 
-                <button className="cta-button primary" onClick={handleBookClick}>
+                <button
+                  className="cta-button primary"
+                  onClick={handleBookClick}
+                  disabled={isDriverAccount}
+                  title={isDriverAccount ? "Driver accounts cannot request bookings" : "See Prices & Book Ride"}
+                >
                   See Prices & Book Ride
                 </button>
+               {isDriverAccount && <div style={{ marginTop: 8, color: "#b71c1c", fontSize: 13 }}>Driver accounts cannot request passenger bookings.</div>}
               </div>
             </div>
 

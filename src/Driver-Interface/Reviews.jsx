@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import "./Reviews.css";
 import DriverHeader from '../../src/DriverHeader.jsx'
+import { useRequireDriver } from "../utils/authGuards.jsx";
 
 function StarRating({ value = 5, max = 5 }) {
   const stars = Array.from({ length: max }, (_, i) => i + 1);
@@ -56,6 +57,7 @@ function ReviewCard({ userName, date, rating, avatarUrl, reviewText }) {
 }
 
 function Reviews() {
+  useRequireDriver();
   const [ratings, setRatings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({

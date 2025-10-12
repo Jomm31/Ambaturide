@@ -1,8 +1,13 @@
 import { useState, useEffect, useMemo } from "react";
+import { useNavigate } from "react-router-dom"; // added
 import "./DriverBooking.css";
 import DriverHeader from "../../src/DriverHeader.jsx";
+import { useRequireDriver } from "../utils/authGuards.jsx"; // add this import
 
 export default function DriverBooking() {
+  useRequireDriver(); // <-- require driver
+
+  const navigate = useNavigate(); // added
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchLocation, setSearchLocation] = useState("");
@@ -10,6 +15,15 @@ export default function DriverBooking() {
 
   // driver status (active / pending / banned / inactive)
   const [driverStatus, setDriverStatus] = useState(null);
+
+  // Require driver account to view driver pages
+  useEffect(() => {
+    const drv = localStorage.getItem("driver");
+    if (!drv) {
+      alert("Driver access only. Please log in as a driver.");
+      navigate("/DriverLogin");
+    }
+  }, [navigate]);
 
   // ✅ Fetch bookings when component mounts
   useEffect(() => {

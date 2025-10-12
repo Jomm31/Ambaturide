@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import DriverHeader from '../../src/DriverHeader.jsx';
+import { useRequireDriver } from "../utils/authGuards.jsx"; // add import
 import "./DriverBookingStatus.css";
 
 function DriverBookingStatus() {
+  useRequireDriver(); // redirect non-drivers
+
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [savingStatusId, setSavingStatusId] = useState(null);
