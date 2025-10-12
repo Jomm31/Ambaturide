@@ -920,7 +920,32 @@ app.get("/api/passenger/:id/booking", (req, res) => {
   });
 });
 
-// Add this after your other API routes (near other booking endpoints)
+// Add this route near other booking endpoints
+
+app.post("/api/bookings/:id/rate", (req, res) => {
+  const bookingId = req.params.id;
+  const { rating, comment } = req.body;
+  if (!bookingId || !rating) return res.status(400).json({ success: false, message: "Missing params" });
+
+  // Get booking to find driver & passenger
+  const getSql = "SELECT PassengerID, DriverID FROM bookings WHERE BookingID = ?";
+  db.query(getSql, [bookingId], (err, results) => {
+    if (err) return res.status(500).json({ success: false, message: "DB error" });
+    if (!results || results.length === 0) return res.status(404).json({ success: false, message: "Booking not found" });
+
+    const booking = results[0];
+    if (!booking.DriverID) return res.status(400).json({ success: false, message: "No driver assigned for this booking" });
+
+    const insertSql = "INSERT INTO driver_ratings (BookingID, DriverID, PassengerID, Rating, Comment) VALUES (?, ?, ?, ?, ?)";
+    db.query(insertSql, [bookingId, booking.DriverID, booking.PassengerID, rating, comment || null], (err2) => {
+      if (err2) {
+        console.error("DB error inserting rating:", err2);
+        return res.status(500).json({ success: false, message: "DB error" });
+      }
+      return res.json({ success: true, message: "Rating saved" });
+    });
+  });
+});
 
 // Delete booking by BookingID (passenger can cancel)
 // This permanently removes the row. If you prefer to keep history, change to update Status='cancelled'.
@@ -958,6 +983,35 @@ app.post("/api/driver/bookings/:id/decline", (req, res) => {
 
     // Optionally: return updated booking so client can refresh if needed
     return res.json({ success: true, message: "Recorded decline" });
+  });
+});
+
+// Get ratings for a specific driver (includes passenger name + avatar)
+app.get("/api/driver/:id/ratings", (req, res) => {
+  const driverId = req.params.id;
+  if (!driverId) return res.status(400).json({ success: false, message: "Missing driverId" });
+
+  const sql = `
+    SELECT 
+      r.Rating,
+      r.Comment,
+      r.CreatedAt,
+      p.PassengerID,
+      p.FirstName,
+      p.LastName,
+      p.ProfilePicture AS PassengerPicture
+    FROM driver_ratings r
+    LEFT JOIN passengers p ON r.PassengerID = p.PassengerID
+    WHERE r.DriverID = ?
+    ORDER BY r.CreatedAt DESC
+  `;
+
+  db.query(sql, [driverId], (err, results) => {
+    if (err) {
+      console.error("DB error fetching ratings:", err);
+      return res.status(500).json({ success: false, message: "Database error" });
+    }
+    res.json({ success: true, ratings: results || [] });
   });
 });
 

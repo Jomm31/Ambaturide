@@ -9,6 +9,9 @@ function PassengerBookingStatus() {
   const [booking, setBooking] = useState(null);
   const [status, setStatus] = useState("none");
   const [rating, setRating] = useState(0);
+  const [comment, setComment] = useState("");
+  const [ratingSubmitting, setRatingSubmitting] = useState(false);
+  const [ratingSubmitted, setRatingSubmitted] = useState(false);
   const [passengerProfile, setPassengerProfile] = useState(null);
   const [passengerPhone, setPassengerPhone] = useState("");
   const [driverProfile, setDriverProfile] = useState(null);
@@ -42,6 +45,15 @@ function PassengerBookingStatus() {
     return phone.toString().replace(/[+\-\s()]/g, "");
   };
 
+  // Normalize image path -> full URL and timestamp
+  const buildImageUrl = (path) => {
+    if (!path) return "/profile-pictures/default.jpg";
+    const raw = String(path);
+    if (/^https?:\/\//i.test(raw) || /^\/\//.test(raw)) return raw;
+    return `http://localhost:5000${raw.startsWith("/") ? raw : `/${raw}`}`;
+  };
+  const withTimestamp = (url) => (url.includes("?") ? `${url}&t=${Date.now()}` : `${url}?t=${Date.now()}`);
+
   useEffect(() => {
     if (!passengerId) return;
 
@@ -51,7 +63,6 @@ function PassengerBookingStatus() {
         if (res.data.booking) {
           setBooking(res.data.booking);
           setStatus(res.data.booking.Status?.toLowerCase() || "pending");
-
           // Fetch passenger profile (to get profile picture / canonical phone)
           try {
             const p = await axios.get(`http://localhost:5000/api/passenger/profile/${passengerId}`);
@@ -66,7 +77,9 @@ function PassengerBookingStatus() {
           if (driverId) {
             try {
               const d = await axios.get(`http://localhost:5000/api/driver/profile/${driverId}`);
-              setDriverProfile(d.data);
+              // server returns { success: true, driver: { ... } }
+              const driverObj = d.data?.driver || d.data;
+              setDriverProfile(driverObj);
             } catch (err) {
               console.warn("Failed to fetch driver profile:", err);
             }
@@ -127,6 +140,27 @@ function PassengerBookingStatus() {
     }
   };
 
+  async function handleSubmitRating() {
+    if (!booking?.BookingID) return;
+    if (rating === 0) { alert("Please select a star rating."); return; }
+    setRatingSubmitting(true);
+    try {
+      const res = await axios.post(`http://localhost:5000/api/bookings/${booking.BookingID}/rate`, {
+        rating, comment
+      }, { withCredentials: true });
+      if (res.data.success) {
+        setRatingSubmitted(true);
+      } else {
+        alert("Failed to submit rating");
+      }
+    } catch (err) {
+      console.error("Rating error", err);
+      alert("An error occurred while submitting your rating.");
+    } finally {
+      setRatingSubmitting(false);
+    }
+  }
+
   // if none — include Header so header always shows
   if (status === "none") {
     return (
@@ -168,20 +202,11 @@ function PassengerBookingStatus() {
 
                 <div className="driver-profile">
                   <div className="profile-picture">
-                    {/* Show driver profile picture (fallback to booking field or default) */}
                     <img
-                      src={
-                        driverProfile && driverProfile.ProfilePicture
-                          ? `http://localhost:5000${driverProfile.ProfilePicture}`
-                          : booking.DriverProfilePicture
-                          ? `http://localhost:5000${booking.DriverProfilePicture}`
-                          : "/profile-pictures/default.jpg"
-                      }
+                      src={withTimestamp(buildImageUrl(driverProfile?.ProfilePicture || booking.DriverProfilePicture))}
                       alt={driverProfile?.FullName || booking.DriverName || "Driver"}
                       className="passenger-img"
-                      onError={(e) => {
-                        e.target.src = "/profile-pictures/default.jpg";
-                      }}
+                      onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = "/profile-pictures/default.jpg"; }}
                     />
                   </div>
                   <div className="driver-details">
@@ -192,7 +217,17 @@ function PassengerBookingStatus() {
 
                 <div className="vehicle-info">
                   <div className="car-image">
-                    <div className="car-img-placeholder">🚗</div>
+                    { /* Show vehicle image if available (driver profile or booking field), otherwise emoji placeholder */ }
+                    { (driverProfile?.VehiclePicture || booking.VehiclePicture) ? (
+                      <img
+                        src={withTimestamp(buildImageUrl(driverProfile?.VehiclePicture || booking.VehiclePicture))}
+                        alt="Vehicle"
+                        className="car-image-img"
+                        onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = "/profile-pictures/default-car.jpg"; }}
+                      />
+                    ) : (
+                      <div className="car-img-placeholder">🚗</div>
+                    )}
                   </div>
                   <div className="car-details">
                     <div className="detail-row">
@@ -214,28 +249,29 @@ function PassengerBookingStatus() {
                   </div>
                 </div>
 
-                <div className="rating-section">
-                  <h4>Rate the Driver</h4>
-                  <div className="stars-container">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <button
-                        key={star}
-                        className={`star-btn ${rating >= star ? "filled" : ""}`}
-                        onClick={() => setRating(star)}
-                      >
-                        ★
+                {/* Rating only shown when booking completed */}
+                {booking.Status?.toLowerCase() === "completed" && !ratingSubmitted && (
+                  <div className="rating-section">
+                    <h4>Rate the Driver</h4>
+                    <div className="stars-container">
+                      {[1,2,3,4,5].map((star) => (
+                        <button key={star} className={`star-btn ${rating >= star ? "filled" : ""}`} onClick={() => setRating(star)}>★</button>
+                      ))}
+                    </div>
+                    <div className="comments-section">
+                      <label>Comments</label>
+                      <textarea className="comments-input" placeholder="Share your experience..." rows="3" value={comment} onChange={(e)=>setComment(e.target.value)}></textarea>
+                    </div>
+                    <div style={{marginTop:12}}>
+                      <button className="btn yellow-btn" onClick={handleSubmitRating} disabled={ratingSubmitting || rating===0}>
+                        {ratingSubmitting ? "Submitting..." : "Submit Rating"}
                       </button>
-                    ))}
+                    </div>
                   </div>
-                  <div className="comments-section">
-                    <label>Comments</label>
-                    <textarea
-                      className="comments-input"
-                      placeholder="Share your experience..."
-                      rows="3"
-                    ></textarea>
-                  </div>
-                </div>
+                )}
+                {ratingSubmitted && (
+                  <div className="rating-thanks">Thanks for rating the driver!</div>
+                )}
               </>
             )}
           </div>
