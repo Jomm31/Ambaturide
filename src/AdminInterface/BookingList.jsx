@@ -71,7 +71,12 @@ export default function BookingListPanel() {
                     {b.DropoffFullAddress && <div style={{ color: '#666', fontSize: '0.8rem' }}>{b.DropoffFullAddress}</div>}
                   </div>
                 </td>
-                <td>{b.RideDate}</td>
+                <td>{new Date(b.RideDate).toLocaleDateString('en-PH', {
+                  year: 'numeric',
+                  month: 'short',
+                  day: 'numeric'
+                })}</td>
+
                 <td>{b.RideTime}</td>
                 <td>{b.VehicleType}</td>
                 <td><strong>₱{b.Fare}</strong></td>

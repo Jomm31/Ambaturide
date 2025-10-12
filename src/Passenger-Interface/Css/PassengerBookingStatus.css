@@ -3,7 +3,6 @@
     max-width: 1400px;
     margin: 0 auto;
     padding: 40px 20px;
-    background: linear-gradient(135deg, #00BCD4 0%, #00838F 100%);
     min-height: 100vh;
     display: flex;
     align-items: center;
@@ -24,16 +23,17 @@
     grid-template-columns: 1fr 1fr;
     background: white;
     border-radius: 20px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
     overflow: hidden;
     max-width: 1200px;
     width: 100%;
     min-height: 650px;
+    border: 1px solid #e0e0e0;
 }
 
 .left-section {
     padding: 40px;
-    background: #f5f5f5;
+    background: #ffffff;
     display: flex;
     flex-direction: column;
     gap: 25px;
@@ -52,12 +52,12 @@
 .wait-title {
     font-size: 1.8rem;
     font-weight: 700;
-    color: #2c3e50;
+    color: #000000;
     text-align: center;
 }
 
 .status-badge-pending {
-    background: #2c3e50;
+    background: #000000;
     color: white;
     padding: 12px 40px;
     border-radius: 8px;
@@ -73,7 +73,7 @@
 
 /* Driver Assigned State */
 .driver-assigned-header {
-    background: linear-gradient(135deg, #00BCD4, #00838F);
+    background-color: black;
     padding: 15px 25px;
     margin: -40px -40px 0 -40px;
 }
@@ -96,9 +96,9 @@
 .section-title {
     font-size: 1.8rem;
     margin-bottom: 30px;
-    color: #2c3e50;
+    color: #000000;
     font-weight: 700;
-    border-bottom: 3px solid #3498db;
+    border-bottom: 3px solid #22c55e;
     padding-bottom: 10px;
 }
 
@@ -111,6 +111,7 @@
     background: white;
     border-radius: 12px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e5e5e5;
 }
 
 .profile-picture {
@@ -121,19 +122,19 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0;               /* remove extra inner space that makes border look large */
+  padding: 0;
   margin: 0;
   box-sizing: border-box;
-  border: 3px solid #00BCD4; /* thin visible blue ring; adjust as needed */
+  border: 3px solid #22c55e;
   background: transparent;
-  box-shadow: none;         /* remove any shadow that enlarges the ring */
+  box-shadow: none;
 }
 
 .driver-img-placeholder {
     width: 80px;
     height: 80px;
     border-radius: 50%;
-    background: #e0e0e0;
+    background: #e5e5e5;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -143,7 +144,7 @@
 
 .driver-details h3 {
     margin: 0 0 8px 0;
-    color: #2c3e50;
+    color: #000000;
     font-size: 1.2rem;
     font-weight: 700;
 }
@@ -157,41 +158,69 @@
     gap: 5px;
 }
 
+/* Report Button Styles */
+.report-btn {
+    background: #dc2626;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 10px !important;
+    font-size: 0.85rem;
+    font-weight: 600;
+    width: fit-content; 
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-top: 8px;
+}
+
+.report-btn:hover {
+    background: #b91c1c;
+    transform: translateY(-1px);
+}
+
+.report-btn:active {
+    background: #991b1b;
+    transform: translateY(0);
+}
+
+.report-btn:disabled {
+    background: #9ca3af;
+    cursor: not-allowed;
+    transform: none;
+}
+
 /* Vehicle Info Styles */
 .vehicle-info {
     background: white;
     border-radius: 12px;
     padding: 20px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e5e5e5;
 }
 
 .vehicle-header h4 {
     margin: 0 0 20px 0;
-    color: #2c3e50;
+    color: #000000;
     font-size: 1.3rem;
 }
 
 .car-image {
     margin-bottom: 20px;
-
-    /* limit how big the image block can grow */
     max-width: 360px;
     width: 100%;
 }
 
-/* ensure the actual vehicle image is constrained and cropped nicely */
 .car-image-img {
     display: block;
     width: 100%;
-    height: 160px;        /* fixed display height */
-    max-height: 220px;    /* prevent overly tall images on large screens */
-    object-fit: cover;    /* crop to fill without stretching */
+    height: 160px;
+    max-height: 220px;
+    object-fit: cover;
     border-radius: 12px;
-    border: 1px solid #e6e6e6;
-    box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+    border: 1px solid #e5e5e5;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.08);
 }
 
-/* make the emoji placeholder match the same size */
 .car-img-placeholder {
     width: 100%;
     height: 160px;
@@ -202,6 +231,7 @@
     justify-content: center;
     font-size: 3rem;
     margin-bottom: 15px;
+    border: 1px solid #e5e5e5;
 }
 
 /* smaller on mobile */
@@ -214,10 +244,10 @@
 }
 
 .vehicle-row {
-    display: flex;
-    justify-content: space-between;
+
+
     padding: 10px 0;
-    border-bottom: 1px solid #ecf0f1;
+    border-bottom: 1px solid #f0f0f0;
 }
 
 .vehicle-row:last-child {
@@ -226,12 +256,12 @@
 
 .label {
     font-weight: 600;
-    color: #7f8c8d;
+    color: #666;
 }
 
 .value {
     font-weight: 600;
-    color: #2c3e50;
+    color: #000000;
 }
 
 .status-indicator {
@@ -248,11 +278,11 @@
 }
 
 .status-badge-active {
-    background: #ff5252;
+    background: #22c55e;
     color: white;
-    padding: 6px 16px;
+    padding: 8px 20px;
     border-radius: 20px;
-    font-size: 0.85rem;
+    font-size: 0.9rem;
     font-weight: 600;
     display: inline-flex;
     align-items: center;
@@ -265,11 +295,12 @@
     border-radius: 12px;
     padding: 20px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e5e5e5;
 }
 
 .rating-section h4 {
     margin: 0 0 15px 0;
-    color: #2c3e50;
+    color: #000000;
     font-size: 1.3rem;
 }
 
@@ -290,7 +321,7 @@
 }
 
 .star-btn.filled {
-    color: #ffd700;
+    color: #fbbf24;
 }
 
 .star-btn:hover {
@@ -305,24 +336,25 @@
     display: block;
     margin-bottom: 8px;
     font-weight: 600;
-    color: #2c3e50;
+    color: #000000;
 }
 
 .comments-input {
     width: 100%;
     padding: 12px;
-    border: 2px solid #e0e0e0;
+    border: 2px solid #e5e5e5;
     border-radius: 8px;
     resize: vertical;
     font-family: inherit;
     transition: border-color 0.3s;
+    background: white;
 }
 
 .comments-input:focus {
     outline: none;
-    border-color: #3498db;
+    border-color: #22c55e;
+    background: #f8fff8;
 }
-
 
 /* Right Section Styles */
 .address-section {
@@ -335,18 +367,18 @@
 
 .address-label {
     font-weight: 600;
-    color: #7f8c8d;
+    color: #666;
     margin-bottom: 8px;
     font-size: 1rem;
 }
 
 .address-value {
-    background: #f8f9fa;
+    background: #f8f8f8;
     padding: 12px 15px;
     border-radius: 8px;
-    border-left: 3px solid #00BCD4;
+    border-left: 3px solid #22c55e;
     font-size: 1rem;
-    color: #2c3e50;
+    color: #000000;
 }
 
 .trip-details {
@@ -360,10 +392,10 @@
 }
 
 .detail-item {
-    background: #f8f9fa;
+    background: #f8f8f8;
     padding: 15px;
     border-radius: 8px;
-    border-left: 3px solid #00BCD4;
+    border-left: 3px solid #22c55e;
 }
 
 .detail-item.full-width {
@@ -372,33 +404,34 @@
 
 .detail-label {
     font-weight: 600;
-    color: #7f8c8d;
+    color: #666;
     margin-bottom: 5px;
     font-size: 0.9rem;
 }
 
 .detail-value {
     font-size: 1.1rem;
-    color: #2c3e50;
+    color: #000000;
     font-weight: 600;
 }
 
 .payment-section {
-    background: #f8f9fa;
+    background: #f8f8f8;
     border-radius: 12px;
     padding: 25px;
+    border: 1px solid #e5e5e5;
 }
 
 .payment-section h3 {
     margin: 0 0 20px 0;
-    color: #2c3e50;
+    color: #000000;
     font-size: 1.4rem;
     font-weight: 700;
 }
 
 .payment-header h4 {
     margin: 0 0 20px 0;
-    color: #2c3e50;
+    color: #000000;
     font-size: 1.3rem;
 }
 
@@ -406,13 +439,14 @@
     background: white;
     border-radius: 10px;
     padding: 20px;
+    border: 1px solid #e5e5e5;
 }
 
 .breakdown-row {
     display: flex;
     justify-content: space-between;
     padding: 10px 0;
-    border-bottom: 1px solid #ecf0f1;
+    border-bottom: 1px solid #f0f0f0;
 }
 
 .breakdown-row:last-child {
@@ -422,15 +456,17 @@
 .breakdown-row.total {
     font-weight: 700;
     font-size: 1.2rem;
+    color: #000000;
 }
 
 .total-amount {
-    color: #e74c3c;
+    color: #22c55e;
+    font-weight: 700;
 }
 
 .action-buttons {
     display: flex;
-    flex-direction: column; /* stack Cancel above Back to Home */
+    flex-direction: column;
     gap: 12px;
     margin-top: auto;
     align-items: stretch;
@@ -438,7 +474,7 @@
 
 /* Cancel button styling */
 .cancel-ride-btn {
-    background: #ff5c5c;
+    background: #dc2626;
     color: #fff;
     border: none;
     padding: 12px 18px;
@@ -457,32 +493,59 @@
 
 .cancel-ride-btn:hover:not(:disabled) {
     transform: translateY(-3px);
-    background: #ff4242;
+    background: #b91c1c;
 }
 
-/* Keep existing home-btn rules but ensure vertical sizing matches */
+/* Home button styling */
 .home-btn {
-    background: #FFD700;
-    color: #2c3e50;
-    flex: none;
+    background: #22c55e;
+    color: #000000;
+    border: none;
     padding: 12px 18px;
     border-radius: 10px;
     font-weight: 700;
-    width: 50% !important;
+    cursor: pointer;
+    transition: transform 0.12s ease, background 0.12s ease;
+    text-align: center;
 }
 
-/* Responsive: make buttons sit side-by-side on very wide screens if preferred */
-@media (min-width: 1400px) {
-  .action-buttons {
-    flex-direction: row;
-    justify-content: flex-end;
-  }
-  .action-buttons .btn {
-    min-width: 160px;
-  }
+.home-btn:hover {
+    transform: translateY(-3px);
+    background: #16a34a;
 }
 
-/* Avatar container: fixed size, no extra padding, small border */
+/* Submit rating button */
+.yellow-btn {
+    background: #000000;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 10px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.12s ease;
+}
+
+.yellow-btn:hover:not(:disabled) {
+    background: #22c55e;
+    transform: translateY(-2px);
+}
+
+.yellow-btn:disabled {
+    background: #9ca3af;
+    cursor: not-allowed;
+}
+
+.rating-thanks {
+    background: #22c55e;
+    color: white;
+    padding: 15px;
+    border-radius: 8px;
+    text-align: center;
+    font-weight: 600;
+}
+
+/* Avatar container */
 .profile-picture {
   width: 80px;
   height: 80px;
@@ -491,15 +554,15 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0;               /* remove extra inner space that makes border look large */
+  padding: 0;
   margin: 0;
   box-sizing: border-box;
-  border: 3px solid #00BCD4; /* thin visible blue ring; adjust as needed */
+  border: 3px solid #22c55e;
   background: transparent;
-  box-shadow: none;         /* remove any shadow that enlarges the ring */
+  box-shadow: none;
 }
 
-/* Image inside avatar: fill the container, cropped (no zoom), no extra border */
+/* Image inside avatar */
 .profile-picture img,
 .passenger-img,
 .summary-passenger-img {
@@ -507,8 +570,8 @@
   height: 100%;
   object-fit: cover;
   display: block;
-  border: none;    /* remove any img border */
-  outline: none;   /* remove focus outline */
+  border: none;
+  outline: none;
 }
 
 /* Slightly larger on wide screens */
@@ -557,6 +620,10 @@
     .driver-assigned-header {
         margin: -25px -20px 0 -20px;
     }
+    
+    .home-btn {
+        width: 100% !important;
+    }
 }
 
 /* Input with right-side icon/logo */
@@ -570,8 +637,16 @@
 .input-with-icon input[type="search"],
 .input-with-icon .search-input {
   width: 100%;
-  padding-right: 44px; /* leave room for the icon on the right */
+  padding-right: 44px;
   box-sizing: border-box;
+  border: 2px solid #e5e5e5;
+  border-radius: 8px;
+  background: white;
+}
+
+.input-with-icon input:focus {
+    outline: none;
+    border-color: #22c55e;
 }
 
 /* right-side logo / icon */
@@ -583,7 +658,7 @@
   width: 28px;
   height: 28px;
   object-fit: contain;
-  pointer-events: none; /* change to auto if it should be clickable */
+  pointer-events: none;
   opacity: 0.95;
 }
 

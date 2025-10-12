@@ -284,16 +284,16 @@ function PassengerBookingStatus() {
                   </div>
                   <div className="car-details">
                     <div className="detail-row">
-                      <span className="label">Plate Number:</span>
+                      <span className="label">Plate Number:&nbsp;&nbsp;</span>
                       <span className="value">{booking.PlateNumber}</span>
                       
                     </div>
                     <div className="detail-row">
-                      <span className="label">Model:</span>
+                      <span className="label">Model:&nbsp;&nbsp;</span>
                       <span className="value">{booking.VehicleBrand}</span>
                     </div>
                     <div className="vehicle-row">
-                      <span className="label">Type of vehicle:</span>
+                      <span className="label">Type of vehicle:&nbsp;&nbsp;</span>
                       <span className="value">{booking.VehicleType}</span>
                     </div>
                   </div>
