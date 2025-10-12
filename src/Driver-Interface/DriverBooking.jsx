@@ -2,11 +2,14 @@ import { useState, useEffect, useMemo } from "react";
 import "./DriverBooking.css";
 import DriverHeader from "../../src/DriverHeader.jsx";
 
-function DriverBooking() {
+export default function DriverBooking() {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchLocation, setSearchLocation] = useState("");
   const [loadingId, setLoadingId] = useState(null);
+
+  // driver status (active / pending / banned / inactive)
+  const [driverStatus, setDriverStatus] = useState(null);
 
   // ✅ Fetch bookings when component mounts
   useEffect(() => {
@@ -17,6 +20,20 @@ function DriverBooking() {
         const url = driverId
           ? `http://localhost:5000/api/driver/bookings?driverId=${driverId}`
           : "http://localhost:5000/api/driver/bookings";
+
+        // Fetch current driver profile/status if logged in
+        if (driverId) {
+          try {
+            const p = await fetch(`http://localhost:5000/api/driver/profile/${driverId}`);
+            const pd = await p.json();
+            // backend returns { success: true, driver: { ... } } or driver object
+            const status = (pd?.driver?.Status) || pd?.Status || driverData?.Status || null;
+            setDriverStatus(status ? String(status).toLowerCase() : null);
+          } catch (err) {
+            // fallback to localStorage value if request fails
+            setDriverStatus(driverData?.Status ? String(driverData.Status).toLowerCase() : null);
+          }
+        }
 
         const response = await fetch(url);
         const data = await response.json();
@@ -68,6 +85,14 @@ function DriverBooking() {
   }, [bookings, searchLocation]);
 
   const handleAccept = async (id) => {
+    // block accept if driver not active
+    if (driverStatus && driverStatus !== "active") {
+      const msg = driverStatus === "banned"
+        ? "Your account is banned and cannot accept bookings."
+        : "Your account is not active (pending approval). You cannot accept bookings.";
+      alert(msg);
+      return;
+    }
     setLoadingId(id);
     try {
       const driverData = JSON.parse(localStorage.getItem("driver") || "{}");
@@ -144,6 +169,14 @@ function DriverBooking() {
   return (
     <>
       <DriverHeader />
+      {/* show a clear notice if driver cannot accept bookings */}
+      {driverStatus && driverStatus !== "active" && (
+        <div className="driver-status-warning" style={{ padding: 12, background: "#fff3cd", color: "#856404", borderRadius: 6, margin: "12px auto", maxWidth: 980 }}>
+          {driverStatus === "banned"
+            ? "Your account is banned. You cannot accept bookings. Contact support for help."
+            : "Your account is pending approval and cannot accept bookings yet. Please wait for admin approval."}
+        </div>
+      )}
       <div className="driver-booking-container">
         <div className="booking-content">
           <div className="search-header">
@@ -263,10 +296,17 @@ function DriverBooking() {
                     <button
                       className="btn-accept"
                       onClick={() => handleAccept(booking.BookingID)}
-                      disabled={loadingId !== null}
+                      disabled={loadingId !== null || (driverStatus && driverStatus !== "active")}
+                      title={driverStatus && driverStatus !== "active" ? "Account not active" : "Accept booking"}
                     >
                       Accept Ride
                     </button>
+                    {/* inline reason if accept disabled */}
+                    {driverStatus && driverStatus !== "active" && (
+                      <div style={{ marginTop: 8, color: "#b71c1c", fontSize: 13 }}>
+                        {driverStatus === "banned" ? "Cannot accept — account banned." : "Cannot accept — pending approval."}
+                      </div>
+                    )}
                   </div>
                 </div>
                );
@@ -288,5 +328,3 @@ function DriverBooking() {
     </>
   );
 }
-
-export default DriverBooking;
