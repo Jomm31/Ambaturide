@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Oct 12, 2025 at 11:10 AM
+-- Generation Time: Oct 12, 2025 at 05:23 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.0.30
 
@@ -49,7 +49,9 @@ CREATE TABLE `bookings` (
 
 INSERT INTO `bookings` (`BookingID`, `PassengerID`, `PickupArea`, `DropoffArea`, `PickupFullAddress`, `DropoffFullAddress`, `RideDate`, `RideTime`, `VehicleType`, `Fare`, `Status`, `CreatedAt`, `DriverID`) VALUES
 (18, 15, 'Mintal', 'Sasa', '', '', '2025-10-17', '07:16:00', '6 Seaters', 600.00, 'pending', '2025-10-12 08:13:44', NULL),
-(23, 10, 'Toril', 'Buhangin', '', '', '0000-00-00', '00:00:00', '6 Seaters', 600.00, 'accepted', '2025-10-12 09:08:30', 5);
+(25, 10, 'Ulas', 'Lanang', '', '', '2025-10-12', '17:58:00', '6 Seaters', 600.00, 'completed', '2025-10-12 09:58:38', 5),
+(26, 17, 'Catalunan', 'Catalunan', '', '', '2025-10-12', '17:59:00', '6 Seaters', 600.00, 'accepted', '2025-10-12 09:59:31', 5),
+(28, 10, 'Mintal', 'Buhangin', '', '', '2025-10-30', '00:00:00', '6 Seaters', 600.00, 'accepted', '2025-10-12 14:36:25', 5);
 
 -- --------------------------------------------------------
 
@@ -139,18 +141,69 @@ CREATE TABLE `drivers` (
   `VehicleBrand` varchar(50) DEFAULT NULL,
   `VehiclePicture` varchar(255) DEFAULT NULL,
   `Status` enum('pending','active','inactive','banned') DEFAULT 'active',
-  `CreatedAt` timestamp NOT NULL DEFAULT current_timestamp()
+  `CreatedAt` timestamp NOT NULL DEFAULT current_timestamp(),
+  `Reports` int(11) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `drivers`
 --
 
-INSERT INTO `drivers` (`DriverID`, `TransactionID`, `FirstName`, `LastName`, `Gender`, `BirthDate`, `Email`, `Password`, `PhoneNumber`, `Address`, `ProfilePicture`, `LicenseNumber`, `LicenseImage`, `VehicleType`, `PlateNumber`, `VehicleBrand`, `VehiclePicture`, `Status`, `CreatedAt`) VALUES
-(1, NULL, 'jomm', 'jommax', 'Female', '2025-06-08', 'asdf@asdf', '$2b$10$DYQEE4JSfGyDUdUtkd.E0exf31oiWa7pbI.FVNIDkBLpuHqtHNElq', '123', '', '/uploads/profile-pictures/1760045839788.png', '111111', '/uploads/driver-license/1760037738467.jpg', '', '123', '', '/uploads/vehicle-images/1760037738475.png', 'pending', '2025-10-09 19:22:18'),
-(3, NULL, 'Driver', 'aa', '', '0000-00-00', 'asd@asd', '$2b$10$5MYO83YfW6LhFylGaelohe5M6yxgkrjgICbJhgp98RGcmzMihYfyS', '', '', '/uploads/profile-pictures/1760046302833.png', 'License Number', '/uploads/driver-license/1760045951573.png', '', 'Vehicle Plate Number', '', '/uploads/vehicle-images/1760045951573.jpg', 'pending', '2025-10-09 21:39:11'),
-(4, NULL, 'Driver', 'User', NULL, NULL, 'dsa@dsa', '$2b$10$FP7SAyxu6ByljPmXbJtf5.noAAxL/D7/y9zhovjhhtr6fxQIBPHXG', '', '', NULL, '111', '/uploads/driver-license/1760046333518.png', 'SUV', '123', '', '/uploads/vehicle-images/1760046333519.jpg', 'pending', '2025-10-09 21:45:33'),
-(5, NULL, 'az', 'jmma', 'Female', '2025-09-28', '123@123', '$2b$10$E7DZN.sYjQ9k8F77.GOq4eslOCOKQzYHPapw2KqXw4.FEtQSX372m', '7563425', '', '/uploads/profile-pictures/1760088331525.png', '11432', '/uploads/driver-license/1760120164970.png', 'Hatchback', '123432', 'carvra', '/uploads/vehicle-images/1760120690300-totoy.png', 'pending', '2025-10-10 09:23:55');
+INSERT INTO `drivers` (`DriverID`, `TransactionID`, `FirstName`, `LastName`, `Gender`, `BirthDate`, `Email`, `Password`, `PhoneNumber`, `Address`, `ProfilePicture`, `LicenseNumber`, `LicenseImage`, `VehicleType`, `PlateNumber`, `VehicleBrand`, `VehiclePicture`, `Status`, `CreatedAt`, `Reports`) VALUES
+(1, NULL, 'jomm', 'jommax', 'Female', '2025-06-08', 'asdf@asdf', '$2b$10$DYQEE4JSfGyDUdUtkd.E0exf31oiWa7pbI.FVNIDkBLpuHqtHNElq', '123', '', '/uploads/profile-pictures/1760045839788.png', '111111', '/uploads/driver-license/1760037738467.jpg', '', '123', '', '/uploads/vehicle-images/1760037738475.png', 'active', '2025-10-09 19:22:18', 0),
+(3, NULL, 'Driver', 'aa', '', '0000-00-00', 'asd@asd', '$2b$10$5MYO83YfW6LhFylGaelohe5M6yxgkrjgICbJhgp98RGcmzMihYfyS', '', '', '/uploads/profile-pictures/1760046302833.png', 'License Number', '/uploads/driver-license/1760045951573.png', '', 'Vehicle Plate Number', '', '/uploads/vehicle-images/1760045951573.jpg', 'active', '2025-10-09 21:39:11', 0),
+(4, NULL, 'Driver', 'User', NULL, NULL, 'dsa@dsa', '$2b$10$FP7SAyxu6ByljPmXbJtf5.noAAxL/D7/y9zhovjhhtr6fxQIBPHXG', '', '', NULL, '111', '/uploads/driver-license/1760046333518.png', 'SUV', '123', '', '/uploads/vehicle-images/1760046333519.jpg', 'active', '2025-10-09 21:45:33', 0),
+(5, NULL, 'az', 'jmma', 'Female', '2025-09-28', '123@123', '$2b$10$E7DZN.sYjQ9k8F77.GOq4eslOCOKQzYHPapw2KqXw4.FEtQSX372m', '7563425', '', '/uploads/profile-pictures/1760088331525.png', '11432', '/uploads/driver-license/1760120164970.png', 'Hatchback', '123432', 'carvra', '/uploads/vehicle-images/1760120690300-totoy.png', 'banned', '2025-10-10 09:23:55', 4),
+(6, NULL, 'Driver', 'User', NULL, NULL, '12345@12345', '$2b$10$w./2DbrXXoTFQD..Ud4bp.KjqVGW6fZBCNA8T9bzyC1NbTfHyBpLq', '', '', NULL, '1234', '/uploads/driver-license/1760279894408.jpg', 'Sedan', '123', '', '/uploads/vehicle-images/1760279894409.jpg', 'active', '2025-10-12 14:38:14', 0);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `driver_ratings`
+--
+
+CREATE TABLE `driver_ratings` (
+  `RatingID` int(11) NOT NULL,
+  `BookingID` int(11) NOT NULL,
+  `DriverID` int(11) NOT NULL,
+  `PassengerID` int(11) NOT NULL,
+  `Rating` tinyint(4) NOT NULL,
+  `Comment` text DEFAULT NULL,
+  `CreatedAt` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `driver_ratings`
+--
+
+INSERT INTO `driver_ratings` (`RatingID`, `BookingID`, `DriverID`, `PassengerID`, `Rating`, `Comment`, `CreatedAt`) VALUES
+(1, 25, 5, 10, 4, 'good', '2025-10-12 10:08:37'),
+(2, 27, 5, 10, 4, 'a', '2025-10-12 10:13:12');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `driver_reports`
+--
+
+CREATE TABLE `driver_reports` (
+  `ReportID` int(11) NOT NULL,
+  `DriverID` int(11) NOT NULL,
+  `PassengerID` int(11) NOT NULL,
+  `BookingID` int(11) DEFAULT NULL,
+  `Message` text DEFAULT NULL,
+  `CreatedAt` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `driver_reports`
+--
+
+INSERT INTO `driver_reports` (`ReportID`, `DriverID`, `PassengerID`, `BookingID`, `Message`, `CreatedAt`) VALUES
+(1, 5, 10, 28, 'a', '2025-10-12 15:12:43'),
+(2, 5, 10, 28, 'a', '2025-10-12 15:12:47'),
+(3, 5, 10, 28, 'a', '2025-10-12 15:15:17'),
+(4, 5, 10, 28, 'a', '2025-10-12 15:15:19');
 
 -- --------------------------------------------------------
 
@@ -184,7 +237,8 @@ INSERT INTO `passengers` (`PassengerID`, `TransactionID`, `FirstName`, `LastName
 (4, NULL, 'Passenger', 'Userasdas', 'ljoemiredave@gmail.com', '$2b$10$ws8DWIVb3kLM3OaXlnjMGuQltGObOxRHWoGgtzXE4o1i/XwMePLFi', '0000000000', 'Unknown', '1999-12-31', '', '/uploads/profile-pictures/1760048361935.jpg', 'active', '2025-10-09 16:39:25', 'Passenger Userasdas'),
 (10, NULL, 'naynay', 'niga', 'jomm21212@gmail.com', '$2b$10$M6nCcYUF5JNV1qKDQqvQa.md0o9lTc2gsiYB3pSUbCCPUXI1lmpK2', '876534', 'Unknown', '2025-09-09', 'Male', '/uploads/profile-pictures/1760044576337.jpg', 'active', '2025-10-09 17:38:58', 'naynay niga'),
 (14, NULL, 'Passenger', 'User', 'abc@abc', '$2b$10$bnrximL6RoedDJz17lQEJOheav6PtOHvx7EKqUQ46WkDo/ITqK/p.', '0000000000', 'Unknown', '2000-01-01', NULL, NULL, 'active', '2025-10-09 17:43:18', 'Passenger User'),
-(15, NULL, 'Passenger', 'User', '321@321', '$2b$10$nPIbe/LvMeJJkdfYdXXybOQ0QV9GfUNMNPHl/m5jRTkjxb5ycvWse', '0000000000', 'Unknown', '2000-01-01', NULL, NULL, 'active', '2025-10-12 08:13:26', NULL);
+(15, NULL, 'Passenger', 'User', '321@321', '$2b$10$nPIbe/LvMeJJkdfYdXXybOQ0QV9GfUNMNPHl/m5jRTkjxb5ycvWse', '0000000000', 'Unknown', '2000-01-01', NULL, NULL, 'active', '2025-10-12 08:13:26', NULL),
+(17, NULL, 'Passenger', 'User', '1234@1234', '$2b$10$p27A7chrsTfQI6dZVd4MJOYqaefmcE68rPqRrIQhPbtNt4/l9LUme', '0000000000', 'Unknown', '2000-01-01', NULL, NULL, 'active', '2025-10-12 09:59:16', NULL);
 
 -- --------------------------------------------------------
 
@@ -262,6 +316,23 @@ ALTER TABLE `drivers`
   ADD UNIQUE KEY `Email` (`Email`);
 
 --
+-- Indexes for table `driver_ratings`
+--
+ALTER TABLE `driver_ratings`
+  ADD PRIMARY KEY (`RatingID`),
+  ADD KEY `BookingID` (`BookingID`),
+  ADD KEY `DriverID` (`DriverID`),
+  ADD KEY `PassengerID` (`PassengerID`);
+
+--
+-- Indexes for table `driver_reports`
+--
+ALTER TABLE `driver_reports`
+  ADD PRIMARY KEY (`ReportID`),
+  ADD KEY `DriverID` (`DriverID`),
+  ADD KEY `PassengerID` (`PassengerID`);
+
+--
 -- Indexes for table `passengers`
 --
 ALTER TABLE `passengers`
@@ -290,7 +361,7 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `bookings`
 --
 ALTER TABLE `bookings`
-  MODIFY `BookingID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=24;
+  MODIFY `BookingID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=29;
 
 --
 -- AUTO_INCREMENT for table `bookings_backup`
@@ -308,13 +379,25 @@ ALTER TABLE `booking_declines`
 -- AUTO_INCREMENT for table `drivers`
 --
 ALTER TABLE `drivers`
-  MODIFY `DriverID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `DriverID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+
+--
+-- AUTO_INCREMENT for table `driver_ratings`
+--
+ALTER TABLE `driver_ratings`
+  MODIFY `RatingID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- AUTO_INCREMENT for table `driver_reports`
+--
+ALTER TABLE `driver_reports`
+  MODIFY `ReportID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `passengers`
 --
 ALTER TABLE `passengers`
-  MODIFY `PassengerID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
+  MODIFY `PassengerID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
 
 --
 -- AUTO_INCREMENT for table `reports`
@@ -339,6 +422,13 @@ ALTER TABLE `bookings`
   ADD CONSTRAINT `bookings_ibfk_1` FOREIGN KEY (`PassengerID`) REFERENCES `passengers` (`PassengerID`),
   ADD CONSTRAINT `fk_bookings_driver_new` FOREIGN KEY (`DriverID`) REFERENCES `drivers` (`DriverID`) ON DELETE SET NULL ON UPDATE CASCADE,
   ADD CONSTRAINT `fk_bookings_passenger_new` FOREIGN KEY (`PassengerID`) REFERENCES `passengers` (`PassengerID`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Constraints for table `driver_reports`
+--
+ALTER TABLE `driver_reports`
+  ADD CONSTRAINT `driver_reports_ibfk_1` FOREIGN KEY (`DriverID`) REFERENCES `drivers` (`DriverID`) ON DELETE CASCADE,
+  ADD CONSTRAINT `driver_reports_ibfk_2` FOREIGN KEY (`PassengerID`) REFERENCES `passengers` (`PassengerID`) ON DELETE CASCADE;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

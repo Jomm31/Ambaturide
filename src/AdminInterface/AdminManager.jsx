@@ -6,11 +6,7 @@ export default function AdminManager() {
   return (
     <aside className="admin-sidebar">
       <ul>
-        <li>
-          <NavLink to="/admin" end className={({ isActive }) => (isActive ? "active" : "")}>
-            🏠 Dashboard
-          </NavLink>
-        </li>
+
         <li>
           <NavLink to="/admin/new-drivers" className={({ isActive }) => (isActive ? "active" : "")}>
             👤 New Drivers
