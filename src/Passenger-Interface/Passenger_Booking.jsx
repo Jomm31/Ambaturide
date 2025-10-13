@@ -304,7 +304,7 @@ function Passenger_Booking() {
                 >
                   <img src={Car4Icon} alt="4 Seaters" className="car-icon" />
                   <span className="vehicle-name">4 Seaters</span>
-                  <span className="vehicle-price">₱50</span>
+                  <span className="vehicle-price">₱15/km</span>
                 </button>
                 <button 
                   className={`vehicle-btn ${selectedVehicle === '6-seater' ? 'selected six' : 'six'}`}
