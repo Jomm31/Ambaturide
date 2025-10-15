@@ -26,23 +26,80 @@ function Passenger_Booking() {
   ];
 
   // Local distance matrix (km) between major areas — add / tweak values as needed.
-  const distanceMatrix = {
-    "Toril": { "Mintal": 8, "Catalunan": 12, "Bago Gallera": 5, "Ulas": 15, "Lanang": 25, "Maa": 18 },
-    "Mintal": { "Toril": 8, "Catalunan": 6, "Ulas": 12, "Roxas": 18, "Lanang": 22 },
-    "Catalunan": { "Mintal": 6, "Maa": 10, "Ecoland": 13, "Lanang": 20 },
-    "Bago Gallera": { "Toril": 5, "Ulas": 10, "Maa": 13 },
-    "Ulas": { "Matina Crossing": 5, "Maa": 6, "Ecoland": 8, "Lanang": 15 },
-    "Matina Crossing": { "Maa": 3, "Ecoland": 4, "Roxas": 6, "Lanang": 12 },
-    "Maa": { "Ecoland": 5, "Roxas": 7, "Lanang": 10, "Sasa": 12 },
-    "Ecoland": { "Roxas": 5, "Agdao": 8, "Lanang": 10 },
-    "Roxas": { "Magsaysay": 2, "Agdao": 4, "Buhangin": 6 },
-    "Magsaysay": { "Agdao": 3, "Buhangin": 5 },
-    "Agdao": { "Buhangin": 4, "Lanang": 6, "Sasa": 8 },
-    "Buhangin": { "Lanang": 5, "Sasa": 7 },
-    "Lanang": { "Sasa": 3, "Toril": 25 },
-    "Sasa": { "Lanang": 3 },
-    // add more if needed
-  };
+// Complete and symmetric local distance matrix (km) between major Davao areas
+const distanceMatrix = {
+  "Toril": {
+    "Mintal": 8, "Catalunan": 12, "Bago Gallera": 5, "Ulas": 15, "Matina Crossing": 18,
+    "Maa": 20, "Ecoland": 22, "Roxas": 24, "Magsaysay": 26, "Agdao": 28,
+    "Buhangin": 30, "Lanang": 25, "Sasa": 28
+  },
+  "Mintal": {
+    "Toril": 8, "Catalunan": 6, "Bago Gallera": 10, "Ulas": 12, "Matina Crossing": 14,
+    "Maa": 16, "Ecoland": 18, "Roxas": 20, "Magsaysay": 22, "Agdao": 24,
+    "Buhangin": 26, "Lanang": 22, "Sasa": 24
+  },
+  "Catalunan": {
+    "Toril": 12, "Mintal": 6, "Bago Gallera": 8, "Ulas": 10, "Matina Crossing": 12,
+    "Maa": 10, "Ecoland": 13, "Roxas": 15, "Magsaysay": 18, "Agdao": 20,
+    "Buhangin": 22, "Lanang": 20, "Sasa": 22
+  },
+  "Bago Gallera": {
+    "Toril": 5, "Mintal": 10, "Catalunan": 8, "Ulas": 10, "Matina Crossing": 12,
+    "Maa": 13, "Ecoland": 15, "Roxas": 18, "Magsaysay": 20, "Agdao": 22,
+    "Buhangin": 24, "Lanang": 20, "Sasa": 22
+  },
+  "Ulas": {
+    "Toril": 15, "Mintal": 12, "Catalunan": 10, "Bago Gallera": 10, "Matina Crossing": 5,
+    "Maa": 6, "Ecoland": 8, "Roxas": 10, "Magsaysay": 14, "Agdao": 16,
+    "Buhangin": 18, "Lanang": 15, "Sasa": 17
+  },
+  "Matina Crossing": {
+    "Toril": 18, "Mintal": 14, "Catalunan": 12, "Bago Gallera": 12, "Ulas": 5,
+    "Maa": 3, "Ecoland": 4, "Roxas": 6, "Magsaysay": 8, "Agdao": 10,
+    "Buhangin": 12, "Lanang": 12, "Sasa": 14
+  },
+  "Maa": {
+    "Toril": 20, "Mintal": 16, "Catalunan": 10, "Bago Gallera": 13, "Ulas": 6,
+    "Matina Crossing": 3, "Ecoland": 5, "Roxas": 7, "Magsaysay": 9,
+    "Agdao": 11, "Buhangin": 13, "Lanang": 10, "Sasa": 12
+  },
+  "Ecoland": {
+    "Toril": 22, "Mintal": 18, "Catalunan": 13, "Bago Gallera": 15, "Ulas": 8,
+    "Matina Crossing": 4, "Maa": 5, "Roxas": 5, "Magsaysay": 7,
+    "Agdao": 8, "Buhangin": 10, "Lanang": 10, "Sasa": 12
+  },
+  "Roxas": {
+    "Toril": 24, "Mintal": 20, "Catalunan": 15, "Bago Gallera": 18, "Ulas": 10,
+    "Matina Crossing": 6, "Maa": 7, "Ecoland": 5, "Magsaysay": 2,
+    "Agdao": 4, "Buhangin": 6, "Lanang": 8, "Sasa": 10
+  },
+  "Magsaysay": {
+    "Toril": 26, "Mintal": 22, "Catalunan": 18, "Bago Gallera": 20, "Ulas": 14,
+    "Matina Crossing": 8, "Maa": 9, "Ecoland": 7, "Roxas": 2,
+    "Agdao": 3, "Buhangin": 5, "Lanang": 7, "Sasa": 9
+  },
+  "Agdao": {
+    "Toril": 28, "Mintal": 24, "Catalunan": 20, "Bago Gallera": 22, "Ulas": 16,
+    "Matina Crossing": 10, "Maa": 11, "Ecoland": 8, "Roxas": 4,
+    "Magsaysay": 3, "Buhangin": 4, "Lanang": 6, "Sasa": 8
+  },
+  "Buhangin": {
+    "Toril": 30, "Mintal": 26, "Catalunan": 22, "Bago Gallera": 24, "Ulas": 18,
+    "Matina Crossing": 12, "Maa": 13, "Ecoland": 10, "Roxas": 6,
+    "Magsaysay": 5, "Agdao": 4, "Lanang": 5, "Sasa": 7
+  },
+  "Lanang": {
+    "Toril": 25, "Mintal": 22, "Catalunan": 20, "Bago Gallera": 20, "Ulas": 15,
+    "Matina Crossing": 12, "Maa": 10, "Ecoland": 10, "Roxas": 8,
+    "Magsaysay": 7, "Agdao": 6, "Buhangin": 5, "Sasa": 3
+  },
+  "Sasa": {
+    "Toril": 28, "Mintal": 24, "Catalunan": 22, "Bago Gallera": 22, "Ulas": 17,
+    "Matina Crossing": 14, "Maa": 12, "Ecoland": 12, "Roxas": 10,
+    "Magsaysay": 9, "Agdao": 8, "Buhangin": 7, "Lanang": 3
+  }
+};
+
 
   // helper: get local YYYY-MM-DD (avoid timezone shift)
   const getTodayLocal = () => {
@@ -174,7 +231,7 @@ function Passenger_Booking() {
                   className="form-select"
                 >
                   <option value="">Select pickup area</option>
-                  {areas.map((area) => (
+                  { areas.map((area) => (
                     <option key={area} value={area}>
                       {area}
                     </option>
