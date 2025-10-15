@@ -9,9 +9,12 @@ import multer from "multer";
 import path from "path";
 import { fileURLToPath } from "url";
 import fs from "fs";
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
+import cookieParser from "cookie-parser";
+import dotenv from "dotenv";
 
-
-
+dotenv.config({ path: ".env" });
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -28,6 +31,51 @@ ensureDir(path.join(__dirname, "uploads/profile-pictures"));
 ensureDir(path.join(__dirname, "uploads/inquiries"));
 
 const app = express();
+app.set("trust proxy", 1);
+
+app.use(
+  helmet({
+    contentSecurityPolicy:
+      process.env.NODE_ENV === "production"
+        ? {
+            directives: {
+              defaultSrc: ["'self'"],
+              baseUri: ["'self'"],
+              frameAncestors: ["'none'"],
+              objectSrc: ["'none'"],
+              imgSrc: ["'self'", "data:"],
+              styleSrc: ["'self'", "'unsafe-inline'"],
+              scriptSrc: ["'self'"],
+              connectSrc: ["'self'", process.env.CLIENT_ORIGIN || "http://localhost:5173"],
+            },
+          }
+        : false,
+    crossOriginResourcePolicy: { policy: "same-origin" },
+    referrerPolicy: { policy: "no-referrer" },
+  })
+);
+
+app.use(
+  cors({
+    origin: process.env.CLIENT_ORIGIN || "http://localhost:5173",
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-CSRF-Token", "X-Requested-With"],
+  })
+);
+
+app.use(cookieParser());
+app.use(express.json({ limit: "200kb" }));
+app.use(express.urlencoded({ extended: true, limit: "200kb" }));
+
+app.use(
+  rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 300,
+    standardHeaders: true,
+    legacyHeaders: false,
+  })
+);
 
 // basic request logger to help debug 404s
 app.use((req, res, next) => {
@@ -36,16 +84,6 @@ app.use((req, res, next) => {
 });
 
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
-
-
-
-
- 
-
-
-
-
-
 
 const allowedOrigins = ["http://localhost:5173", "http://localhost:5174"];
 
@@ -1200,6 +1238,9 @@ app.use((req, res) => {
 });
 
 // Start server
-app.listen(5000, () => console.log("🚀 Server running on http://localhost:5000"));
+const port = process.env.PORT || 5000;
+app.listen(port, () => {
+  console.log(`API listening on ${port}`);
+});
 
 
