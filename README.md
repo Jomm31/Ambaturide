@@ -1,5 +1,6 @@
 # HOW TO RUN
 - Download and import MySql database
+- In powershell: npm install
 - In powershell: node src/backend/server.js
 - In powershell: npm run dev
 
