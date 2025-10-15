@@ -1,9 +1,7 @@
 # HOW TO RUN
-- [download and import mysql database]
-
-- [in powershell: node src/backend/server.js]
-
--in powershell: npm run dev
+- download and import mysql database
+- in powershell: node src/backend/server.js
+- in powershell: npm run dev
 
 
 # React + Vite
