@@ -87,13 +87,13 @@ function Reviews() {
 
     (async () => {
       try {
-        const res = await axios.get(`http://localhost:5000/api/driver/${driverId}/ratings`);
+        const res = await axios.get(`http://localhost:3001/api/driver/${driverId}/ratings`);
         if (res.data.success) {
           // normalize avatar url: if relative path, prefix host
           const normalized = res.data.ratings.map(r => {
             const avatar = r.PassengerPicture;
             const avatarUrl = avatar
-              ? (/^https?:\/\//i.test(avatar) ? avatar : `http://localhost:5000${avatar.startsWith("/") ? avatar : `/${avatar}`}`)
+              ? (/^https?:\/\//i.test(avatar) ? avatar : `http://localhost:3001${avatar.startsWith("/") ? avatar : `/${avatar}`}`)
               : null;
             return {
               id: r.RatingID || r.CreatedAt + Math.random(),

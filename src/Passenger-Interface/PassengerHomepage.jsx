@@ -79,7 +79,7 @@ function PassengerHomepage() {
     }
 
     try {
-      const res = await axios.get("http://localhost:5000/api/check-auth", { withCredentials: true });
+      const res = await axios.get("http://localhost:3001/api/check-auth", { withCredentials: true });
       if (!res.data.loggedIn) {
         navigate("/LoginHomepage");
         return;
@@ -107,7 +107,7 @@ function PassengerHomepage() {
       // If we have a passenger id, check for an existing active booking
       if (passengerId) {
         try {
-          const check = await axios.get(`http://localhost:5000/api/passenger/${passengerId}/booking`, { withCredentials: true });
+          const check = await axios.get(`http://localhost:3001/api/passenger/${passengerId}/booking`, { withCredentials: true });
           const existing = check.data.booking;
           const activeStatuses = ["pending", "accepted", "assigned", "active"];
           if (existing && activeStatuses.includes((existing.Status || "").toLowerCase())) {
@@ -145,7 +145,7 @@ function PassengerHomepage() {
       form.append("message", contactMessage);
       if (contactFile) form.append("attachment", contactFile);
 
-      const res = await axios.post("http://localhost:5000/api/inquiries", form, {
+      const res = await axios.post("http://localhost:3001/api/inquiries", form, {
         headers: { "Content-Type": "multipart/form-data" }
       });
       if (res.data.success) {

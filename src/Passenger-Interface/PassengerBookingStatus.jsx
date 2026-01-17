@@ -51,7 +51,7 @@ function PassengerBookingStatus() {
     if (!path) return "/profile-pictures/default.jpg";
     const raw = String(path);
     if (/^https?:\/\//i.test(raw) || /^\/\//.test(raw)) return raw;
-    return `http://localhost:5000${raw.startsWith("/") ? raw : `/${raw}`}`;
+    return `http://localhost:3001${raw.startsWith("/") ? raw : `/${raw}`}`;
   };
   const withTimestamp = (url) => (url.includes("?") ? `${url}&t=${Date.now()}` : `${url}?t=${Date.now()}`);
 
@@ -60,7 +60,7 @@ function PassengerBookingStatus() {
 
     const fetchBooking = async () => {
       try {
-        const res = await axios.get(`http://localhost:5000/api/passenger/${passengerId}/booking`);
+        const res = await axios.get(`http://localhost:3001/api/passenger/${passengerId}/booking`);
         if (res.data.booking) {
           const b = res.data.booking;
 
@@ -93,7 +93,7 @@ function PassengerBookingStatus() {
           // 3) If booking completed and still not determined, check driver_ratings table
           if (!alreadySubmitted && b.Status?.toLowerCase() === "completed" && b.DriverID && b.BookingID) {
             try {
-              const rr = await axios.get(`http://localhost:5000/api/driver/${b.DriverID}/ratings`);
+              const rr = await axios.get(`http://localhost:3001/api/driver/${b.DriverID}/ratings`);
               const ratings = rr.data.ratings || rr.data || [];
               const found = ratings.find(r =>
                 Number(r.BookingID) === Number(b.BookingID) &&
@@ -116,7 +116,7 @@ function PassengerBookingStatus() {
 
           // Fetch passenger profile (to get profile picture / canonical phone)
           try {
-            const p = await axios.get(`http://localhost:5000/api/passenger/profile/${passengerId}`);
+            const p = await axios.get(`http://localhost:3001/api/passenger/profile/${passengerId}`);
             setPassengerProfile(p.data);
             setPassengerPhone(sanitizePhone(p.data.PhoneNumber));
           } catch (err) {
@@ -127,7 +127,7 @@ function PassengerBookingStatus() {
           const driverId = b.DriverID || b.DriverId || b.driverId;
           if (driverId) {
             try {
-              const d = await axios.get(`http://localhost:5000/api/driver/profile/${driverId}`);
+              const d = await axios.get(`http://localhost:3001/api/driver/profile/${driverId}`);
               const driverObj = d.data?.driver || d.data;
               setDriverProfile(driverObj);
             } catch (err) {
@@ -172,7 +172,7 @@ function PassengerBookingStatus() {
 
     try {
       setCanceling(true);
-      const res = await axios.delete(`http://localhost:5000/api/bookings/${booking.BookingID}`, { withCredentials: true });
+      const res = await axios.delete(`http://localhost:3001/api/bookings/${booking.BookingID}`, { withCredentials: true });
       if (res.data.success) {
         // clear booking and show "none" state
         setBooking(null);
@@ -195,7 +195,7 @@ function PassengerBookingStatus() {
     if (rating === 0) { alert("Please select a star rating."); return; }
     setRatingSubmitting(true);
     try {
-      const res = await axios.post(`http://localhost:5000/api/bookings/${booking.BookingID}/rate`, {
+      const res = await axios.post(`http://localhost:3001/api/bookings/${booking.BookingID}/rate`, {
         rating, comment
       }, { withCredentials: true });
       if (res.data.success) {
@@ -233,7 +233,7 @@ function PassengerBookingStatus() {
 
     try {
       setReporting(true);
-      const res = await axios.post(`http://localhost:5000/api/drivers/${booking.DriverID}/report`, {
+      const res = await axios.post(`http://localhost:3001/api/drivers/${booking.DriverID}/report`, {
         reason: reportReason.trim(),
         bookingId: booking.BookingID,
         passengerId: passengerId

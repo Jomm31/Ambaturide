@@ -1,6 +1,6 @@
 // backend/server.js
 import express from "express";
-import mysql from "mysql2";
+import pool from "./db.js";
 import session from "express-session";
 import cors from "cors";
 import bodyParser from "body-parser";
@@ -50,7 +50,7 @@ app.use(
             },
           }
         : false,
-    crossOriginResourcePolicy: { policy: "same-origin" },
+    crossOriginResourcePolicy: { policy: "cross-origin" },
     referrerPolicy: { policy: "no-referrer" },
   })
 );
@@ -106,32 +106,23 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 // Session middleware
 app.use(session({
-  secret: "ambaturide_secret",
+  secret: process.env.SESSION_SECRET || "ambaturide_secret",
   resave: false,
   saveUninitialized: false,
-  cookie: { secure: false } // secure: true only if using https
+  cookie: { 
+    secure: process.env.NODE_ENV === "production",
+    httpOnly: true,
+    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+  }
 }));
 
-// MySQL connection
-const db = mysql.createConnection({
-  host: "localhost",
-  user: "root",
-  password: "",
-  database: "ambaturide_db"
-});
-
-db.connect(err => {
-  if (err) throw err;
-  console.log("✅ MySQL Connected!");
-});
-
 // Login route (for example)
-app.post("/api/login", (req, res) => {
+app.post("/api/login", async (req, res) => {
   const { email, password } = req.body;
 
-  const sql = "SELECT * FROM passengers WHERE Email = ? AND Password = ?";
-  db.query(sql, [email, password], (err, result) => {
-    if (err) return res.status(500).json({ error: "Database error" });
+  try {
+    const sql = "SELECT * FROM passengers WHERE Email = ? AND Password = ?";
+    const [result] = await pool.query(sql, [email, password]);
 
     if (result.length > 0) {
       req.session.user = result[0];
@@ -139,7 +130,10 @@ app.post("/api/login", (req, res) => {
     } else {
       res.status(401).json({ success: false, message: "Invalid credentials" });
     }
-  });
+  } catch (err) {
+    console.error('❌ Login error:', err);
+    res.status(500).json({ error: "Database error" });
+  }
 });
 
 // Check login status
@@ -170,27 +164,19 @@ app.post('/api/passenger/signup', async (req, res) => {
       VALUES (?, ?, ?, ?, ?, ?, ?)
     `;
 
-    db.query(
+    const [result] = await pool.query(
       sql,
-      [firstName || 'Passenger', lastName || 'User', email, hashedPassword, phoneNumber || '', address || '', birthDate || null],
-      (err, result) => {
-        if (err) {
-          if (err.code === 'ER_DUP_ENTRY') {
-            return res.status(409).json({ message: 'Email already registered' });
-          }
-          console.error('❌ Error inserting passenger:', err);
-          return res.status(500).json({ message: 'Database error' });
-        }
-        res.status(201).json({ success: true, message: 'Passenger registered successfully!' });
-
-      }
+      [firstName || 'Passenger', lastName || 'User', email, hashedPassword, phoneNumber || '', address || '', birthDate || null]
     );
-  } catch (error) {
-    console.error('❌ Error:', error);
-    res.status(500).json({ message: 'Server error' });
-  }
-  console.log("📥 Signup data:", req.body);
 
+    res.status(201).json({ success: true, message: 'Passenger registered successfully!' });
+  } catch (error) {
+    if (error.code === 'ER_DUP_ENTRY') {
+      return res.status(409).json({ message: 'Email already registered' });
+    }
+    console.error('❌ Error inserting passenger:', error);
+    res.status(500).json({ message: 'Database error' });
+  }
 });
 
 app.get("/api/passenger/signup", (req, res) => {
@@ -209,11 +195,8 @@ app.post('/api/passenger/login', async (req, res) => {
 
   const sql = `SELECT * FROM passengers WHERE Email = ?`;
 
-  db.query(sql, [email], async (err, results) => {
-    if (err) {
-      console.error('❌ Database error:', err);
-      return res.status(500).json({ message: 'Database error' });
-    }
+  try {
+    const [results] = await pool.query(sql, [email]);
 
     if (results.length === 0) {
       return res.status(404).json({ message: 'Account not found' });
@@ -237,15 +220,18 @@ app.post('/api/passenger/login', async (req, res) => {
     res.json({
       message: 'Login successful',
       passenger: {
-        PassengerID: passenger.PassengerID, // ✅ Make sure this line exists and is correct
+        PassengerID: passenger.PassengerID,
         FirstName: passenger.FirstName,
         LastName: passenger.LastName,
         Email: passenger.Email,
-        PhoneNumber: passenger.PhoneNumber || "", // Add other fields if needed
-        ProfilePicture: passenger.ProfilePicture || "", // Add other fields if needed
+        PhoneNumber: passenger.PhoneNumber || "",
+        ProfilePicture: passenger.ProfilePicture || "",
       },
     });
-  });
+  } catch (err) {
+    console.error('❌ Database error:', err);
+    return res.status(500).json({ message: 'Database error' });
+  }
 });
 
 
@@ -316,7 +302,7 @@ app.post("/api/driver/signup", driverUpload.fields([
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')
     `;
 
-    db.query(
+    const [result] = await pool.query(
       sql,
       [
         firstName || "Driver",
@@ -331,25 +317,19 @@ app.post("/api/driver/signup", driverUpload.fields([
         plateNumber,
         vehicleBrand || "",
         vehicleImagePath
-      ],
-      (err, result) => {
-        if (err) {
-          console.error("❌ DB Error:", err);
-          if (err.code === "ER_DUP_ENTRY") {
-            return res.status(409).json({ message: "Email already registered" });
-          }
-          return res.status(500).json({ message: "Database error" });
-        }
-
-        res.status(201).json({
-          success: true,
-          message: "Driver registered successfully!",
-          driverID: result.insertId
-        });
-      }
+      ]
     );
+
+    res.status(201).json({
+      success: true,
+      message: "Driver registered successfully!",
+      driverID: result.insertId
+    });
   } catch (error) {
     console.error("❌ Error:", error);
+    if (error.code === "ER_DUP_ENTRY") {
+      return res.status(409).json({ message: "Email already registered" });
+    }
     res.status(500).json({ message: "Server error" });
   }
 });
@@ -365,12 +345,9 @@ app.post("/api/driver/login", async (req, res) => {
   if (!email || !password)
     return res.status(400).json({ message: "Missing email or password" });
 
-  const query = "SELECT * FROM drivers WHERE Email = ?";
-  db.query(query, [email], async (err, results) => {
-    if (err) {
-      console.error("Database error:", err);
-      return res.status(500).json({ message: "Database error" });
-    }
+  try {
+    const query = "SELECT * FROM drivers WHERE Email = ?";
+    const [results] = await pool.query(query, [email]);
 
     if (results.length === 0)
       return res.status(401).json({ message: "Driver not found" });
@@ -397,14 +374,17 @@ app.post("/api/driver/login", async (req, res) => {
         Status: driver.Status
       }
     });
-  });
+  } catch (err) {
+    console.error("Database error:", err);
+    return res.status(500).json({ message: "Database error" });
+  }
 });
 app.get("/api/driver/login", (req, res) => {
   res.send("✅ You reached the Driver SignUp route! Use POST to submit data.");
 });
 
 // ✅ Get full passenger profile by ID
-app.get("/api/passenger/profile/:id", (req, res) => {
+app.get("/api/passenger/profile/:id", async (req, res) => {
   const passengerId = req.params.id;
 
   const sql = `
@@ -413,18 +393,18 @@ app.get("/api/passenger/profile/:id", (req, res) => {
     WHERE PassengerID = ?
   `;
 
-  db.query(sql, [passengerId], (err, results) => {
-    if (err) {
-      console.error("❌ Database error:", err);
-      return res.status(500).json({ message: "Database error" });
-    }
+  try {
+    const [results] = await pool.query(sql, [passengerId]);
 
     if (results.length === 0) {
       return res.status(404).json({ message: "Passenger not found" });
     }
 
     res.json(results[0]);
-  });
+  } catch (err) {
+    console.error("❌ Database error:", err);
+    return res.status(500).json({ message: "Database error" });
+  }
 });
 
 // ✅ Passenger Profile Picture Upload & Update
@@ -437,7 +417,7 @@ const profileStorage = multer.diskStorage({
 
 const profileUpload = multer({ storage: profileStorage });
 
-app.post("/api/passenger/profile-picture/:id", profileUpload.single("profile"), (req, res) => {
+app.post("/api/passenger/profile-picture/:id", profileUpload.single("profile"), async (req, res) => {
   const passengerId = req.params.id;
 
   if (!req.file) {
@@ -446,19 +426,18 @@ app.post("/api/passenger/profile-picture/:id", profileUpload.single("profile"), 
 
   const imagePath = `/uploads/profile-pictures/${req.file.filename}`;
 
-  const sql = "UPDATE passengers SET ProfilePicture = ? WHERE PassengerID = ?";
-  db.query(sql, [imagePath, passengerId], (err, result) => {
-    if (err) {
-      console.error("❌ Database error:", err);
-      return res.status(500).json({ message: "Database error" });
-    }
-
+  try {
+    const sql = "UPDATE passengers SET ProfilePicture = ? WHERE PassengerID = ?";
+    await pool.query(sql, [imagePath, passengerId]);
     res.json({ success: true, imagePath, message: "Profile picture updated successfully" });
-  });
+  } catch (err) {
+    console.error("❌ Database error:", err);
+    return res.status(500).json({ message: "Database error" });
+  }
 });
 
 // ✅ Update Passenger Info (Name, Gender, Birthdate, etc.)
-app.put("/api/passenger/update/:id", (req, res) => {
+app.put("/api/passenger/update/:id", async (req, res) => {
   const passengerId = req.params.id;
   const { firstName, lastName, gender, birthdate } = req.body;
 
@@ -468,17 +447,16 @@ app.put("/api/passenger/update/:id", (req, res) => {
     WHERE PassengerID = ?
   `;
 
-  db.query(sql, [firstName, lastName, gender, birthdate, passengerId], (err, result) => {
-    if (err) {
-      console.error("❌ Database error:", err);
-      return res.status(500).json({ message: "Database error" });
-    }
-
+  try {
+    await pool.query(sql, [firstName, lastName, gender, birthdate, passengerId]);
     res.json({ success: true, message: "Profile updated successfully!" });
-  });
+  } catch (err) {
+    console.error("❌ Database error:", err);
+    return res.status(500).json({ message: "Database error" });
+  }
 });
 // ✅ Update Passenger Contact and Email
-app.put("/api/passenger/update-contact/:id", (req, res) => {
+app.put("/api/passenger/update-contact/:id", async (req, res) => {
   const passengerId = req.params.id;
   const { contactNo, email } = req.body;
 
@@ -492,14 +470,13 @@ app.put("/api/passenger/update-contact/:id", (req, res) => {
     WHERE PassengerID = ?
   `;
 
-  db.query(sql, [contactNo, email, passengerId], (err, result) => {
-    if (err) {
-      console.error("❌ Database error:", err);
-      return res.status(500).json({ success: false, message: "Database error" });
-    }
-
+  try {
+    await pool.query(sql, [contactNo, email, passengerId]);
     res.json({ success: true, message: "Contact info updated successfully!" });
-  });
+  } catch (err) {
+    console.error("❌ Database error:", err);
+    return res.status(500).json({ success: false, message: "Database error" });
+  }
 });
 
 
@@ -513,13 +490,10 @@ app.put("/api/passenger/change-password/:id", async (req, res) => {
     return res.status(400).json({ success: false, message: "Both old and new passwords are required" });
   }
 
-  // Get the current password hash from the DB
-  const getSql = `SELECT Password FROM passengers WHERE PassengerID = ?`;
-  db.query(getSql, [passengerId], async (err, results) => {
-    if (err) {
-      console.error("❌ Database error:", err);
-      return res.status(500).json({ success: false, message: "Database error" });
-    }
+  try {
+    // Get the current password hash from the DB
+    const getSql = `SELECT Password FROM passengers WHERE PassengerID = ?`;
+    const [results] = await pool.query(getSql, [passengerId]);
 
     if (results.length === 0) {
       return res.status(404).json({ success: false, message: "Passenger not found" });
@@ -535,20 +509,17 @@ app.put("/api/passenger/change-password/:id", async (req, res) => {
     // Hash the new password
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     const updateSql = `UPDATE passengers SET Password = ? WHERE PassengerID = ?`;
+    await pool.query(updateSql, [hashedPassword, passengerId]);
 
-    db.query(updateSql, [hashedPassword, passengerId], (err) => {
-      if (err) {
-        console.error("❌ Database error:", err);
-        return res.status(500).json({ success: false, message: "Failed to update password" });
-      }
-
-      res.json({ success: true, message: "Password changed successfully!" });
-    });
-  });
+    res.json({ success: true, message: "Password changed successfully!" });
+  } catch (err) {
+    console.error("❌ Database error:", err);
+    return res.status(500).json({ success: false, message: "Database error" });
+  }
 });
 
 
-app.get("/api/driver/profile/:id", (req, res) => {
+app.get("/api/driver/profile/:id", async (req, res) => {
   const driverId = req.params.id;
 
   const sql = `
@@ -572,11 +543,8 @@ app.get("/api/driver/profile/:id", (req, res) => {
     WHERE DriverID = ?
   `;
 
-  db.query(sql, [driverId], (err, results) => {
-    if (err) {
-      console.error("❌ Database error:", err);
-      return res.status(500).json({ message: "Database error" });
-    }
+  try {
+    const [results] = await pool.query(sql, [driverId]);
 
     if (results.length === 0) {
       return res.status(404).json({ message: "Driver not found" });
@@ -584,12 +552,15 @@ app.get("/api/driver/profile/:id", (req, res) => {
 
     // Send profile with image paths
     res.json({ success: true, driver: results[0] });
-  });
+  } catch (err) {
+    console.error("❌ Database error:", err);
+    return res.status(500).json({ message: "Database error" });
+  }
 });
 
 
 // ✅ Driver Profile Picture Upload & Update
-app.post("/api/driver/profile-picture/:id", profileUpload.single("profile"), (req, res) => {
+app.post("/api/driver/profile-picture/:id", profileUpload.single("profile"), async (req, res) => {
   const driverId = req.params.id;
 
   if (!req.file) {
@@ -598,19 +569,18 @@ app.post("/api/driver/profile-picture/:id", profileUpload.single("profile"), (re
 
   const imagePath = `/uploads/profile-pictures/${req.file.filename}`;
 
-  const sql = "UPDATE drivers SET ProfilePicture = ? WHERE DriverID = ?";
-  db.query(sql, [imagePath, driverId], (err, result) => {
-    if (err) {
-      console.error("❌ Database error:", err);
-      return res.status(500).json({ message: "Database error" });
-    }
-
+  try {
+    const sql = "UPDATE drivers SET ProfilePicture = ? WHERE DriverID = ?";
+    await pool.query(sql, [imagePath, driverId]);
     res.json({ success: true, imagePath, message: "Profile picture updated successfully" });
-  });
+  } catch (err) {
+    console.error("❌ Database error:", err);
+    return res.status(500).json({ message: "Database error" });
+  }
 });
 
 // ✅ Update Driver Info (Name, Gender, Birthdate, etc.)
-app.put("/api/driver/update/:id", (req, res) => {
+app.put("/api/driver/update/:id", async (req, res) => {
   const driverId = req.params.id;
   const { firstName, lastName, gender, birthdate } = req.body;
 
@@ -620,18 +590,17 @@ app.put("/api/driver/update/:id", (req, res) => {
     WHERE DriverID = ?
   `;
 
-  db.query(sql, [firstName, lastName, gender, birthdate, driverId], (err, result) => {
-    if (err) {
-      console.error("❌ Database error:", err);
-      return res.status(500).json({ message: "Database error" });
-    }
-
+  try {
+    await pool.query(sql, [firstName, lastName, gender, birthdate, driverId]);
     res.json({ success: true, message: "Profile updated successfully!" });
-  });
+  } catch (err) {
+    console.error("❌ Database error:", err);
+    return res.status(500).json({ message: "Database error" });
+  }
 });
 
 // ✅ Update Driver Contact and Email
-app.put("/api/driver/update-contact/:id", (req, res) => {
+app.put("/api/driver/update-contact/:id", async (req, res) => {
   const driverId = req.params.id;
   const { contactNo, email } = req.body;
 
@@ -645,18 +614,17 @@ app.put("/api/driver/update-contact/:id", (req, res) => {
     WHERE DriverID = ?
   `;
 
-  db.query(sql, [contactNo, email, driverId], (err, result) => {
-    if (err) {
-      console.error("❌ Database error:", err);
-      return res.status(500).json({ success: false, message: "Database error" });
-    }
-
+  try {
+    await pool.query(sql, [contactNo, email, driverId]);
     res.json({ success: true, message: "Contact info updated successfully!" });
-  });
+  } catch (err) {
+    console.error("❌ Database error:", err);
+    return res.status(500).json({ success: false, message: "Database error" });
+  }
 });
 
 // ✅ Update Driver Vehicle Information
-app.put("/api/driver/update-vehicle/:id", (req, res) => {
+app.put("/api/driver/update-vehicle/:id", async (req, res) => {
   const driverId = req.params.id;
   const { vehicleBrand, vehicleType, plateNumber } = req.body;
 
@@ -666,14 +634,13 @@ app.put("/api/driver/update-vehicle/:id", (req, res) => {
     WHERE DriverID = ?
   `;
 
-  db.query(sql, [vehicleBrand, vehicleType, plateNumber, driverId], (err, result) => {
-    if (err) {
-      console.error("❌ Database error:", err);
-      return res.status(500).json({ success: false, message: "Database error" });
-    }
-
+  try {
+    await pool.query(sql, [vehicleBrand, vehicleType, plateNumber, driverId]);
     res.json({ success: true, message: "Vehicle information updated successfully!" });
-  });
+  } catch (err) {
+    console.error("❌ Database error:", err);
+    return res.status(500).json({ success: false, message: "Database error" });
+  }
 });
 
 // ✅ Change Driver Password
@@ -685,13 +652,10 @@ app.put("/api/driver/change-password/:id", async (req, res) => {
     return res.status(400).json({ success: false, message: "Both old and new passwords are required" });
   }
 
-  // Get the current password hash from the DB
-  const getSql = `SELECT Password FROM drivers WHERE DriverID = ?`;
-  db.query(getSql, [driverId], async (err, results) => {
-    if (err) {
-      console.error("❌ Database error:", err);
-      return res.status(500).json({ success: false, message: "Database error" });
-    }
+  try {
+    // Get the current password hash from the DB
+    const getSql = `SELECT Password FROM drivers WHERE DriverID = ?`;
+    const [results] = await pool.query(getSql, [driverId]);
 
     if (results.length === 0) {
       return res.status(404).json({ success: false, message: "Driver not found" });
@@ -707,20 +671,17 @@ app.put("/api/driver/change-password/:id", async (req, res) => {
     // Hash the new password
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     const updateSql = `UPDATE drivers SET Password = ? WHERE DriverID = ?`;
+    await pool.query(updateSql, [hashedPassword, driverId]);
 
-    db.query(updateSql, [hashedPassword, driverId], (err) => {
-      if (err) {
-        console.error("❌ Database error:", err);
-        return res.status(500).json({ success: false, message: "Failed to update password" });
-      }
-
-      res.json({ success: true, message: "Password changed successfully!" });
-    });
-  });
+    res.json({ success: true, message: "Password changed successfully!" });
+  } catch (err) {
+    console.error("❌ Database error:", err);
+    return res.status(500).json({ success: false, message: "Database error" });
+  }
 });
 
 // ✅ Driver License Image Upload & Update
-app.post("/api/driver/license-image/:id", driverUpload.single("license"), (req, res) => {
+app.post("/api/driver/license-image/:id", driverUpload.single("license"), async (req, res) => {
   const driverId = req.params.id;
 
   if (!req.file) {
@@ -729,15 +690,14 @@ app.post("/api/driver/license-image/:id", driverUpload.single("license"), (req, 
 
   const imagePath = `/uploads/driver-license/${req.file.filename}`;
 
-  const sql = "UPDATE drivers SET LicenseImage = ? WHERE DriverID = ?";
-  db.query(sql, [imagePath, driverId], (err, result) => {
-    if (err) {
-      console.error("❌ Database error:", err);
-      return res.status(500).json({ message: "Database error" });
-    }
-
+  try {
+    const sql = "UPDATE drivers SET LicenseImage = ? WHERE DriverID = ?";
+    await pool.query(sql, [imagePath, driverId]);
     res.json({ success: true, imagePath, message: "License image updated successfully" });
-  });
+  } catch (err) {
+    console.error("❌ Database error:", err);
+    return res.status(500).json({ message: "Database error" });
+  }
 });
 
 // ✅ Driver Vehicle Image Upload & Update
@@ -766,18 +726,13 @@ app.post("/api/driver/vehicle-image/:id", uploadVehicle.single("vehicle"), async
 
     // Update drivers.VehiclePicture so subsequent profile fetches include the image
     const sql = "UPDATE drivers SET VehiclePicture = ? WHERE DriverID = ?";
-    db.query(sql, [imagePath, driverId], (err, result) => {
-      if (err) {
-        console.error("❌ DB error updating VehiclePicture:", err);
-        return res.status(500).json({ success: false, message: "Database error" });
-      }
+    await pool.query(sql, [imagePath, driverId]);
 
-      // Return the saved path so client can update UI/localStorage immediately
-      return res.json({
-        success: true,
-        imagePath,
-        message: "Vehicle image uploaded and saved to database"
-      });
+    // Return the saved path so client can update UI/localStorage immediately
+    return res.json({
+      success: true,
+      imagePath,
+      message: "Vehicle image uploaded and saved to database"
     });
   } catch (err) {
     console.error("vehicle upload error:", err);
@@ -785,7 +740,7 @@ app.post("/api/driver/vehicle-image/:id", uploadVehicle.single("vehicle"), async
   }
 });
 
-app.post("/api/passenger/book", (req, res) => {
+app.post("/api/passenger/book", async (req, res) => {
   const {
     PassengerID,
     PickupArea,
@@ -808,28 +763,28 @@ app.post("/api/passenger/book", (req, res) => {
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
 
-  db.query(sql, [
-    PassengerID,
-    PickupArea,
-    DropoffArea,
-    PickupFullAddress,
-    DropoffFullAddress,
-    RideDate,
-    RideTime,
-    VehicleType,
-    Fare
-  ], (err, result) => {
-    if (err) {
-      console.error("Booking error:", err);
-      return res.status(500).json({ success: false, message: "Database error" });
-    }
+  try {
+    const [result] = await pool.query(sql, [
+      PassengerID,
+      PickupArea,
+      DropoffArea,
+      PickupFullAddress,
+      DropoffFullAddress,
+      RideDate,
+      RideTime,
+      VehicleType,
+      Fare
+    ]);
     res.json({ success: true, message: "Booking created successfully", bookingID: result.insertId });
-  });
+  } catch (err) {
+    console.error("Booking error:", err);
+    return res.status(500).json({ success: false, message: "Database error" });
+  }
 });
 
 // ✅ Get all bookings (joined with driver details)
 // ✅ Get bookings + passenger info
-app.get("/api/driver/bookings", (req, res) => {
+app.get("/api/driver/bookings", async (req, res) => {
   const driverId = req.query.driverId; // optional
 
   // base select
@@ -867,17 +822,17 @@ app.get("/api/driver/bookings", (req, res) => {
 
   sql += ` ORDER BY b.BookingID DESC`;
 
-  db.query(sql, params, (err, results) => {
-    if (err) {
-      console.error("❌ Error fetching bookings:", err);
-      return res.status(500).json({ success: false, message: "Database error" });
-    }
+  try {
+    const [results] = await pool.query(sql, params);
     res.json({ success: true, bookings: results });
-  });
+  } catch (err) {
+    console.error("❌ Error fetching bookings:", err);
+    return res.status(500).json({ success: false, message: "Database error" });
+  }
 });
 
 // GET assigned bookings for a specific driver
-app.get("/api/driver/assigned-bookings/:driverId", (req, res) => {
+app.get("/api/driver/assigned-bookings/:driverId", async (req, res) => {
   const driverId = req.params.driverId;
   if (!driverId) return res.status(400).json({ success: false, message: "Missing driverId" });
 
@@ -892,17 +847,18 @@ app.get("/api/driver/assigned-bookings/:driverId", (req, res) => {
       AND b.Status IN ('accepted', 'pending') 
     ORDER BY b.CreatedAt DESC
   `;
-  db.query(sql, [driverId], (err, results) => {
-    if (err) {
-      console.error("DB error fetching assigned bookings:", err);
-      return res.status(500).json({ success: false, message: "Database error" });
-    }
+
+  try {
+    const [results] = await pool.query(sql, [driverId]);
     res.json({ success: true, bookings: results });
-  });
+  } catch (err) {
+    console.error("DB error fetching assigned bookings:", err);
+    return res.status(500).json({ success: false, message: "Database error" });
+  }
 });
 
 // Update booking status (driver can set accepted/completed/cancelled)
-app.put("/api/bookings/:id/status", (req, res) => {
+app.put("/api/bookings/:id/status", async (req, res) => {
   const bookingId = req.params.id;
   const { status, driverId } = req.body;
   if (!bookingId || !status) return res.status(400).json({ success: false, message: "Missing params" });
@@ -911,28 +867,28 @@ app.put("/api/bookings/:id/status", (req, res) => {
   const allowed = ["pending", "accepted", "completed", "cancelled"];
   if (!allowed.includes(status)) return res.status(400).json({ success: false, message: "Invalid status" });
 
-  // If accepting, set DriverID as well and ensure booking is still pending to avoid race conditions
-  if (status === "accepted") {
-    const sql = "UPDATE bookings SET Status = ?, DriverID = ? WHERE BookingID = ? AND Status = 'pending'";
-    db.query(sql, [status, driverId, bookingId], (err, result) => {
-      if (err) return res.status(500).json({ success: false, message: "DB error" });
+  try {
+    // If accepting, set DriverID as well and ensure booking is still pending to avoid race conditions
+    if (status === "accepted") {
+      const sql = "UPDATE bookings SET Status = ?, DriverID = ? WHERE BookingID = ? AND Status = 'pending'";
+      const [result] = await pool.query(sql, [status, driverId, bookingId]);
       if (result.affectedRows === 0) return res.status(409).json({ success: false, message: "Booking already taken or not pending" });
       return res.json({ success: true, message: "Assigned and accepted" });
-    });
-    return;
-  }
+    }
 
-  // other status updates
-  const sql = "UPDATE bookings SET Status = ? WHERE BookingID = ?";
-  db.query(sql, [status, bookingId], (err, result) => {
-    if (err) return res.status(500).json({ success: false, message: "DB error" });
+    // other status updates
+    const sql = "UPDATE bookings SET Status = ? WHERE BookingID = ?";
+    const [result] = await pool.query(sql, [status, bookingId]);
     if (result.affectedRows === 0) return res.status(404).json({ success: false, message: "Booking not found" });
     return res.json({ success: true, message: "Status updated" });
-  });
+  } catch (err) {
+    console.error("DB error:", err);
+    return res.status(500).json({ success: false, message: "DB error" });
+  }
 });
 
 // ✅ Get latest booking of a passenger with driver info
-app.get("/api/passenger/:id/booking", (req, res) => {
+app.get("/api/passenger/:id/booking", async (req, res) => {
   const passengerId = req.params.id;
 
   const sql = `
@@ -950,114 +906,120 @@ app.get("/api/passenger/:id/booking", (req, res) => {
     LIMIT 1
   `;
 
-  db.query(sql, [passengerId], (err, results) => {
-    if (err) {
-      console.error("❌ Error fetching booking:", err);
-      return res.status(500).json({ success: false, message: "Database error" });
-    }
+  try {
+    const [results] = await pool.query(sql, [passengerId]);
 
     if (results.length === 0) {
       return res.json({ success: true, booking: null }); // No active booking
     }
 
     res.json({ success: true, booking: results[0] });
-  });
+  } catch (err) {
+    console.error("❌ Error fetching booking:", err);
+    return res.status(500).json({ success: false, message: "Database error" });
+  }
 });
 
 // Add this route near other booking endpoints
 
-app.post("/api/bookings/:id/rate", (req, res) => {
+app.post("/api/bookings/:id/rate", async (req, res) => {
   const bookingId = req.params.id;
   const { rating, comment } = req.body;
   if (!bookingId || !rating) return res.status(400).json({ success: false, message: "Missing params" });
 
-  // Get booking to find driver & passenger
-  const getSql = "SELECT PassengerID, DriverID FROM bookings WHERE BookingID = ?";
-  db.query(getSql, [bookingId], (err, results) => {
-    if (err) return res.status(500).json({ success: false, message: "DB error" });
+  try {
+    // Get booking to find driver & passenger
+    const getSql = "SELECT PassengerID, DriverID FROM bookings WHERE BookingID = ?";
+    const [results] = await pool.query(getSql, [bookingId]);
+
     if (!results || results.length === 0) return res.status(404).json({ success: false, message: "Booking not found" });
 
     const booking = results[0];
     if (!booking.DriverID) return res.status(400).json({ success: false, message: "No driver assigned for this booking" });
 
     const insertSql = "INSERT INTO driver_ratings (BookingID, DriverID, PassengerID, Rating, Comment) VALUES (?, ?, ?, ?, ?)";
-    db.query(insertSql, [bookingId, booking.DriverID, booking.PassengerID, rating, comment || null], (err2) => {
-      if (err2) {
-        console.error("DB error inserting rating:", err2);
-        return res.status(500).json({ success: false, message: "DB error" });
-      }
-      return res.json({ success: true, message: "Rating saved" });
-    });
-  });
+    await pool.query(insertSql, [bookingId, booking.DriverID, booking.PassengerID, rating, comment || null]);
+
+    return res.json({ success: true, message: "Rating saved" });
+  } catch (err) {
+    console.error("DB error:", err);
+    return res.status(500).json({ success: false, message: "DB error" });
+  }
 });
 
 // Delete booking by BookingID (passenger can cancel)
 // This permanently removes the row. If you prefer to keep history, change to update Status='cancelled'.
-app.delete("/api/bookings/:id", (req, res) => {
+app.delete("/api/bookings/:id", async (req, res) => {
   const bookingId = req.params.id;
   if (!bookingId) return res.status(400).json({ success: false, message: "Missing booking id" });
 
-  const sql = "DELETE FROM bookings WHERE BookingID = ?";
-  db.query(sql, [bookingId], (err, result) => {
-    if (err) {
-      console.error("DB error deleting booking:", err);
-      return res.status(500).json({ success: false, message: "Database error" });
-    }
+  try {
+    const sql = "DELETE FROM bookings WHERE BookingID = ?";
+    const [result] = await pool.query(sql, [bookingId]);
 
     if (result.affectedRows === 0) {
       return res.status(404).json({ success: false, message: "Booking not found" });
     }
 
     return res.json({ success: true, message: "Booking cancelled and deleted" });
-  });
+  } catch (err) {
+    console.error("DB error deleting booking:", err);
+    return res.status(500).json({ success: false, message: "Database error" });
+  }
 });
 
-app.post("/api/driver/bookings/:id/decline", (req, res) => {
+app.post("/api/driver/bookings/:id/decline", async (req, res) => {
   const bookingId = req.params.id;
   const { driverId, reason } = req.body || {};
   if (!bookingId || !driverId) return res.status(400).json({ success: false, message: "Missing bookingId or driverId" });
 
-  // record decline so same driver won't see it again
-  const sql = "INSERT INTO booking_declines (BookingID, DriverID, Reason) VALUES (?, ?, ?)";
-  db.query(sql, [bookingId, driverId, reason || null], (err) => {
-    if (err) {
-      console.error("DB error recording decline:", err);
-      return res.status(500).json({ success: false, message: "Database error" });
-    }
+  try {
+    // record decline so same driver won't see it again
+    const sql = "INSERT INTO booking_declines (BookingID, DriverID, Reason) VALUES (?, ?, ?)";
+    await pool.query(sql, [bookingId, driverId, reason || null]);
 
     // Optionally: return updated booking so client can refresh if needed
     return res.json({ success: true, message: "Recorded decline" });
-  });
+  } catch (err) {
+    console.error("DB error recording decline:", err);
+    return res.status(500).json({ success: false, message: "Database error" });
+  }
 });
 
 // Admin: list drivers by status
-app.get("/api/admin/drivers", (req, res) => {
+app.get("/api/admin/drivers", async (req, res) => {
   const status = req.query.status || "active";
-  const sql = "SELECT * FROM drivers WHERE Status = ?";
-  db.query(sql, [status], (err, results) => {
-    if (err) { console.error(err); return res.status(500).json({ success:false, message:"DB error" }); }
-    res.json({ success:true, drivers: results || [] });
-  });
+  try {
+    const sql = "SELECT * FROM drivers WHERE Status = ?";
+    const [results] = await pool.query(sql, [status]);
+    res.json({ success: true, drivers: results || [] });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ success: false, message: "DB error" });
+  }
 });
 
 // Admin: update driver status
-app.put("/api/admin/drivers/:id/status", (req, res) => {
+app.put("/api/admin/drivers/:id/status", async (req, res) => {
   const id = req.params.id;
   const { status } = req.body || {};
-  if (!id || !status) return res.status(400).json({ success:false, message:"Missing params" });
-  const allowed = ["pending","active","inactive","banned"];
-  if (!allowed.includes(status)) return res.status(400).json({ success:false, message:"Invalid status" });
+  if (!id || !status) return res.status(400).json({ success: false, message: "Missing params" });
+  const allowed = ["pending", "active", "inactive", "banned"];
+  if (!allowed.includes(status)) return res.status(400).json({ success: false, message: "Invalid status" });
 
-  const sql = "UPDATE drivers SET Status = ? WHERE DriverID = ?";
-  db.query(sql, [status, id], (err, result) => {
-    if (err) { console.error(err); return res.status(500).json({ success:false, message:"DB error" }); }
-    if (result.affectedRows === 0) return res.status(404).json({ success:false, message:"Driver not found" });
-    res.json({ success:true, message:"Status updated" });
-  });
+  try {
+    const sql = "UPDATE drivers SET Status = ? WHERE DriverID = ?";
+    const [result] = await pool.query(sql, [status, id]);
+    if (result.affectedRows === 0) return res.status(404).json({ success: false, message: "Driver not found" });
+    res.json({ success: true, message: "Status updated" });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ success: false, message: "DB error" });
+  }
 });
 
 // Admin: bookings list (with passenger and driver names when available)
-app.get("/api/admin/bookings", (req, res) => {
+app.get("/api/admin/bookings", async (req, res) => {
   const sql = `
     SELECT b.*, 
            CONCAT(p.FirstName, ' ', p.LastName) AS PassengerName,
@@ -1067,14 +1029,18 @@ app.get("/api/admin/bookings", (req, res) => {
     LEFT JOIN drivers d ON b.DriverID = d.DriverID
     ORDER BY b.CreatedAt DESC
   `;
-  db.query(sql, (err, results) => {
-    if (err) { console.error(err); return res.status(500).json({ success:false, message:"DB error" }); }
-    res.json({ success:true, bookings: results || [] });
-  });
+
+  try {
+    const [results] = await pool.query(sql);
+    res.json({ success: true, bookings: results || [] });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ success: false, message: "DB error" });
+  }
 });
 
 // (optional) ratings endpoint if not present
-app.get("/api/driver/:id/ratings", (req, res) => {
+app.get("/api/driver/:id/ratings", async (req, res) => {
   const driverId = req.params.id;
   const sql = `
     SELECT r.Rating, r.Comment, r.CreatedAt, p.FirstName, p.LastName, p.ProfilePicture AS PassengerPicture
@@ -1083,14 +1049,18 @@ app.get("/api/driver/:id/ratings", (req, res) => {
     WHERE r.DriverID = ?
     ORDER BY r.CreatedAt DESC
   `;
-  db.query(sql, [driverId], (err, results) => {
-    if (err) { console.error(err); return res.status(500).json({ success:false, message:"DB error" }); }
-    res.json({ success:true, ratings: results || [] });
-  });
+
+  try {
+    const [results] = await pool.query(sql, [driverId]);
+    res.json({ success: true, ratings: results || [] });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ success: false, message: "DB error" });
+  }
 });
 
 // Passenger -> report a driver (called from PassengerBookingStatus)
-app.post("/api/drivers/:id/report", (req, res) => {
+app.post("/api/drivers/:id/report", async (req, res) => {
   const driverId = Number(req.params.id);
   const { passengerId, bookingId, reason } = req.body || {};
 
@@ -1098,13 +1068,10 @@ app.post("/api/drivers/:id/report", (req, res) => {
     return res.status(400).json({ success: false, message: "Missing driverId, passengerId or reason" });
   }
 
-  // limit reports per passenger -> driver to 2
-  const countSql = "SELECT COUNT(*) AS cnt FROM driver_reports WHERE DriverID = ? AND PassengerID = ?";
-  db.query(countSql, [driverId, passengerId], (errCount, rows) => {
-    if (errCount) {
-      console.error("DB error counting reports:", errCount);
-      return res.status(500).json({ success: false, message: "Database error" });
-    }
+  try {
+    // limit reports per passenger -> driver to 2
+    const countSql = "SELECT COUNT(*) AS cnt FROM driver_reports WHERE DriverID = ? AND PassengerID = ?";
+    const [rows] = await pool.query(countSql, [driverId, passengerId]);
     const cnt = (rows && rows[0] && rows[0].cnt) ? Number(rows[0].cnt) : 0;
     const LIMIT_PER_PASSENGER_DRIVER = 2;
     if (cnt >= LIMIT_PER_PASSENGER_DRIVER) {
@@ -1115,27 +1082,21 @@ app.post("/api/drivers/:id/report", (req, res) => {
     }
 
     const insertSql = "INSERT INTO driver_reports (DriverID, PassengerID, BookingID, Message) VALUES (?, ?, ?, ?)";
-    db.query(insertSql, [driverId, passengerId, bookingId || null, reason], (err, result) => {
-      if (err) {
-        console.error("DB error inserting driver report:", err);
-        return res.status(500).json({ success: false, message: "Database error" });
-      }
+    await pool.query(insertSql, [driverId, passengerId, bookingId || null, reason]);
 
-      // increment driver's Reports counter
-      const upd = "UPDATE drivers SET Reports = IFNULL(Reports,0) + 1 WHERE DriverID = ?";
-      db.query(upd, [driverId], (err2) => {
-        if (err2) {
-          console.error("DB error incrementing report count:", err2);
-          // Still return success for report insertion
-        }
-        return res.json({ success: true, message: "Report submitted" });
-      });
-    });
-  });
+    // increment driver's Reports counter
+    const upd = "UPDATE drivers SET Reports = IFNULL(Reports,0) + 1 WHERE DriverID = ?";
+    await pool.query(upd, [driverId]);
+
+    return res.json({ success: true, message: "Report submitted" });
+  } catch (err) {
+    console.error("DB error:", err);
+    return res.status(500).json({ success: false, message: "Database error" });
+  }
 });
 
 // Admin: list driver reports with passenger & driver info
-app.get("/api/admin/driver-reports", (req, res) => {
+app.get("/api/admin/driver-reports", async (req, res) => {
   const sql = `
     SELECT r.ReportID, r.DriverID, r.PassengerID, r.BookingID, r.Message, r.CreatedAt,
            CONCAT(d.FirstName, ' ', d.LastName) AS DriverName, d.ProfilePicture AS DriverPicture, d.Reports,
@@ -1145,29 +1106,30 @@ app.get("/api/admin/driver-reports", (req, res) => {
     LEFT JOIN passengers p ON r.PassengerID = p.PassengerID
     ORDER BY r.CreatedAt DESC
   `;
-  db.query(sql, (err, results) => {
-    if (err) {
-      console.error("DB error fetching driver reports:", err);
-      return res.status(500).json({ success: false, message: "Database error" });
-    }
+
+  try {
+    const [results] = await pool.query(sql);
     res.json({ success: true, reports: results || [] });
-  });
+  } catch (err) {
+    console.error("DB error fetching driver reports:", err);
+    return res.status(500).json({ success: false, message: "Database error" });
+  }
 });
 
 // Admin: ban driver (convenience endpoint; admin panel may already call /api/admin/drivers/:id/status)
-app.put("/api/admin/drivers/:id/ban", (req, res) => {
+app.put("/api/admin/drivers/:id/ban", async (req, res) => {
   const id = req.params.id;
   if (!id) return res.status(400).json({ success: false, message: "Missing driver id" });
 
-  const sql = "UPDATE drivers SET Status = 'banned' WHERE DriverID = ?";
-  db.query(sql, [id], (err, result) => {
-    if (err) {
-      console.error("DB error banning driver:", err);
-      return res.status(500).json({ success: false, message: "Database error" });
-    }
+  try {
+    const sql = "UPDATE drivers SET Status = 'banned' WHERE DriverID = ?";
+    const [result] = await pool.query(sql, [id]);
     if (result.affectedRows === 0) return res.status(404).json({ success: false, message: "Driver not found" });
     return res.json({ success: true, message: "Driver banned" });
-  });
+  } catch (err) {
+    console.error("DB error banning driver:", err);
+    return res.status(500).json({ success: false, message: "Database error" });
+  }
 });
 
 // ensure inquiries upload folder exists
@@ -1184,7 +1146,7 @@ const inquiriesStorage = multer.diskStorage({
 const uploadInquiry = multer({ storage: inquiriesStorage, limits: { fileSize: 5 * 1024 * 1024 } }); // 5MB
 
 // POST new inquiry (public)
-app.post("/api/inquiries", uploadInquiry.single("attachment"), (req, res) => {
+app.post("/api/inquiries", uploadInquiry.single("attachment"), async (req, res) => {
   const { firstName, lastName, phoneNumber, email, message, country, countryCode } = req.body;
   const attachmentPath = req.file ? `/uploads/inquiries/${req.file.filename}` : null;
 
@@ -1192,31 +1154,32 @@ app.post("/api/inquiries", uploadInquiry.single("attachment"), (req, res) => {
     return res.status(400).json({ success: false, message: "Missing required fields" });
   }
 
-  const sql = `INSERT INTO inquiries (FirstName, LastName, Country, CountryCode, PhoneNumber, Email, Message, AttachmentPath)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
-  db.query(sql, [
-    firstName, lastName, country || "Philippines", countryCode || "+63",
-    phoneNumber, email || null, message, attachmentPath
-  ], (err, result) => {
-    if (err) {
-      console.error("DB error inserting inquiry:", err);
-      return res.status(500).json({ success: false, message: "Database error" });
-    }
+  try {
+    const sql = `INSERT INTO inquiries (FirstName, LastName, Country, CountryCode, PhoneNumber, Email, Message, AttachmentPath)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
+    const [result] = await pool.query(sql, [
+      firstName, lastName, country || "Philippines", countryCode || "+63",
+      phoneNumber, email || null, message, attachmentPath
+    ]);
     res.json({ success: true, message: "Inquiry submitted", inquiryId: result.insertId });
-  });
+  } catch (err) {
+    console.error("DB error inserting inquiry:", err);
+    return res.status(500).json({ success: false, message: "Database error" });
+  }
 });
 
 // Admin: fetch inquiries
-app.get("/api/admin/inquiries", (req, res) => {
+app.get("/api/admin/inquiries", async (req, res) => {
   const sql = `SELECT InquiryID, FirstName, LastName, Country, CountryCode, PhoneNumber, Email, Message, AttachmentPath, CreatedAt
                FROM inquiries ORDER BY CreatedAt DESC`;
-  db.query(sql, (err, results) => {
-    if (err) {
-      console.error("DB error fetching inquiries:", err);
-      return res.status(500).json({ success: false, message: "Database error" });
-    }
+
+  try {
+    const [results] = await pool.query(sql);
     res.json({ success: true, inquiries: results || [] });
-  });
+  } catch (err) {
+    console.error("DB error fetching inquiries:", err);
+    return res.status(500).json({ success: false, message: "Database error" });
+  }
 });
 
 // Serve frontend build in production and fallback to index.html for client routes
@@ -1237,10 +1200,15 @@ app.use((req, res) => {
   res.status(404).send("❌ Route not found");
 });
 
-// Start server
-const port = process.env.PORT || 5000;
-app.listen(port, () => {
-  console.log(`API listening on ${port}`);
-});
+// Start server (only for local development, not on Vercel)
+if (process.env.NODE_ENV !== 'production') {
+  const port = process.env.PORT || 3001;
+  app.listen(port, () => {
+    console.log(`🚀 Server running on port ${port}`);
+  });
+}
+
+// Export for Vercel serverless
+export default app;
 
 

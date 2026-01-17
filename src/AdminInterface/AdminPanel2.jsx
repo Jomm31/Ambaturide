@@ -14,7 +14,7 @@ export default function AdminPanel() {
   const fetchUsers = async () => {
     setLoadingUsers(true);
     try {
-      const res = await axios.get("http://localhost:5000/api/users");
+      const res = await axios.get("http://localhost:3001/api/users");
       setUsers(res.data || []);
     } catch (err) {
       console.error(err);
@@ -27,7 +27,7 @@ export default function AdminPanel() {
   const fetchTransactions = async () => {
     setLoadingTransactions(true);
     try {
-      const res = await axios.get("http://localhost:5000/api/transactions");
+      const res = await axios.get("http://localhost:3001/api/transactions");
       setTransactions(res.data || []);
     } catch (err) {
       console.error(err);

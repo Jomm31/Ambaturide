@@ -32,13 +32,13 @@ export default function DriverBooking() {
         const driverData = JSON.parse(localStorage.getItem("driver") || "{}");
         const driverId = driverData?.DriverID;
         const url = driverId
-          ? `http://localhost:5000/api/driver/bookings?driverId=${driverId}`
-          : "http://localhost:5000/api/driver/bookings";
+          ? `http://localhost:3001/api/driver/bookings?driverId=${driverId}`
+          : "http://localhost:3001/api/driver/bookings";
 
         // Fetch current driver profile/status if logged in
         if (driverId) {
           try {
-            const p = await fetch(`http://localhost:5000/api/driver/profile/${driverId}`);
+            const p = await fetch(`http://localhost:3001/api/driver/profile/${driverId}`);
             const pd = await p.json();
             // backend returns { success: true, driver: { ... } } or driver object
             const status = (pd?.driver?.Status) || pd?.Status || driverData?.Status || null;
@@ -118,7 +118,7 @@ export default function DriverBooking() {
       }
 
       // use the backend route that updates booking status (and assign driver)
-      const response = await fetch(`http://localhost:5000/api/bookings/${id}/status`, {
+      const response = await fetch(`http://localhost:3001/api/bookings/${id}/status`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: "accepted", driverId }),
@@ -150,7 +150,7 @@ export default function DriverBooking() {
       const driverData = JSON.parse(localStorage.getItem("driver"));
       const driverId = driverData?.DriverID;
       // tell backend this driver declined the booking
-      const res = await fetch(`http://localhost:5000/api/driver/bookings/${id}/decline`, {
+      const res = await fetch(`http://localhost:3001/api/driver/bookings/${id}/decline`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ driverId }),
@@ -245,9 +245,9 @@ export default function DriverBooking() {
 
               // booking.PassengerImage comes from server as "/uploads/..." — prefix backend URL so images load
               const passengerImage = booking.PassengerImage
-                ? `http://localhost:5000${booking.PassengerImage}`
+                ? `http://localhost:3001${booking.PassengerImage}`
                 : booking.ProfilePicture
-                ? `http://localhost:5000${booking.ProfilePicture}`
+                ? `http://localhost:3001${booking.ProfilePicture}`
                 : "/profile-pictures/default.jpg";
 
                return (

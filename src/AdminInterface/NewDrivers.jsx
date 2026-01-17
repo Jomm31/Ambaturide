@@ -10,7 +10,7 @@ export default function NewDriversPanel({ onChange }) {
   const fetchPending = async () => {
     setLoading(true);
     try {
-      const res = await axios.get("http://localhost:5000/api/admin/drivers?status=pending");
+      const res = await axios.get("http://localhost:3001/api/admin/drivers?status=pending");
       setDrivers(res.data.drivers || []);
     } catch (err) {
       console.error("Failed to load pending drivers", err);
@@ -29,7 +29,7 @@ export default function NewDriversPanel({ onChange }) {
     
     setProcessingId(driverId);
     try {
-      const res = await axios.put(`http://localhost:5000/api/admin/drivers/${driverId}/status`, { status: newStatus });
+      const res = await axios.put(`http://localhost:3001/api/admin/drivers/${driverId}/status`, { status: newStatus });
       if (res.data.success) {
         await fetchPending();
         if (onChange) onChange();
@@ -48,7 +48,7 @@ export default function NewDriversPanel({ onChange }) {
     if (!path) return null;
     const raw = String(path);
     if (/^https?:\/\//i.test(raw) || /^\/\//.test(raw)) return raw;
-    return `http://localhost:5000${raw.startsWith("/") ? raw : `/${raw}`}`;
+    return `http://localhost:3001${raw.startsWith("/") ? raw : `/${raw}`}`;
   };
 
   const openImageModal = (imageUrl, caption) => {

@@ -93,7 +93,7 @@ function DriverSignUp() {
         plateNumber: formData.vehiclePlate
       });
 
-      const res = await fetch("http://localhost:5000/api/driver/signup", {
+      const res = await fetch("http://localhost:3001/api/driver/signup", {
         method: "POST",
         body: data
       });

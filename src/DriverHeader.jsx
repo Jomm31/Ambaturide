@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import "./DriverHeader.css";
-import darkLogo from "../public/ambaturide-darklogo.png";
-import defaultProfile from "../public/profile-pictures/default.jpg";
+import darkLogo from "/ambaturide-darklogo.png";
+import defaultProfile from "/profile-pictures/default.jpg";
 
 function DriverHeader() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -65,7 +65,7 @@ function DriverHeader() {
     }
     
     // If it's a path, construct the full URL with cache busting
-    return `http://localhost:5000${profilePicture}?t=${Date.now()}`;
+    return `http://localhost:3001${profilePicture}?t=${Date.now()}`;
   };
 
   return (

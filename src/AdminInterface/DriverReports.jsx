@@ -10,13 +10,13 @@ export default function DriverReports() {
   const buildImageUrl = (path) => {
     if (!path) return null;
     if (/^https?:\/\//i.test(path) || /^\/\//.test(path)) return path;
-    return `http://localhost:5000${path.startsWith("/") ? path : `/${path}`}`;
+    return `http://localhost:3001${path.startsWith("/") ? path : `/${path}`}`;
   };
 
   const fetchReports = async () => {
     setLoading(true);
     try {
-      const res = await axios.get("http://localhost:5000/api/admin/driver-reports");
+      const res = await axios.get("http://localhost:3001/api/admin/driver-reports");
       setReports(res.data.reports || []);
     } catch (err) {
       console.error("Failed to load driver reports", err);
@@ -34,7 +34,7 @@ export default function DriverReports() {
     setProcessingId(driverId);
     try {
       // use convenience ban route
-      const res = await axios.put(`http://localhost:5000/api/admin/drivers/${driverId}/ban`);
+      const res = await axios.put(`http://localhost:3001/api/admin/drivers/${driverId}/ban`);
       if (res.data.success) {
         alert("Driver banned.");
         await fetchReports();

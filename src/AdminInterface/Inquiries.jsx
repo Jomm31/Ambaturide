@@ -8,7 +8,7 @@ export default function Inquiries() {
   useEffect(() => {
     (async () => {
       try {
-        const res = await axios.get("http://localhost:5000/api/admin/inquiries");
+        const res = await axios.get("http://localhost:3001/api/admin/inquiries");
         setItems(res.data.inquiries || []);
       } catch (err) {
         console.warn("Failed to fetch inquiries", err);
@@ -19,7 +19,7 @@ export default function Inquiries() {
     })();
   }, []);
 
-  const buildUrl = (p) => (p ? (p.startsWith("http") ? p : `http://localhost:5000${p}`) : null);
+  const buildUrl = (p) => (p ? (p.startsWith("http") ? p : `http://localhost:3001${p}`) : null);
 
   if (loading) return <div className="panel loading-state">Loading inquiries…</div>;
   if (items.length === 0) return <div className="panel empty-state">No inquiries found.</div>;

@@ -30,7 +30,7 @@ export default function BookingListPanel() {
   const fetchBookings = async () => {
     setLoading(true);
     try {
-      const res = await axios.get("http://localhost:5000/api/admin/bookings");
+      const res = await axios.get("http://localhost:3001/api/admin/bookings");
       setBookings(res.data.bookings || []);
     } catch (err) {
       console.error("Failed to load bookings", err);

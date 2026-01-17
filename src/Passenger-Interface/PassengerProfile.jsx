@@ -66,7 +66,7 @@ function PassengerProfile() {
   // Function to fetch full profile from backend (optional, for complete data)
   const fetchProfileFromDB = async (passengerId) => {
     try {
-      const response = await axios.get(`http://localhost:5000/api/passenger/profile/${passengerId}`, {
+      const response = await axios.get(`http://localhost:3001/api/passenger/profile/${passengerId}`, {
         withCredentials: true // For session-based auth
       });
       const fullData = response.data;
@@ -146,7 +146,7 @@ function PassengerProfile() {
 
       // Send update request to backend
       const response = await axios.put(
-        `http://localhost:5000/api/passenger/update/${passengerId}`,
+        `http://localhost:3001/api/passenger/update/${passengerId}`,
         {
           firstName: tempData.firstName,
           lastName: tempData.lastName,
@@ -197,7 +197,7 @@ function PassengerProfile() {
       }
 
       const response = await axios.put(
-        `http://localhost:5000/api/passenger/update-contact/${passengerId}`,
+        `http://localhost:3001/api/passenger/update-contact/${passengerId}`,
         {
           contactNo: formData.contactNo,
           email: formData.email,
@@ -245,7 +245,7 @@ function PassengerProfile() {
       }
 
       const response = await axios.put(
-        `http://localhost:5000/api/passenger/change-password/${passengerId}`,
+        `http://localhost:3001/api/passenger/change-password/${passengerId}`,
         {
           oldPassword: formData.currentPassword,
           newPassword: formData.newPassword,
@@ -302,7 +302,7 @@ function PassengerProfile() {
       uploadFormData.append("profile", file);
 
       const response = await axios.post(
-        `http://localhost:5000/api/passenger/profile-picture/${passengerId}`,
+        `http://localhost:3001/api/passenger/profile-picture/${passengerId}`,
         uploadFormData,
         {
           headers: { "Content-Type": "multipart/form-data" },
@@ -500,7 +500,7 @@ function PassengerProfile() {
                   <div className="profile-picture">
                     {formData.profilePicture ? (
                       <img
-                        src={`http://localhost:5000${formData.profilePicture}?t=${Date.now()}`}
+                        src={`http://localhost:3001${formData.profilePicture}?t=${Date.now()}`}
                         alt="Profile"
                         className="profile-img"
                         onError={(e) => {

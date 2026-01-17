@@ -33,7 +33,7 @@ function PassengerLogin() {
   
   try {
   // After successful login in your passenger login component
-  const response = await fetch('http://localhost:5000/api/passenger/login', {
+  const response = await fetch('http://localhost:3001/api/passenger/login', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, password }),

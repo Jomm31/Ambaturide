@@ -13,14 +13,14 @@ export default function DriverListPanel() {
   const fetchActiveDrivers = async () => {
     setLoading(true);
     try {
-      const res = await axios.get("http://localhost:5000/api/admin/drivers?status=active");
+      const res = await axios.get("http://localhost:3001/api/admin/drivers?status=active");
       const list = res.data.drivers || [];
 
       // Fetch average rating per driver (parallel)
       const driversWithRating = await Promise.all(
         list.map(async (drv) => {
           try {
-            const r = await axios.get(`http://localhost:5000/api/driver/${drv.DriverID}/ratings`);
+            const r = await axios.get(`http://localhost:3001/api/driver/${drv.DriverID}/ratings`);
             const ratings = r.data.ratings || [];
             const avg = ratings.length ? (ratings.reduce((s, it) => s + Number(it.Rating), 0) / ratings.length) : 0;
             return { ...drv, avgRating: Number(avg.toFixed(2)), ratingCount: ratings.length };
@@ -46,7 +46,7 @@ export default function DriverListPanel() {
     setModalOpen(true);
     setReportsLoading(true);
     try {
-      const res = await axios.get("http://localhost:5000/api/admin/driver-reports");
+      const res = await axios.get("http://localhost:3001/api/admin/driver-reports");
       const all = res.data.reports || [];
       const filtered = all.filter(r => Number(r.DriverID) === Number(driver.DriverID));
       setSelectedReports(filtered);
@@ -62,7 +62,7 @@ export default function DriverListPanel() {
     if (!driverId) return;
     if (!confirm("Ban this driver? This will set their status to 'banned'.")) return;
     try {
-      const res = await axios.put(`http://localhost:5000/api/admin/drivers/${driverId}/ban`);
+      const res = await axios.put(`http://localhost:3001/api/admin/drivers/${driverId}/ban`);
       if (res.data.success) {
         alert("Driver banned.");
         fetchActiveDrivers();

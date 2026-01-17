@@ -152,7 +152,7 @@ const distanceMatrix = {
     // Prevent multiple active bookings: check existing booking first
     try {
       const checkRes = await fetch(
-        `http://localhost:5000/api/passenger/${savedPassenger.PassengerID}/booking`
+        `http://localhost:3001/api/passenger/${savedPassenger.PassengerID}/booking`
       );
       const checkData = await checkRes.json();
       const existing = checkData.booking;
@@ -183,7 +183,7 @@ const distanceMatrix = {
     };
 
     try {
-      const response = await fetch("http://localhost:5000/api/passenger/book", {
+      const response = await fetch("http://localhost:3001/api/passenger/book", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(bookingData)

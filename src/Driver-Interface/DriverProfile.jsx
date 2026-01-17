@@ -38,7 +38,7 @@ function DriverProfile() {
     if (/^https?:\/\//i.test(raw) || /^\/\//.test(raw)) return raw;
     // ensure leading slash
     const clean = raw.startsWith("/") ? raw : `/${raw}`;
-    return `http://localhost:5000${clean}`;
+    return `http://localhost:3001${clean}`;
   };
 
   const withTimestamp = (url) =>
@@ -54,7 +54,7 @@ function DriverProfile() {
           const driverId = driverData.DriverID;
           
           // Fetch full driver profile from backend
-          const response = await axios.get(`http://localhost:5000/api/driver/profile/${driverId}`, {
+          const response = await axios.get(`http://localhost:3001/api/driver/profile/${driverId}`, {
             withCredentials: true
           });
           
@@ -187,7 +187,7 @@ function DriverProfile() {
       setEditingField(null);
 
       const response = await axios.put(
-        `http://localhost:5000${endpoint}`,
+        `http://localhost:3001${endpoint}`,
         payload,
         { withCredentials: true }
       );
@@ -257,7 +257,7 @@ function DriverProfile() {
       }
 
       const response = await axios.put(
-        `http://localhost:5000/api/driver/update-contact/${driverId}`,
+        `http://localhost:3001/api/driver/update-contact/${driverId}`,
         {
           contactNo: formData.contactNo,
           email: formData.email,
@@ -306,7 +306,7 @@ function DriverProfile() {
       }
 
       const response = await axios.put(
-        `http://localhost:5000/api/driver/change-password/${driverId}`,
+        `http://localhost:3001/api/driver/change-password/${driverId}`,
         {
           oldPassword: formData.currentPassword,
           newPassword: formData.newPassword,
@@ -344,7 +344,7 @@ function DriverProfile() {
       }
 
       const response = await axios.put(
-        `http://localhost:5000/api/driver/update-vehicle/${driverId}`,
+        `http://localhost:3001/api/driver/update-vehicle/${driverId}`,
         {
           vehicleBrand: formData.carBrand,
           vehicleType: formData.carModel,
@@ -405,7 +405,7 @@ function DriverProfile() {
       uploadFormData.append("profile", file);
 
       const response = await axios.post(
-        `http://localhost:5000/api/driver/profile-picture/${driverId}`,
+        `http://localhost:3001/api/driver/profile-picture/${driverId}`,
         uploadFormData,
         {
           headers: { "Content-Type": "multipart/form-data" },
@@ -475,7 +475,7 @@ function DriverProfile() {
       uploadFormData.append("license", file);
 
       const response = await axios.post(
-        `http://localhost:5000/api/driver/license-image/${driverId}`,
+        `http://localhost:3001/api/driver/license-image/${driverId}`,
         uploadFormData,
         {
           headers: { "Content-Type": "multipart/form-data" },
@@ -542,7 +542,7 @@ function DriverProfile() {
       uploadFormData.append("vehicle", file);
 
       const response = await axios.post(
-        `http://localhost:5000/api/driver/vehicle-image/${driverId}`,
+        `http://localhost:3001/api/driver/vehicle-image/${driverId}`,
         uploadFormData,
         {
           headers: { "Content-Type": "multipart/form-data" },
@@ -727,7 +727,7 @@ function DriverProfile() {
                   <div className="profile-picture">
                     {formData.profilePicture ? (
                       <img
-                        src={`http://localhost:5000${formData.profilePicture}?t=${Date.now()}`}
+                        src={`http://localhost:3001${formData.profilePicture}?t=${Date.now()}`}
                         alt="Profile"
                         className="profile-img"
                         onError={(e) => {
@@ -977,7 +977,7 @@ function DriverProfile() {
                         {formData.licenseImage ? (
                           <div className="image-with-actions">
                             <img
-                              src={`http://localhost:5000${formData.licenseImage}?t=${Date.now()}`}
+                              src={`http://localhost:3001${formData.licenseImage}?t=${Date.now()}`}
                               alt="Driver's License"
                               className="uploaded-image"
                               onError={(e) => {

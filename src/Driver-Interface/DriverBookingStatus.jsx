@@ -18,7 +18,7 @@ function DriverBookingStatus() {
     const raw = String(path);
     if (/^https?:\/\//i.test(raw) || /^\/\//.test(raw)) return raw;
     const clean = raw.startsWith("/") ? raw : `/${raw}`;
-    return `http://localhost:5000${clean}`;
+    return `http://localhost:3001${clean}`;
   };
 
   const withTimestamp = (url) =>
@@ -44,7 +44,7 @@ function DriverBookingStatus() {
         return;
       }
       try {
-        const res = await axios.get(`http://localhost:5000/api/driver/assigned-bookings/${driverId}`, { withCredentials: true });
+        const res = await axios.get(`http://localhost:3001/api/driver/assigned-bookings/${driverId}`, { withCredentials: true });
         setBookings(res.data.bookings || []);
       } catch (err) {
         console.error(err);
@@ -61,7 +61,7 @@ function DriverBookingStatus() {
     if (!bookingId) return;
     setSavingStatusId(bookingId);
     try {
-      const res = await axios.put(`http://localhost:5000/api/bookings/${bookingId}/status`, {
+      const res = await axios.put(`http://localhost:3001/api/bookings/${bookingId}/status`, {
         status: newStatus,
       }, { withCredentials: true });
 
