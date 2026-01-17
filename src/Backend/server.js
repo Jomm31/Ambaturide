@@ -1,34 +1,23 @@
-// backend/server.js
+// backend/server.js - Serverless Compatible
 import express from "express";
 import pool from "./db.js";
-import session from "express-session";
 import cors from "cors";
 import bodyParser from "body-parser";
 import bcrypt from 'bcryptjs';
-import multer from "multer";
-import path from "path";
-import { fileURLToPath } from "url";
-import fs from "fs";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
+import { generateToken, verifyToken } from "./auth.js";
+import {
+  uploadProfilePicture,
+  uploadDriverSignup,
+  uploadVehicleImage,
+  uploadInquiry,
+  uploadDriverLicense
+} from "./cloudinary.js";
 
-dotenv.config({ path: ".env" });
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-const ensureDir = (dir) => {
-  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-};
-
-
-ensureDir(path.join(__dirname, "uploads/driver-license"));
-ensureDir(path.join(__dirname, "uploads/vehicle-images"));
-ensureDir(path.join(__dirname, "uploads/profile-pictures"));
-// ensure inquiries upload folder exists
-ensureDir(path.join(__dirname, "uploads/inquiries"));
+dotenv.config();
 
 const app = express();
 app.set("trust proxy", 1);
@@ -43,7 +32,7 @@ app.use(
               baseUri: ["'self'"],
               frameAncestors: ["'none'"],
               objectSrc: ["'none'"],
-              imgSrc: ["'self'", "data:"],
+              imgSrc: ["'self'", "data:", "https://res.cloudinary.com"],
               styleSrc: ["'self'", "'unsafe-inline'"],
               scriptSrc: ["'self'"],
               connectSrc: ["'self'", process.env.CLIENT_ORIGIN || "http://localhost:5173"],
@@ -83,9 +72,9 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+// Note: Static file serving removed - images served from Cloudinary
 
-const allowedOrigins = ["http://localhost:5173", "http://localhost:5174"];
+const allowedOrigins = ["http://localhost:5173", "http://localhost:5174", process.env.CLIENT_ORIGIN].filter(Boolean);
 
 app.use(
   cors({
@@ -104,29 +93,39 @@ app.use(
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// Session middleware
-app.use(session({
-  secret: process.env.SESSION_SECRET || "ambaturide_secret",
-  resave: false,
-  saveUninitialized: false,
-  cookie: { 
-    secure: process.env.NODE_ENV === "production",
-    httpOnly: true,
-    maxAge: 24 * 60 * 60 * 1000 // 24 hours
-  }
-}));
+// JWT-based authentication (replaces session)
+// Token is sent in Authorization header or stored in httpOnly cookie
 
 // Login route (for example)
 app.post("/api/login", async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    const sql = "SELECT * FROM passengers WHERE Email = ? AND Password = ?";
-    const [result] = await pool.query(sql, [email, password]);
+    const sql = "SELECT * FROM passengers WHERE Email = ?";
+    const [result] = await pool.query(sql, [email]);
 
     if (result.length > 0) {
-      req.session.user = result[0];
-      res.json({ success: true, user: result[0] });
+      const passenger = result[0];
+      const isMatch = await bcrypt.compare(password, passenger.Password);
+      
+      if (isMatch) {
+        const token = generateToken({ 
+          id: passenger.PassengerID, 
+          email: passenger.Email, 
+          role: 'passenger' 
+        });
+        
+        res.cookie('token', token, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
+          maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+        });
+        
+        res.json({ success: true, token, user: result[0] });
+      } else {
+        res.status(401).json({ success: false, message: "Invalid credentials" });
+      }
     } else {
       res.status(401).json({ success: false, message: "Invalid credentials" });
     }
@@ -136,10 +135,24 @@ app.post("/api/login", async (req, res) => {
   }
 });
 
-// Check login status
+// Check login status (JWT version)
 app.get("/api/check-auth", (req, res) => {
-  if (req.session.user) {
-    res.json({ loggedIn: true, user: req.session.user });
+  let token = null;
+  
+  const authHeader = req.headers.authorization;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    token = authHeader.substring(7);
+  } else if (req.cookies && req.cookies.token) {
+    token = req.cookies.token;
+  }
+
+  if (!token) {
+    return res.json({ loggedIn: false });
+  }
+
+  const decoded = verifyToken(token);
+  if (decoded) {
+    res.json({ loggedIn: true, user: decoded });
   } else {
     res.json({ loggedIn: false });
   }
@@ -147,7 +160,7 @@ app.get("/api/check-auth", (req, res) => {
 
 // Logout route
 app.post("/api/logout", (req, res) => {
-  req.session.destroy();
+  res.clearCookie('token');
   res.json({ success: true });
 });
 
@@ -185,8 +198,7 @@ app.get("/api/passenger/signup", (req, res) => {
 
 
 
-// Passenger Login Route
-// Passenger Login Route - FIXED VERSION
+// Passenger Login Route - JWT VERSION
 app.post('/api/passenger/login', async (req, res) => {
   const { email, password } = req.body;
 
@@ -209,16 +221,26 @@ app.post('/api/passenger/login', async (req, res) => {
       return res.status(401).json({ message: 'Invalid password' });
     }
 
-    // Save session (optional)
-    req.session.user = {
+    // Generate JWT token
+    const token = generateToken({
       id: passenger.PassengerID,
       email: passenger.Email,
       firstName: passenger.FirstName,
       lastName: passenger.LastName,
-    };
+      role: 'passenger'
+    });
+
+    // Set httpOnly cookie
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+    });
 
     res.json({
       message: 'Login successful',
+      token,
       passenger: {
         PassengerID: passenger.PassengerID,
         FirstName: passenger.FirstName,
@@ -245,23 +267,8 @@ app.get("/", (req, res) => {
 
 
 
-// ✅ Driver Signup Route
-const driverStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    let folder = "uploads/driver-license";
-    if (file.fieldname === "vehicleImage") {
-      folder = "uploads/vehicle-images";
-    }
-    cb(null, path.join(__dirname, folder));
-  },
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + path.extname(file.originalname));
-  }
-});
-
-const driverUpload = multer({ storage: driverStorage });
-
-app.post("/api/driver/signup", driverUpload.fields([
+// ✅ Driver Signup Route - Cloudinary Version
+app.post("/api/driver/signup", uploadDriverSignup.fields([
   { name: "licenseImage", maxCount: 1 },
   { name: "vehicleImage", maxCount: 1 }
 ]), async (req, res) => {
@@ -287,13 +294,9 @@ app.post("/api/driver/signup", driverUpload.fields([
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const licenseImagePath = req.files?.licenseImage
-      ? `/uploads/driver-license/${req.files.licenseImage[0].filename}`
-      : null;
-
-    const vehicleImagePath = req.files?.vehicleImage
-      ? `/uploads/vehicle-images/${req.files.vehicleImage[0].filename}`
-      : null;
+    // Get Cloudinary URLs
+    const licenseImagePath = req.files?.licenseImage?.[0]?.path || null;
+    const vehicleImagePath = req.files?.vehicleImage?.[0]?.path || null;
 
     const sql = `
       INSERT INTO drivers 
@@ -358,9 +361,27 @@ app.post("/api/driver/login", async (req, res) => {
     if (!isMatch)
       return res.status(401).json({ message: "Invalid credentials" });
 
+    // Generate JWT token
+    const token = generateToken({
+      id: driver.DriverID,
+      email: driver.Email,
+      firstName: driver.FirstName,
+      lastName: driver.LastName,
+      role: 'driver'
+    });
+
+    // Set httpOnly cookie
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+    });
+
     // Return driver data in consistent format
     res.json({ 
-      message: "Login successful", 
+      message: "Login successful",
+      token,
       driver: {
         DriverID: driver.DriverID,
         FirstName: driver.FirstName,
@@ -407,24 +428,16 @@ app.get("/api/passenger/profile/:id", async (req, res) => {
   }
 });
 
-// ✅ Passenger Profile Picture Upload & Update
-const profileStorage = multer.diskStorage({
-  destination: path.join(__dirname, "uploads/profile-pictures"),
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + path.extname(file.originalname));
-  }
-});
-
-const profileUpload = multer({ storage: profileStorage });
-
-app.post("/api/passenger/profile-picture/:id", profileUpload.single("profile"), async (req, res) => {
+// ✅ Passenger Profile Picture Upload & Update - Cloudinary Version
+app.post("/api/passenger/profile-picture/:id", uploadProfilePicture.single("profile"), async (req, res) => {
   const passengerId = req.params.id;
 
   if (!req.file) {
     return res.status(400).json({ message: "No file uploaded" });
   }
 
-  const imagePath = `/uploads/profile-pictures/${req.file.filename}`;
+  // Cloudinary returns the URL in req.file.path
+  const imagePath = req.file.path;
 
   try {
     const sql = "UPDATE passengers SET ProfilePicture = ? WHERE PassengerID = ?";
@@ -559,15 +572,15 @@ app.get("/api/driver/profile/:id", async (req, res) => {
 });
 
 
-// ✅ Driver Profile Picture Upload & Update
-app.post("/api/driver/profile-picture/:id", profileUpload.single("profile"), async (req, res) => {
+// ✅ Driver Profile Picture Upload & Update - Cloudinary Version
+app.post("/api/driver/profile-picture/:id", uploadProfilePicture.single("profile"), async (req, res) => {
   const driverId = req.params.id;
 
   if (!req.file) {
     return res.status(400).json({ message: "No file uploaded" });
   }
 
-  const imagePath = `/uploads/profile-pictures/${req.file.filename}`;
+  const imagePath = req.file.path;
 
   try {
     const sql = "UPDATE drivers SET ProfilePicture = ? WHERE DriverID = ?";
@@ -680,15 +693,15 @@ app.put("/api/driver/change-password/:id", async (req, res) => {
   }
 });
 
-// ✅ Driver License Image Upload & Update
-app.post("/api/driver/license-image/:id", driverUpload.single("license"), async (req, res) => {
+// ✅ Driver License Image Upload & Update - Cloudinary Version
+app.post("/api/driver/license-image/:id", uploadDriverLicense.single("license"), async (req, res) => {
   const driverId = req.params.id;
 
   if (!req.file) {
     return res.status(400).json({ message: "No file uploaded" });
   }
 
-  const imagePath = `/uploads/driver-license/${req.file.filename}`;
+  const imagePath = req.file.path;
 
   try {
     const sql = "UPDATE drivers SET LicenseImage = ? WHERE DriverID = ?";
@@ -700,29 +713,15 @@ app.post("/api/driver/license-image/:id", driverUpload.single("license"), async 
   }
 });
 
-// ✅ Driver Vehicle Image Upload & Update
-// Multer storage for vehicle images
-const vehicleStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, path.join(__dirname, "uploads", "vehicle-images"));
-  },
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname);
-    const name = Date.now() + "-" + file.originalname.replace(/\s+/g, "-");
-    cb(null, name);
-  },
-});
-const uploadVehicle = multer({ storage: vehicleStorage });
-
-// Route: upload vehicle image & save to DB
-app.post("/api/driver/vehicle-image/:id", uploadVehicle.single("vehicle"), async (req, res) => {
+// ✅ Driver Vehicle Image Upload & Update - Cloudinary Version
+app.post("/api/driver/vehicle-image/:id", uploadVehicleImage.single("vehicle"), async (req, res) => {
   try {
     const driverId = req.params.id;
     if (!req.file) {
       return res.status(400).json({ success: false, message: "No file uploaded" });
     }
 
-    const imagePath = `/uploads/vehicle-images/${req.file.filename}`;
+    const imagePath = req.file.path;
 
     // Update drivers.VehiclePicture so subsequent profile fetches include the image
     const sql = "UPDATE drivers SET VehiclePicture = ? WHERE DriverID = ?";
@@ -1132,23 +1131,10 @@ app.put("/api/admin/drivers/:id/ban", async (req, res) => {
   }
 });
 
-// ensure inquiries upload folder exists
-ensureDir(path.join(__dirname, "uploads/inquiries"));
-
-// multer for inquiries attachments
-const inquiriesStorage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, path.join(__dirname, "uploads/inquiries")),
-  filename: (req, file, cb) => {
-    const name = Date.now() + "-" + file.originalname.replace(/\s+/g, "-");
-    cb(null, name);
-  }
-});
-const uploadInquiry = multer({ storage: inquiriesStorage, limits: { fileSize: 5 * 1024 * 1024 } }); // 5MB
-
-// POST new inquiry (public)
+// POST new inquiry (public) - Cloudinary Version
 app.post("/api/inquiries", uploadInquiry.single("attachment"), async (req, res) => {
   const { firstName, lastName, phoneNumber, email, message, country, countryCode } = req.body;
-  const attachmentPath = req.file ? `/uploads/inquiries/${req.file.filename}` : null;
+  const attachmentPath = req.file ? req.file.path : null;
 
   if (!firstName || !lastName || !phoneNumber || !message) {
     return res.status(400).json({ success: false, message: "Missing required fields" });
@@ -1182,20 +1168,8 @@ app.get("/api/admin/inquiries", async (req, res) => {
   }
 });
 
-// Serve frontend build in production and fallback to index.html for client routes
-if (process.env.NODE_ENV === "production") {
-  const clientDist = path.join(__dirname, "..", "dist"); // adjust if your build output is different
-  if (fs.existsSync(clientDist)) {
-    app.use(express.static(clientDist));
-    app.get("*", (req, res) => {
-      res.sendFile(path.join(clientDist, "index.html"));
-    });
-  } else {
-    console.warn("Client dist folder not found:", clientDist);
-  }
-}
-
 // Handle all other undefined routes safely
+// Note: On Vercel, static files are served by the edge network, not Express
 app.use((req, res) => {
   res.status(404).send("❌ Route not found");
 });

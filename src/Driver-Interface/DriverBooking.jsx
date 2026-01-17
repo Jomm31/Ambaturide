@@ -243,11 +243,10 @@ export default function DriverBooking() {
               const pickupArea = booking.PickupArea || "Unknown area";
               const dropoffArea = booking.DropoffArea || "Unknown area";
 
-              // booking.PassengerImage comes from server as "/uploads/..." — prefix backend URL so images load
-              const passengerImage = booking.PassengerImage
-                ? `http://localhost:3001${booking.PassengerImage}`
-                : booking.ProfilePicture
-                ? `http://localhost:3001${booking.ProfilePicture}`
+              // booking.PassengerImage comes from server - handle both Cloudinary URLs and local paths
+              const rawImage = booking.PassengerImage || booking.ProfilePicture;
+              const passengerImage = rawImage
+                ? (rawImage.startsWith('http') ? rawImage : `http://localhost:3001${rawImage}`)
                 : "/profile-pictures/default.jpg";
 
                return (

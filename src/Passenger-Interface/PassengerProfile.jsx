@@ -500,7 +500,9 @@ function PassengerProfile() {
                   <div className="profile-picture">
                     {formData.profilePicture ? (
                       <img
-                        src={`http://localhost:3001${formData.profilePicture}?t=${Date.now()}`}
+                        src={formData.profilePicture.startsWith('http') 
+                          ? formData.profilePicture 
+                          : `http://localhost:3001${formData.profilePicture}?t=${Date.now()}`}
                         alt="Profile"
                         className="profile-img"
                         onError={(e) => {

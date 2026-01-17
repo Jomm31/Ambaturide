@@ -8,6 +8,10 @@
    - **AWS RDS**: Production-grade, pay-as-you-go
    - **Azure Database for MySQL**: Enterprise option
 
+2. **Cloudinary Account** (for image uploads):
+   - Sign up free at [cloudinary.com](https://cloudinary.com)
+   - Get your Cloud Name, API Key, and API Secret from the dashboard
+
 ## Deployment Steps
 
 ### 1. Prepare Your Environment Variables
@@ -15,6 +19,7 @@
 Create a `.env` file locally (already in `.gitignore`):
 
 ```env
+# Database
 DB_HOST=your-database-host.com
 DB_USER=your-username
 DB_PASSWORD=your-password
@@ -22,9 +27,20 @@ DB_NAME=ambaturide_db
 DB_PORT=3306
 DB_SSL=true
 DB_SSL_REJECT_UNAUTHORIZED=true
+
+# Application
 NODE_ENV=production
-SESSION_SECRET=generate-a-secure-random-string-here
+PORT=3001
 CLIENT_ORIGIN=https://your-frontend-domain.vercel.app
+
+# JWT Authentication
+JWT_SECRET=generate-a-secure-random-string-here-at-least-32-chars
+JWT_EXPIRES_IN=7d
+
+# Cloudinary (required for image uploads)
+CLOUDINARY_CLOUD_NAME=your-cloud-name
+CLOUDINARY_API_KEY=your-api-key
+CLOUDINARY_API_SECRET=your-api-secret
 ```
 
 ### 2. Deploy to Vercel
@@ -49,16 +65,28 @@ In Vercel Dashboard:
 1. Go to your project settings
 2. Navigate to "Environment Variables"
 3. Add each variable from your `.env` file:
-   - `DB_HOST`
-   - `DB_USER`
-   - `DB_PASSWORD`
-   - `DB_NAME`
-   - `DB_PORT`
-   - `DB_SSL`
-   - `DB_SSL_REJECT_UNAUTHORIZED`
-   - `SESSION_SECRET`
-   - `CLIENT_ORIGIN`
-   - `NODE_ENV` (set to "production")
+
+**Database:**
+- `DB_HOST`
+- `DB_USER`
+- `DB_PASSWORD`
+- `DB_NAME`
+- `DB_PORT`
+- `DB_SSL`
+- `DB_SSL_REJECT_UNAUTHORIZED`
+
+**Authentication:**
+- `JWT_SECRET` (generate with: `openssl rand -base64 32`)
+- `JWT_EXPIRES_IN` (e.g., "7d" for 7 days)
+
+**Cloudinary:**
+- `CLOUDINARY_CLOUD_NAME`
+- `CLOUDINARY_API_KEY`
+- `CLOUDINARY_API_SECRET`
+
+**Other:**
+- `CLIENT_ORIGIN` (your frontend URL)
+- `NODE_ENV` (set to "production")
 
 ### 4. Database Provider Examples
 
@@ -84,68 +112,47 @@ DB_SSL=false
 DB_SSL_REJECT_UNAUTHORIZED=false
 ```
 
-## Important Notes for Vercel Serverless
+## Architecture Overview
 
-### File Uploads
-⚠️ **Vercel serverless functions have read-only file systems**. You cannot store uploads in `/uploads` folder.
+### Serverless-Compatible Design
 
-**Solutions:**
-1. **Use cloud storage** (recommended):
-   - AWS S3
-   - Cloudinary
-   - Vercel Blob Storage
-   - Azure Blob Storage
+This backend has been refactored for Vercel serverless deployment:
 
-2. **Modify multer configuration** to use cloud storage:
+1. **Stateless Authentication (JWT)**
+   - No server-side sessions
+   - Tokens stored in HTTP-only cookies
+   - 7-day expiration by default
+
+2. **Cloud Image Storage (Cloudinary)**
+   - Profile pictures, driver licenses, vehicle images
+   - Automatic image optimization
+   - No local filesystem dependency
+
+3. **Connection Pooling**
+   - mysql2 pool with automatic reconnection
+   - SSL support for cloud databases
+
+## Frontend Integration
+
+### Updating API URL
+
+Before deploying, update your frontend API configuration to use the Vercel deployment URL:
+
 ```javascript
-import { v2 as cloudinary } from 'cloudinary';
-import { CloudinaryStorage } from 'multer-storage-cloudinary';
-
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET
-});
-
-const storage = new CloudinaryStorage({
-  cloudinary: cloudinary,
-  params: {
-    folder: 'ambaturide',
-    allowed_formats: ['jpg', 'png', 'jpeg'],
-  },
-});
-
-const upload = multer({ storage });
+// In src/api/api.js
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 ```
 
-### Session Management
-⚠️ **In-memory sessions won't work** across serverless function invocations.
+Then add `VITE_API_URL` to your Vercel environment variables.
 
-**Solutions:**
-1. **Use JWT tokens** instead of sessions
-2. **Use connect-redis** with Redis database
-3. **Use database-backed sessions**:
+### JWT Token Handling
+
+The backend uses JWT tokens stored in HTTP-only cookies. The frontend doesn't need to manage tokens manually.
+
+**Important:** Ensure `credentials: 'include'` is set in your axios/fetch calls:
+
 ```javascript
-import session from 'express-session';
-import MySQLStoreFactory from 'express-mysql-session';
-
-const MySQLStore = MySQLStoreFactory(session);
-
-const sessionStore = new MySQLStore({
-  /* MySQL connection options */
-}, pool);
-
-app.use(session({
-  secret: process.env.SESSION_SECRET,
-  store: sessionStore,
-  resave: false,
-  saveUninitialized: false,
-  cookie: {
-    secure: true,
-    httpOnly: true,
-    maxAge: 24 * 60 * 60 * 1000
-  }
-}));
+axios.defaults.withCredentials = true;
 ```
 
 ## Testing Locally
@@ -155,7 +162,7 @@ app.use(session({
 npm install
 ```
 
-2. Create `.env` file with your local database credentials
+2. Create `.env` file with your local database and Cloudinary credentials
 
 3. Run the development server:
 ```bash
@@ -170,9 +177,9 @@ node src/Backend/server.js
 - [x] Move credentials to environment variables
 - [x] Add SSL configuration
 - [x] Export app for Vercel
-- [ ] Migrate remaining db.query calls (see MIGRATION_GUIDE.md)
-- [ ] Replace file uploads with cloud storage
-- [ ] Replace in-memory sessions with persistent storage
+- [x] Migrate all db.query calls to pool.query
+- [x] Replace file uploads with Cloudinary
+- [x] Replace sessions with JWT authentication
 - [ ] Update frontend API URL to Vercel deployment URL
 
 ## Helpful Commands
@@ -190,34 +197,37 @@ vercel --prod
 # View logs
 vercel logs
 
-# Check environment variables
-vercel env ls
+# Generate JWT secret
+openssl rand -base64 32
 ```
 
 ## Troubleshooting
 
-**Connection timeout errors:**
-- Check if your database allows connections from any IP (or Vercel's IP range)
-- Verify SSL settings match your provider's requirements
+**CORS Error after deployment:**
+- Ensure `CLIENT_ORIGIN` matches your frontend URL exactly
+- Check for trailing slashes
 
-**"db.query is not a function":**
-- You missed updating some queries from `db` to `pool`
-- Search for all `db.query` in your code
+**Database connection failed:**
+- Verify DB credentials are correct
+- Check if your IP needs to be whitelisted
+- For PlanetScale/Railway, ensure `DB_SSL=true`
 
-**502 errors:**
-- Check Vercel logs: `vercel logs`
-- Verify all environment variables are set
-- Check database connection settings
+**Image upload failed:**
+- Verify Cloudinary credentials
+- Check the Cloudinary dashboard for upload limits
+
+**401 Unauthorized on protected routes:**
+- Ensure cookies are being sent (`credentials: 'include'`)
+- Check if the JWT has expired
+- Verify JWT_SECRET matches between environments
 
 ## Security Best Practices
 
 1. ✅ Never commit `.env` to git
-2. ✅ Use strong, random `SESSION_SECRET`
+2. ✅ Use strong, random `JWT_SECRET` (32+ characters)
 3. ✅ Enable SSL for database connections in production
 4. ✅ Use `helmet` for security headers (already configured)
 5. ✅ Implement rate limiting (already configured)
-6. ✅ Use prepared statements (parameterized queries) - already using `?` placeholders
+6. ✅ Use prepared statements (parameterized queries)
 7. ✅ Hash passwords with bcrypt (already implemented)
-8. ⚠️ Implement JWT-based authentication for serverless
-9. ⚠️ Validate and sanitize all user inputs
-10. ⚠️ Set up CORS properly with your frontend domain
+8. ✅ JWT-based authentication for serverless (implemented)

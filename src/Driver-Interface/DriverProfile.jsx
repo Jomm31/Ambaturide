@@ -727,7 +727,9 @@ function DriverProfile() {
                   <div className="profile-picture">
                     {formData.profilePicture ? (
                       <img
-                        src={`http://localhost:3001${formData.profilePicture}?t=${Date.now()}`}
+                        src={formData.profilePicture.startsWith('http') 
+                          ? formData.profilePicture 
+                          : `http://localhost:3001${formData.profilePicture}?t=${Date.now()}`}
                         alt="Profile"
                         className="profile-img"
                         onError={(e) => {
@@ -977,7 +979,7 @@ function DriverProfile() {
                         {formData.licenseImage ? (
                           <div className="image-with-actions">
                             <img
-                              src={`http://localhost:3001${formData.licenseImage}?t=${Date.now()}`}
+                              src={withTimestamp(buildImageUrl(formData.licenseImage))}
                               alt="Driver's License"
                               className="uploaded-image"
                               onError={(e) => {
